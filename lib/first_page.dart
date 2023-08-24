@@ -48,14 +48,14 @@ class _FirstPageState extends State<FirstPage> {
 
         // Save the data to SharedPreferences
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('categoriesData', data);
+        await prefs.setString('categories', data);
 
         // Navigate to the next page
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) =>HomePage()),
         );
-    await prefs.setString('categoriesData', data);
+    //await prefs.setString('categoriesData', data);
   } else {
     throw Exception('Failed to load data');
   }
