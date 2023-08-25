@@ -8,9 +8,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-   double? _deviceWidth, _deviceHeight;
-   String? _categories = "";
-   final prefs = SharedPreferences.getInstance();
    List<Color> colors = [
     const Color.fromRGBO(250, 100, 100, 1),
     const Color.fromRGBO(250, 140, 60, 1),
@@ -18,6 +15,12 @@ class _HomePageState extends State<HomePage> {
     const Color.fromRGBO(90, 145, 255, 1),
     const Color.fromRGBO(184, 91, 255, 1),
    ];
+   double? _deviceWidth, _deviceHeight;
+   String? _categories = "";
+   List _categories_json = [];
+   String _category_name = "ビジネス";
+   Color _color = Color.fromRGBO(250, 100, 100, 1);
+   final prefs = SharedPreferences.getInstance();
   @override
   void initState() {
     final prefs = SharedPreferences.getInstance();
@@ -48,20 +51,27 @@ class _HomePageState extends State<HomePage> {
     return fontSize -1;
   }
 
+  void SelectCategory(int category_num){
+      setState(() {
+        _category_name = _categories_json[category_num]['japanese_name'];
+        _color =  colors[category_num % colors.length];
+      });
+  }
+
   @override
   Widget build(BuildContext context) {
     _deviceWidth = MediaQuery.of(context).size.width;
     _deviceHeight = MediaQuery.of(context).size.height;
     final container_width = _deviceWidth!/5;
     final container_height = _deviceWidth!/10;
-    final categories = json.decode(_categories!);
-    for (var item in categories) {
+    _categories_json = json.decode(_categories!);
+    for (var item in _categories_json) {
       String japaneseName = item['japanese_name'];
       print(japaneseName);
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text(_categories!),
+        title: Text("$_category_name"),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -70,7 +80,7 @@ class _HomePageState extends State<HomePage> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                for (var i = 0; i < categories.length; i++)
+                for (var i = 0; i < _categories_json.length; i++)
                   Container(
                     color: colors[i % colors.length],
                     width: container_width,
@@ -78,12 +88,15 @@ class _HomePageState extends State<HomePage> {
                     padding: EdgeInsets.all(0),
                     margin: EdgeInsets.all(0),
                     child:TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        SelectCategory(i);
+                      },
                       child: Text(
-                        categories[i]['japanese_name'],
+                        _categories_json[i]['japanese_name'],
                         style: TextStyle(
-                          fontSize: fontSize(categories[i]['japanese_name'].length),
-                          color: Colors.black,
+                          fontSize: fontSize(_categories_json[i]['japanese_name'].length),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                       style: TextButton.styleFrom(
@@ -97,6 +110,11 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
+          Container(
+                    color: _color,
+                    width: _deviceWidth,
+                    height: 5,
+                    ),
           Container(
             height: (_deviceHeight! - 200),
             //margin: EdgeInsets.only(bottom: 100),
