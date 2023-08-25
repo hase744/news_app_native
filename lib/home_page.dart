@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class HomePage extends StatefulWidget {
   @override
@@ -35,10 +36,29 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  double fontSize(int text_count) {
+    double fontSize = 0;
+    if(text_count < 4){
+      fontSize = _deviceWidth!/20;
+    }else{
+      fontSize = _deviceWidth!/5/text_count;
+    }
+    print(text_count);
+    print(fontSize);
+    return fontSize -1;
+  }
+
   @override
   Widget build(BuildContext context) {
     _deviceWidth = MediaQuery.of(context).size.width;
     _deviceHeight = MediaQuery.of(context).size.height;
+    final container_width = _deviceWidth!/5;
+    final container_height = _deviceWidth!/10;
+    final categories = json.decode(_categories!);
+    for (var item in categories) {
+      String japaneseName = item['japanese_name'];
+      print(japaneseName);
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(_categories!),
@@ -50,11 +70,29 @@ class _HomePageState extends State<HomePage> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                for (var i = 0; i < 10; i++)
+                for (var i = 0; i < categories.length; i++)
                   Container(
                     color: colors[i % colors.length],
-                    width: 100,
-                    height: 50,
+                    width: container_width,
+                    height: container_height,
+                    padding: EdgeInsets.all(0),
+                    margin: EdgeInsets.all(0),
+                    child:TextButton(
+                      onPressed: () {},
+                      child: Text(
+                        categories[i]['japanese_name'],
+                        style: TextStyle(
+                          fontSize: fontSize(categories[i]['japanese_name'].length),
+                          color: Colors.black,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.all(0), // ボタンの内側の余白
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(0), // 角丸の半径
+                        ),
+                      ),
+                    )
                   ),
               ],
             ),
