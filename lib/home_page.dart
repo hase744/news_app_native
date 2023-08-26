@@ -74,39 +74,94 @@ class _HomePageState extends State<HomePage> {
       _press = json.decode(_categoriesJson[category_num]['press']);
       print("OK");
       for(var i=0; i < _press.length; i++){
-        String youtube_id = _press[i]['youtube_id'];
         _videoCells.add(
-          Container(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
+          VideoCell(i)
+        );
+      }
+    });
+  }
+
+  Widget VideoCell(int video_num){
+    String youtube_id = _press[video_num]['youtube_id'];
+    double cellWidth = _deviceWidth!;
+    double cellHeight = _deviceWidth!/2/16*9;
+    return Container(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                Container(
+                  width: cellWidth/2,
+                  height: cellHeight,
+                  color: Colors.red,
+                  child:Stack(
                     children: [
-                      Container(
-                        child:Image.network(
-                          "https://img.youtube.com/vi/$youtube_id/default.jpg",
-                          width: 128,
-                          height: 128,
+                      Positioned.fill(
+                        child: 
+                        Image.network(
+                          "http://img.youtube.com/vi/$youtube_id/sddefault.jpg",
+                          fit: BoxFit.cover,
                           errorBuilder: (c, o, s) {
                             return const Icon(
                               Icons.error,
                               color: Colors.red,
                             );
                           },
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: Center(
+                          child: Opacity(
+                            opacity: 0.5,
+                            child: Icon(
+                              Icons.play_circle,
+                              size: 50, // 調整が必要かもしれません
+                              color: Colors.white, // プレイボタンの色
+                            ),
+                          )
                           
                         ),
                       ),
-                    ]
-                  )
+                    ],
+                  ),
+                ),
+                Container(
+                  width: cellWidth/2,
+                  height: cellHeight,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: cellWidth/2,
+                        height: cellHeight/4*3,
+                        child:Text(
+                          _press[video_num]['title'],
+                          maxLines: 3,
+                        )
+                      ),
+                      Container(
+                        width: cellWidth/2,
+                        height: cellHeight/4,
+                        child:Text(
+                          _press[video_num]['channel_name'],
+                          maxLines: 1,
+                          style: TextStyle(
+                            fontSize: cellHeight/4/2,
+                            color: Colors.grey
+                          ),
+                        )
+                      )
+                    ])
                 )
               ]
             )
           )
-        );
-      }
-    });
+        ]
+      )
+    );
   }
 
   @override
