@@ -51,8 +51,8 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       //　データの読み込み
       _categories = prefs.getString('categories')!;
-      print("カテゴリー");
-      print(_categories);
+      _categoriesJson = json.decode(_categories!);
+      SelectCategory(0);
     });
   }
 
@@ -118,8 +118,8 @@ class _HomePageState extends State<HomePage> {
                             opacity: 0.5,
                             child: Icon(
                               Icons.play_circle,
-                              size: 50, // 調整が必要かもしれません
-                              color: Colors.white, // プレイボタンの色
+                              size: 50,
+                              color: Colors.white,
                             ),
                           )
                           
