@@ -17,7 +17,24 @@ class _HomePageState extends State<HomePage> {
    ];
    double? _deviceWidth, _deviceHeight;
    String? _categories = "";
-   List _categories_json = [];
+   List _press = [];
+   List _categoriesJson = [];
+   List<Widget> _videoCells = [Container(
+                    height: 200,
+                    color: Colors.green,
+                  ),
+                  Container(
+                    height: 200,
+                    color: Colors.blue,
+                  ),
+                  Container(
+                    height: 200,
+                    color: Colors.red,
+                  ),
+                  Container(
+                    height: 200,
+                    color: Colors.yellow,
+                  ),];
    String _category_name = "ビジネス";
    Color _color = Color.fromRGBO(250, 100, 100, 1);
    final prefs = SharedPreferences.getInstance();
@@ -46,16 +63,50 @@ class _HomePageState extends State<HomePage> {
     }else{
       fontSize = _deviceWidth!/5/text_count;
     }
-    print(text_count);
-    print(fontSize);
     return fontSize -1;
   }
 
   void SelectCategory(int category_num){
-      setState(() {
-        _category_name = _categories_json[category_num]['japanese_name'];
-        _color =  colors[category_num % colors.length];
-      });
+    setState(() {
+      _category_name = _categoriesJson[category_num]['japanese_name'];
+      _color =  colors[category_num % colors.length];
+      _videoCells = [];
+      _press = json.decode(_categoriesJson[category_num]['press']);
+      print("OK");
+      for(var i=0; i < _press.length; i++){
+        String youtube_id = _press[i]['youtube_id'];
+        _videoCells.add(
+          Container(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      Container(
+                        child:Image.network(
+                          "https://img.youtube.com/vi/$youtube_id/default.jpg",
+                          width: 128,
+                          height: 128,
+                          errorBuilder: (c, o, s) {
+                            return const Icon(
+                              Icons.error,
+                              color: Colors.red,
+                            );
+                          },
+                          
+                        ),
+                      ),
+                    ]
+                  )
+                )
+              ]
+            )
+          )
+        );
+      }
+    });
   }
 
   @override
@@ -64,8 +115,8 @@ class _HomePageState extends State<HomePage> {
     _deviceHeight = MediaQuery.of(context).size.height;
     final container_width = _deviceWidth!/5;
     final container_height = _deviceWidth!/10;
-    _categories_json = json.decode(_categories!);
-    for (var item in _categories_json) {
+    _categoriesJson = json.decode(_categories!);
+    for (var item in _categoriesJson) {
       String japaneseName = item['japanese_name'];
       print(japaneseName);
     }
@@ -80,7 +131,7 @@ class _HomePageState extends State<HomePage> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                for (var i = 0; i < _categories_json.length; i++)
+                for (var i = 0; i < _categoriesJson.length; i++)
                   Container(
                     color: colors[i % colors.length],
                     width: container_width,
@@ -92,9 +143,9 @@ class _HomePageState extends State<HomePage> {
                         SelectCategory(i);
                       },
                       child: Text(
-                        _categories_json[i]['japanese_name'],
+                        _categoriesJson[i]['japanese_name'],
                         style: TextStyle(
-                          fontSize: fontSize(_categories_json[i]['japanese_name'].length),
+                          fontSize: fontSize(_categoriesJson[i]['japanese_name'].length),
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -120,24 +171,7 @@ class _HomePageState extends State<HomePage> {
             //margin: EdgeInsets.only(bottom: 100),
             child: SingleChildScrollView(
               child: Column(
-                children: <Widget>[
-                  Container(
-                    height: 200,
-                    color: Colors.green,
-                  ),
-                  Container(
-                    height: 200,
-                    color: Colors.blue,
-                  ),
-                  Container(
-                    height: 200,
-                    color: Colors.red,
-                  ),
-                  Container(
-                    height: 200,
-                    color: Colors.yellow,
-                  ),
-                ],
+                children: _videoCells,
               ),
             )
           ),
