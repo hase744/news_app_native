@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 class HomeBottomNavigationBar extends StatefulWidget {
   final int initialIndex;
+  double height;
 
-  HomeBottomNavigationBar({Key? key, this.initialIndex = 0}) : super(key: key);
+  HomeBottomNavigationBar({Key? key, this.initialIndex = 0, this.height = 56.0}) : super(key: key);
 
   @override
   _HomeBottomNavigationBarState createState() => _HomeBottomNavigationBarState();
@@ -11,12 +12,23 @@ class HomeBottomNavigationBar extends StatefulWidget {
 
 class _HomeBottomNavigationBarState extends State<HomeBottomNavigationBar> {
   int currentIndex = 0;
+  double currntHeight = 0.0;
 
   @override
   void initState() {
     super.initState();
     currentIndex = widget.initialIndex;
+    // BottomNavigationBar の高さを取得し、変数に格納
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      final RenderBox renderBox = context.findRenderObject() as RenderBox;
+      final currntHeight = renderBox.size.height;
+      setState(() {
+        this.currntHeight = currntHeight;
+      });
+    });
   }
+
+  double get height => currntHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -37,4 +49,6 @@ class _HomeBottomNavigationBarState extends State<HomeBottomNavigationBar> {
       type: BottomNavigationBarType.fixed,
     );
   }
+
+  
 }

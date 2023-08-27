@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'bottom_navigation_bar.dart';  // 新しいファイルをインポート
+import 'bottom_navigation_bar.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -21,6 +23,7 @@ class _HomePageState extends State<HomePage> {
    List _press = [];
    List _categoriesJson = [];
    List<Widget> _videoCells = [];
+   Map<String, double> layout_height = {};
    String _category_name = "ビジネス";
    Color _color = Color.fromRGBO(250, 100, 100, 1);
    final prefs = SharedPreferences.getInstance();
@@ -38,6 +41,20 @@ class _HomePageState extends State<HomePage> {
       //　データの読み込み
       _categories = prefs.getString('categories')!;
       _categoriesJson = json.decode(_categories!);
+
+      HomeBottomNavigationBar bar = HomeBottomNavigationBar(initialIndex: 0);
+      int integer = bar.initialIndex;
+      layout_height = {
+        'app_bar':40,
+        'category_bar':_deviceWidth!/10,
+        'category_bar_line':5,
+        'youtube_display':_deviceWidth!/16*9,
+        'bottom_nabigation_bar': bar.height
+        };
+      
+      var padding = MediaQuery.of(context).padding;
+      double innerHeight = _deviceHeight! - padding.top - padding.bottom;
+      layout_height['news_cells'] = innerHeight - layout_height.values.reduce((a, b) => a + b) - 2;
       SelectCategory(0);
     });
   }
@@ -155,15 +172,18 @@ class _HomePageState extends State<HomePage> {
     _deviceWidth = MediaQuery.of(context).size.width;
     _deviceHeight = MediaQuery.of(context).size.height;
     final container_width = _deviceWidth!/5;
-    final container_height = _deviceWidth!/10;
+    final container_height = layout_height['category_bar'];
     _categoriesJson = json.decode(_categories!);
     for (var item in _categoriesJson) {
       String japaneseName = item['japanese_name'];
       print(japaneseName);
     }
     return Scaffold(
-      appBar: AppBar(
-        title: Text("$_category_name"),
+      appBar: PreferredSize(
+         preferredSize: Size.fromHeight(layout_height['app_bar']!),
+         child: AppBar(
+           title: Text("$_category_name"),
+         ),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -205,10 +225,20 @@ class _HomePageState extends State<HomePage> {
           Container(
                     color: _color,
                     width: _deviceWidth,
-                    height: 5,
+                    height: layout_height['category_bar_line'],
                     ),
+          YoutubePlayer(
+            controller: YoutubePlayerController(
+              initialVideoId: 'v2Vu_Of9exk',  // YouTube 動画の ID を指定
+              flags: YoutubePlayerFlags(
+                autoPlay: false,  // 自動再生しない
+              ),
+            ),
+            showVideoProgressIndicator: true,
+            progressIndicatorColor: Colors.blueAccent,
+          ),
           Container(
-            height: (_deviceHeight! - 200),
+            height: layout_height['news_cells'],
             //margin: EdgeInsets.only(bottom: 100),
             child: SingleChildScrollView(
               child: Column(
