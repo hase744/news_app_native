@@ -60,5 +60,4 @@ class _FirstPageState extends State<FirstPage> {
     throw Exception('Failed to load data');
   }
 }
-
 }

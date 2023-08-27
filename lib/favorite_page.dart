@@ -3,12 +3,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'bottom_navigation_bar.dart';  // 新しいファイルをインポート
 
-class HomePage extends StatefulWidget {
+class FavoritePage extends StatefulWidget {
   @override
-  _HomePageState createState() => _HomePageState();
+  _FavoritePageState createState() => _FavoritePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _FavoritePageState extends State<FavoritePage> {
    List<Color> colors = [
     const Color.fromRGBO(250, 100, 100, 1),
     const Color.fromRGBO(250, 140, 60, 1),
@@ -30,7 +30,7 @@ class _HomePageState extends State<HomePage> {
     init();
     // ここに初期化時に実行したい特定の処理を記述します
     // 例えば、API呼び出しやデータの読み込みなどです
-    print("HomePage initialized"); // これは例です
+    print("FavoritePage initialized"); // これは例です
   }
   void init() async {
     final prefs = await SharedPreferences.getInstance();
