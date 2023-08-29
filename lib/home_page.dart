@@ -109,7 +109,64 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Widget VideoCell(int video_num){
+  List<String> stringToList(String listAsString) {
+    return listAsString.split(',');
+  }
+
+  String listToString(List<String> list) {
+    return list.map<String>((String value) => value).join(',');
+  }
+
+  modalWindow(String youtubeId, BuildContext context) {
+    //String value = "";
+    List? values;
+    return Container(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        //mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          TextButton(
+            child: Container(
+              width: _deviceWidth,
+              child: Center(
+                child:Text(
+                "＋お気に入りに追加",
+                style: TextStyle(
+                    fontSize: _deviceWidth!/15,
+                    color: Colors.grey
+                  ),
+                )
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              primary: Colors.black,
+            ),
+            onPressed: () async {
+              //final prefs = await SharedPreferences.getInstance();
+              //values = stringToList(prefs.getString("favoriteYoutubeIds")!);
+              //values!.add(youtubeId);
+              //prefs.setString('favoriteYoutubeIds', values!.join(','));
+              print("お気に入り追加");
+              Navigator.of(context).pop();
+            },
+          ),
+        ]),
+        height: 500,
+        alignment: Alignment.center,
+        width: double.infinity,
+        decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey,
+            blurRadius: 20,
+          )
+        ],
+      ),
+    );;
+  }
+
+  Widget VideoCell(int video_num, BuildContext context){
     String youtube_id = _press[video_num]['youtube_id'];
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth!/2/16*9;
@@ -173,7 +230,8 @@ class _HomePageState extends State<HomePage> {
                       Container(
                         width: cellWidth/2,
                         height: cellHeight/4*3,
-                        child:Text(
+                        child:
+                        Text(
                           _press[video_num]['title'],
                           maxLines: 3,
                         )
@@ -181,13 +239,38 @@ class _HomePageState extends State<HomePage> {
                       Container(
                         width: cellWidth/2,
                         height: cellHeight/4,
-                        child:Text(
-                          _press[video_num]['channel_name'],
-                          maxLines: 1,
-                          style: TextStyle(
-                            fontSize: cellHeight/4/2,
-                            color: Colors.grey
-                          ),
+                        child:Row(
+                          children:[
+                            Container(
+                              width: cellWidth/2 - 25,
+                              //color: Colors.blue,
+                              child: Text(
+                                _press[video_num]['channel_name'],
+                                maxLines: 1,
+                                style: TextStyle(
+                                  fontSize: cellHeight/4/2,
+                                  color: Colors.grey
+                                ),
+                              )
+                            ),
+                            InkWell(
+                              onTap: () {
+                                print("押された");
+                                showModalBottomSheet(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return modalWindow(youtube_id, context);
+                                  },
+                                );
+                              },
+                              child:Container(
+                                height: 25,
+                                width: 25,
+                                //color: Colors.red,
+                                child: Icon(Icons.more_horiz),
+                              )
+                            ),
+                          ],
                         )
                       )
                     ])
@@ -283,7 +366,7 @@ class _HomePageState extends State<HomePage> {
                 //children: _videoCells,
                 children: [
                   for (var i = 0; i < _press.length; i++)
-                    VideoCell(i)
+                    VideoCell(i, context)
                 ],
               ),
             )
