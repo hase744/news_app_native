@@ -1,12 +1,11 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'bottom_navigation_bar.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:sqflite/sqflite.dart';
-import 'video_cell_container.dart';
 import 'package:path/path.dart' as p;
+import 'history.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -33,7 +32,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
    bool displayYoutube = true;
-   late Database _database;
+  var history = History();  // History クラスのインスタンスを作成
    
    Map<String, double> layout_height = {};
    String _category_name = "ビジネス";
@@ -46,8 +45,8 @@ class _HomePageState extends State<HomePage> {
     "item":BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム')
     },
     {
-    "name": 'favorite',
-    "item":BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'お気に入り')
+    "name": 'history',
+    "item":BottomNavigationBarItem(icon: Icon(Icons.history), label: '履歴')
     },
     {
     "name": 'notification',
@@ -59,18 +58,12 @@ class _HomePageState extends State<HomePage> {
     },
   ];
 
-  late Map<String, dynamic> funcs = {
-    'home':displayNews(),
-    'favorite':displayHistory(),
-    'notification':displayNews(),
-    'setting':displayNews()
-    };
-
   Future<void> displayHistory() async {
     print("履歴");
     _press = [];
-    await _initDatabase();
-    List<Map<String, dynamic>> histories = await _getHistories();// あなたの非同期処理;
+    await history.initDatabase();
+    List<Map<String, dynamic>> histories = await history.all();
+    histories = histories.reversed.toList();// あなたの非同期処理;
     setState(() {
       setDefauldLayout();
       layout_height['category_bar'] = 0;
@@ -134,55 +127,17 @@ class _HomePageState extends State<HomePage> {
     layout_height['news_cells'] = _innerHeight! - layout_height.values.reduce((a, b) => a + b) - 2;
   }
 
-  Future<void> _deleteHistoriesTable() async {
-    final dbPath = p.join(await getDatabasesPath(), 'my_database.db');
-    await deleteDatabase(dbPath);
-  }
-  
-  Future<void> _initDatabase() async {
-    _database = await openDatabase(
-      p.join(await getDatabasesPath(), 'my_database.db'),
-      onCreate: (db, version) {
-        return db.execute('''
-          CREATE TABLE Histories (
-            id INTEGER PRIMARY KEY,
-            youtube_id TEXT,
-            title TEXT,
-            channel_name TEXT,
-            channel_id TEXT
-          )
-        ''');
-      },
-      version: 1,
-    );
-  }
-
-  Future<void> _insertHistory(Map press) async {
-    Map<String, String> stringMap = press.map((key, value) {
-      return MapEntry(key.toString(), value.toString());
-    });
-    await _database.insert(
-      'Histories',
-      stringMap,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  Future<List<Map<String, dynamic>>> _getHistories() async {
-    return await _database.query('Histories');
-  }
-
   void openYoutube(Map press) async {
-      String youtube_id = press["youtube_id"];
-      layout_height['youtube_display'] = _deviceWidth!/16*9;
-      set_news_cells_height();
-      displayYoutube = true;
-      await Future.delayed(Duration.zero);
-      youtubeController.load( youtube_id,startAt:0);
-      await _initDatabase();
-      List<Map<String, dynamic>> histories = await _getHistories();
-      print(histories);
-      await _insertHistory(press);
+    String youtube_id = press["youtube_id"];
+    layout_height['youtube_display'] = _deviceWidth!/16*9;
+    set_news_cells_height();
+    displayYoutube = true;
+    await Future.delayed(Duration.zero);
+    youtubeController.load( youtube_id,startAt:0);
+    await history.initDatabase(); 
+    List<Map<String, dynamic>> histories = await history.all();
+    print(histories);
+    await history.create(press);
   }
 
   void closeYoutube(){
@@ -211,11 +166,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  //List<Map<String, String>> stringToList(String listAsString) {
-  //  List listString = listAsString.split(',');
-  //  List<Map<String, String>> listMap = listString.map((e) => null)
-//
-  //}
   Future<Database> openDatabaseConnection() async {
   final dbPath = await getDatabasesPath();
   final path = p.join(dbPath, 'my_database.db');
@@ -234,8 +184,6 @@ class _HomePageState extends State<HomePage> {
     return list.map<String>((String value) => value).join(',');
   }
   
-  void saveData(){}
-
   modalWindow(String youtubeId, BuildContext context) {
     //String value = "";
     List? values;
@@ -282,7 +230,7 @@ class _HomePageState extends State<HomePage> {
           )
         ],
       ),
-    );;
+    );
   }
 
   Widget VideoCell(BuildContext context, Map press){
@@ -402,8 +350,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final container_width = _deviceWidth!/5;
@@ -510,7 +456,7 @@ class _HomePageState extends State<HomePage> {
             case 'home':
               displayNews();
               break;
-            case 'favorite':
+            case 'history':
               displayHistory();
               break;
             case 'notification':
@@ -519,7 +465,6 @@ class _HomePageState extends State<HomePage> {
             default:
               break;
           }
-          funcs[mixedMap[currentIndex]['name']];
         },
         items: itemList,
         type: BottomNavigationBarType.fixed,
