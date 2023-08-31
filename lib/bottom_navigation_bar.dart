@@ -11,7 +11,7 @@ class HomeBottomNavigationBar extends StatefulWidget {
 }
 
 class _HomeBottomNavigationBarState extends State<HomeBottomNavigationBar> {
-  int currentIndex = 0;
+  int currentIndex = 1;
   double currntHeight = 0.0;
 
   @override

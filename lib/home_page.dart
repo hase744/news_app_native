@@ -4,6 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'bottom_navigation_bar.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:sqflite/sqflite.dart';
+import 'video_cell_container.dart';
+
 
 class HomePage extends StatefulWidget {
   @override
@@ -30,7 +33,6 @@ class _HomePageState extends State<HomePage> {
     );
    bool displayYoutube = true;
    
-   List<Widget> _videoCells = [];
    Map<String, double> layout_height = {};
    String _category_name = "ビジネス";
    Color _color = Color.fromRGBO(250, 100, 100, 1);
@@ -103,15 +105,16 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _category_name = _categoriesJson[category_num]['japanese_name'];
       _color =  colors[category_num % colors.length];
-      _videoCells = [];
       _press = json.decode(_categoriesJson[category_num]['press']);
       closeYoutube();
     });
   }
 
-  List<String> stringToList(String listAsString) {
-    return listAsString.split(',');
-  }
+  //List<Map<String, String>> stringToList(String listAsString) {
+  //  List listString = listAsString.split(',');
+  //  List<Map<String, String>> listMap = listString.map((e) => null)
+//
+  //}
 
   String listToString(List<String> list) {
     return list.map<String>((String value) => value).join(',');
@@ -166,8 +169,8 @@ class _HomePageState extends State<HomePage> {
     );;
   }
 
-  Widget VideoCell(int video_num, BuildContext context){
-    String youtube_id = _press[video_num]['youtube_id'];
+  Widget VideoCell(BuildContext context, Map press){
+    String youtube_id = press['youtube_id'];
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth!/2/16*9;
     return Container(
@@ -232,7 +235,7 @@ class _HomePageState extends State<HomePage> {
                         height: cellHeight/4*3,
                         child:
                         Text(
-                          _press[video_num]['title'],
+                          press['title'],
                           maxLines: 3,
                         )
                       ),
@@ -245,7 +248,7 @@ class _HomePageState extends State<HomePage> {
                               width: cellWidth/2 - 25,
                               //color: Colors.blue,
                               child: Text(
-                                _press[video_num]['channel_name'],
+                                press['channel_name'],
                                 maxLines: 1,
                                 style: TextStyle(
                                   fontSize: cellHeight/4/2,
@@ -290,6 +293,7 @@ class _HomePageState extends State<HomePage> {
     _deviceWidth = MediaQuery.of(context).size.width;
     _deviceHeight = MediaQuery.of(context).size.height;
     double? youtubeHeight = layout_height['youtube_display'];
+    print("スキャフォルド");
     //youtubeController.reload();
     final container_width = _deviceWidth!/5;
     final container_height = layout_height['category_bar'];
@@ -363,10 +367,15 @@ class _HomePageState extends State<HomePage> {
             //margin: EdgeInsets.only(bottom: 100),
             child: SingleChildScrollView(
               child: Column(
-                //children: _videoCells,
                 children: [
                   for (var i = 0; i < _press.length; i++)
-                    VideoCell(i, context)
+                    VideoCell(context, _press[i])
+                    //VideoCellContainer(
+                    //  press:_press[i],
+                    //  context: context,
+                    //  youtubeController: youtubeController,
+                    //  openYoutube: openYoutube,
+                    //)
                 ],
               ),
             )
