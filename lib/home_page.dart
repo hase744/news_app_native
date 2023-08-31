@@ -6,6 +6,7 @@ import 'bottom_navigation_bar.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:sqflite/sqflite.dart';
 import 'video_cell_container.dart';
+import 'package:path/path.dart' as p;
 
 
 class HomePage extends StatefulWidget {
@@ -21,7 +22,7 @@ class _HomePageState extends State<HomePage> {
     const Color.fromRGBO(90, 145, 255, 1),
     const Color.fromRGBO(185, 90, 255, 1),
    ];
-   double? _deviceWidth, _deviceHeight;
+   double? _deviceWidth, _deviceHeight, _innerHeight;
    String? _categories = "";
    List _press = [];
    List _categoriesJson = [];
@@ -32,10 +33,62 @@ class _HomePageState extends State<HomePage> {
       ),
     );
    bool displayYoutube = true;
+   late Database _database;
    
    Map<String, double> layout_height = {};
    String _category_name = "ビジネス";
    Color _color = Color.fromRGBO(250, 100, 100, 1);
+   int currentIndex = 0;
+
+  late List<Map<dynamic, dynamic>> mixedMap = [
+    {
+    "name": 'home',
+    "item":BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム')
+    },
+    {
+    "name": 'favorite',
+    "item":BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'お気に入り')
+    },
+    {
+    "name": 'notification',
+    "item":BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'お知らせ')
+    },
+    {
+    "name": 'setting',
+    "item":BottomNavigationBarItem(icon: Icon(Icons.settings), label: '設定')
+    },
+  ];
+
+  late Map<String, dynamic> funcs = {
+    'home':displayNews(),
+    'favorite':displayHistory(),
+    'notification':displayNews(),
+    'setting':displayNews()
+    };
+
+  Future<void> displayHistory() async {
+    print("履歴");
+    _press = [];
+    await _initDatabase();
+    List<Map<String, dynamic>> histories = await _getHistories();// あなたの非同期処理;
+    setState(() {
+      setDefauldLayout();
+      layout_height['category_bar'] = 0;
+      layout_height['category_bar_line'] = 0;
+      layout_height['youtube_display'] = 0;
+      print(layout_height);
+      set_news_cells_height();
+      _press = histories; // 取得したデータを _press 変数に代入
+    });
+  }
+
+  Future<void> displayNews() async {
+    print("ニュース");
+    setState(() {
+      setDefauldLayout();
+      SelectCategory(0);
+    });
+  }
 
    final prefs = SharedPreferences.getInstance();
   @override
@@ -46,47 +99,95 @@ class _HomePageState extends State<HomePage> {
     // 例えば、API呼び出しやデータの読み込みなどです
     print("HomePage initialized"); // これは例です
   }
+
   void init() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       //　データの読み込み
+      var _padding = MediaQuery.of(context).padding;
+      _deviceWidth = MediaQuery.of(context).size.width;
+      _deviceHeight = MediaQuery.of(context).size.height;
+      _innerHeight = _deviceHeight! - _padding.top - _padding.bottom;
       _categories = prefs.getString('categories')!;
       _categoriesJson = json.decode(_categories!);
-
-      HomeBottomNavigationBar bar = HomeBottomNavigationBar(initialIndex: 0);
-      int integer = bar.initialIndex;
-      layout_height = {
-        'app_bar':40,
-        'category_bar':_deviceWidth!/10,
-        'category_bar_line':5,
-        'youtube_display':_deviceWidth!/16*9,
-        'bottom_nabigation_bar': bar.height
-        };
-      
-      var padding = MediaQuery.of(context).padding;
-      double innerHeight = _deviceHeight! - padding.top - padding.bottom;
-      layout_height['news_cells'] = innerHeight - layout_height.values.reduce((a, b) => a + b) - 2;
+      //_deleteHistoriesTable();
+      setDefauldLayout();
       SelectCategory(0);
     });
   }
 
-  void openYoutube(String youtube_id) async {
-      var padding = MediaQuery.of(context).padding;
-      double innerHeight = _deviceHeight! - padding.top - padding.bottom;
+  void setDefauldLayout(){
+    HomeBottomNavigationBar bar = HomeBottomNavigationBar(initialIndex: 0);
+    layout_height = {
+      'app_bar':40,
+      'category_bar':_deviceWidth!/10,
+      'category_bar_line':5,
+      'youtube_display':_deviceWidth!/16*9,
+      'bottom_nabigation_bar': bar.height,
+    };
+    set_news_cells_height();
+    print(layout_height);
+  }
+
+  void set_news_cells_height(){
+    layout_height['news_cells'] = 0;
+    layout_height['news_cells'] = _innerHeight! - layout_height.values.reduce((a, b) => a + b) - 2;
+  }
+
+  Future<void> _deleteHistoriesTable() async {
+    final dbPath = p.join(await getDatabasesPath(), 'my_database.db');
+    await deleteDatabase(dbPath);
+  }
+  
+  Future<void> _initDatabase() async {
+    _database = await openDatabase(
+      p.join(await getDatabasesPath(), 'my_database.db'),
+      onCreate: (db, version) {
+        return db.execute('''
+          CREATE TABLE Histories (
+            id INTEGER PRIMARY KEY,
+            youtube_id TEXT,
+            title TEXT,
+            channel_name TEXT,
+            channel_id TEXT
+          )
+        ''');
+      },
+      version: 1,
+    );
+  }
+
+  Future<void> _insertHistory(Map press) async {
+    Map<String, String> stringMap = press.map((key, value) {
+      return MapEntry(key.toString(), value.toString());
+    });
+    await _database.insert(
+      'Histories',
+      stringMap,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> _getHistories() async {
+    return await _database.query('Histories');
+  }
+
+  void openYoutube(Map press) async {
+      String youtube_id = press["youtube_id"];
       layout_height['youtube_display'] = _deviceWidth!/16*9;
-      layout_height['news_cells'] = 0;
-      layout_height['news_cells'] = innerHeight - layout_height.values.reduce((a, b) => a + b) - 2;
+      set_news_cells_height();
       displayYoutube = true;
       await Future.delayed(Duration.zero);
       youtubeController.load( youtube_id,startAt:0);
+      await _initDatabase();
+      List<Map<String, dynamic>> histories = await _getHistories();
+      print(histories);
+      await _insertHistory(press);
   }
 
   void closeYoutube(){
-    var padding = MediaQuery.of(context).padding;
-    double innerHeight = _deviceHeight! - padding.top - padding.bottom;
     layout_height['youtube_display'] = 0;
-    layout_height['news_cells'] = 0;
-    layout_height['news_cells'] = innerHeight - layout_height.values.reduce((a, b) => a + b) - 2;
+    set_news_cells_height();
     youtubeController.pause();
     displayYoutube = false;
   }
@@ -101,12 +202,12 @@ class _HomePageState extends State<HomePage> {
     return fontSize -1;
   }
 
-  void SelectCategory(int category_num){
+  void SelectCategory(int category_num) {
     setState(() {
+      closeYoutube();
       _category_name = _categoriesJson[category_num]['japanese_name'];
       _color =  colors[category_num % colors.length];
       _press = json.decode(_categoriesJson[category_num]['press']);
-      closeYoutube();
     });
   }
 
@@ -115,10 +216,25 @@ class _HomePageState extends State<HomePage> {
   //  List<Map<String, String>> listMap = listString.map((e) => null)
 //
   //}
+  Future<Database> openDatabaseConnection() async {
+  final dbPath = await getDatabasesPath();
+  final path = p.join(dbPath, 'my_database.db');
+  return await openDatabase(
+    path,
+    version: 1,
+    onCreate: (db, version) async {
+      await db.execute(
+        'CREATE TABLE my_table(id INTEGER PRIMARY KEY, name TEXT)',
+      );
+    },
+  );
+}
 
   String listToString(List<String> list) {
     return list.map<String>((String value) => value).join(',');
   }
+  
+  void saveData(){}
 
   modalWindow(String youtubeId, BuildContext context) {
     //String value = "";
@@ -190,7 +306,7 @@ class _HomePageState extends State<HomePage> {
                       // onPressed イベントの処理をここに書きます
                       print('Container tapped!');
                       setState(() {
-                        openYoutube(youtube_id);
+                        openYoutube(press);
                         youtubeController.load( youtube_id,startAt:0);
                       });
                     },
@@ -290,14 +406,14 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    _deviceWidth = MediaQuery.of(context).size.width;
-    _deviceHeight = MediaQuery.of(context).size.height;
-    double? youtubeHeight = layout_height['youtube_display'];
-    print("スキャフォルド");
-    //youtubeController.reload();
     final container_width = _deviceWidth!/5;
     final container_height = layout_height['category_bar'];
+
     _categoriesJson = json.decode(_categories!);
+    List<BottomNavigationBarItem> itemList = mixedMap.map((map) => map["item"]).toList()
+    .whereType<BottomNavigationBarItem>() // BottomNavigationBarItem型の要素のみ抽出
+    .toList();
+
     for (var item in _categoriesJson) {
       String japaneseName = item['japanese_name'];
       print(japaneseName);
@@ -382,7 +498,32 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      bottomNavigationBar: HomeBottomNavigationBar(initialIndex: 0)
+      //bottomNavigationBar: HomeBottomNavigationBar(initialIndex: 0)
+      bottomNavigationBar: BottomNavigationBar(
+        selectedItemColor: Colors.blue,
+        currentIndex: currentIndex,
+        onTap: (index) {
+          setState(() {
+            currentIndex = index;
+          });
+          switch(mixedMap[currentIndex]['name']) {
+            case 'home':
+              displayNews();
+              break;
+            case 'favorite':
+              displayHistory();
+              break;
+            case 'notification':
+              displayNews();
+              break;
+            default:
+              break;
+          }
+          funcs[mixedMap[currentIndex]['name']];
+        },
+        items: itemList,
+        type: BottomNavigationBarType.fixed,
+      ),
     );
   }
 }
