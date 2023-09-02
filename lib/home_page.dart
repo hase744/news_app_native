@@ -31,14 +31,19 @@ class _HomePageState extends State<HomePage> {
         autoPlay: false,  // 自動再生しない
       ),
     );
+  ScrollController _scrollController = ScrollController();
   bool displayYoutube = true;
   var history = History(); 
   var favorite = Favorite(); // History クラスのインスタンスを作成
    
-  Map<String, double> layout_height = {};
-  String _category_name = "ビジネス";
+  Map<String, double> layoutHeight = {};
+  String _categoryName = "ビジネス";
   Color _color = Color.fromRGBO(250, 100, 100, 1);
   int currentIndex = 0;
+  int currentCategoryIndex = 0;
+  int _pressUnitCount = 8;
+  late int _pressCount =  _pressUnitCount;
+  bool _displayLoadingScreen = false;
   String? _alert;
   final prefs = SharedPreferences.getInstance();
 
@@ -83,9 +88,9 @@ class _HomePageState extends State<HomePage> {
         flags: YoutubePlayerFlags(
           autoPlay: false,  // 自動再生しない
         ),);
-      setDefauldLayout();
-      SelectCategory(0);
     });
+    await displayNews();
+    resetPressCount();
   }
 
   Future<void> displayHistory() async {
@@ -96,20 +101,32 @@ class _HomePageState extends State<HomePage> {
     histories = histories.reversed.toList();// あなたの非同期処理;
     setState(() {
       setDefauldLayout();
-      layout_height['category_bar'] = 0;
-      layout_height['category_bar_line'] = 0;
-      layout_height['youtube_display'] = 0;
-      print(layout_height);
+      layoutHeight['category_bar'] = 0;
+      layoutHeight['category_bar_line'] = 0;
+      layoutHeight['youtube_display'] = 0;
+      print(layoutHeight);
       setNesCellsHeight();
       _press = histories; // 取得したデータを _press 変数に代入
+      resetPressCount();
+    });
+  }
+
+  void resetPressCount(){
+    setState(() {
+      _displayLoadingScreen = false;
+      _pressCount =  _pressUnitCount;
+      if (_pressCount > _press.length) {
+        _pressCount = _press.length;
+      }
     });
   }
 
   Future<void> displayNews() async {
     setState(() {
       setDefauldLayout();
-      SelectCategory(0);
+      SelectCategory(currentCategoryIndex);
     });
+    resetPressCount();
   }
 
   Future<void> displayFavorites() async {
@@ -121,19 +138,22 @@ class _HomePageState extends State<HomePage> {
     print(favorites);
     setState(() {
       setDefauldLayout();
-      layout_height['category_bar'] = 0;
-      layout_height['category_bar_line'] = 0;
-      layout_height['youtube_display'] = 0;
-      print(layout_height);
+      layoutHeight['category_bar'] = 0;
+      layoutHeight['category_bar_line'] = 0;
+      layoutHeight['youtube_display'] = 0;
+      print(layoutHeight);
       setNesCellsHeight();
       _press = favorites; // 取得したデータを _press 変数に代入
+      print("総数${_press.length}");
+      print("表示数${_pressCount}");
+      resetPressCount();
     });
     print("お気に入り");
   }
 
   void setDefauldLayout(){
     HomeBottomNavigationBar bar = HomeBottomNavigationBar(initialIndex: 0);
-    layout_height = {
+    layoutHeight = {
       'app_bar':40,
       'category_bar':_deviceWidth!/10,
       'category_bar_line':5,
@@ -142,17 +162,17 @@ class _HomePageState extends State<HomePage> {
       'alert':0
     };
     setNesCellsHeight();
-    print(layout_height);
+    print(layoutHeight);
   }
 
   void setNesCellsHeight(){
-    layout_height['news_cells'] = 0;
-    layout_height['news_cells'] = _innerHeight! - layout_height.values.reduce((a, b) => a + b) - 2;
+    layoutHeight['news_cells'] = 0;
+    layoutHeight['news_cells'] = _innerHeight! - layoutHeight.values.reduce((a, b) => a + b) - 2;
   }
 
   void openYoutube(Map press) async {
     String youtube_id = press["youtube_id"];
-    layout_height['youtube_display'] = _deviceWidth!/16*9;
+    layoutHeight['youtube_display'] = _deviceWidth!/16*9;
     setNesCellsHeight();
     displayYoutube = true;
     //最後に再生した動画を保存機能
@@ -167,7 +187,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void closeYoutube(){
-    layout_height['youtube_display'] = 0;
+    layoutHeight['youtube_display'] = 0;
     setNesCellsHeight();
     youtubeController.pause();
     displayYoutube = false;
@@ -186,25 +206,12 @@ class _HomePageState extends State<HomePage> {
   Future<void> SelectCategory(int category_num) async {
     setState(() {
       closeYoutube();
-      _category_name = _categoriesJson[category_num]['japanese_name'];
+      _categoryName = _categoriesJson[category_num]['japanese_name'];
       _color =  colors[category_num % colors.length];
     });
     _press = await json.decode(_categoriesJson[category_num]['press']);
+    print("総数${_press.length}");
   }
-
-  Future<Database> openDatabaseConnection() async {
-  final dbPath = await getDatabasesPath();
-  final path = p.join(dbPath, 'my_database.db');
-  return await openDatabase(
-    path,
-    version: 1,
-    onCreate: (db, version) async {
-      await db.execute(
-        'CREATE TABLE my_table(id INTEGER PRIMARY KEY, name TEXT)',
-      );
-    },
-  );
-}
 
   String listToString(List<String> list) {
     return list.map<String>((String value) => value).join(',');
@@ -272,7 +279,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Widget VideoCell(BuildContext context, Map press){
+  Widget videoCell(BuildContext context, Map press){
     String youtube_id = press['youtube_id'];
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth!/2/16*9;
@@ -396,22 +403,18 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final container_width = _deviceWidth!/5;
-    final container_height = layout_height['category_bar'];
+    final container_height = layoutHeight['category_bar'];
 
     _categoriesJson = json.decode(_categories!);
     List<BottomNavigationBarItem> itemList = mixedMap.map((map) => map["item"]).toList()
     .whereType<BottomNavigationBarItem>() // BottomNavigationBarItem型の要素のみ抽出
     .toList();
 
-    for (var item in _categoriesJson) {
-      String japaneseName = item['japanese_name'];
-      print(japaneseName);
-    }
     return Scaffold(
       appBar: PreferredSize(
-         preferredSize: Size.fromHeight(layout_height['app_bar']!),
+         preferredSize: Size.fromHeight(layoutHeight['app_bar']!),
          child: AppBar(
-           title: Text("$_category_name"),
+           title: Text("$_categoryName"),
          ),
       ),
       body: Column(
@@ -430,7 +433,11 @@ class _HomePageState extends State<HomePage> {
                   margin: EdgeInsets.all(0),
                   child:TextButton(
                     onPressed: () {
-                      SelectCategory(i);
+                      setState(() {
+                        currentCategoryIndex = i;
+                      });
+                      SelectCategory(currentCategoryIndex);
+                      resetPressCount();
                     },
                     child: Text(
                       _categoriesJson[i]['japanese_name'],
@@ -454,15 +461,15 @@ class _HomePageState extends State<HomePage> {
           Container(
             color: _color,
             width: _deviceWidth,
-            height: layout_height['category_bar_line'],
+            height: layoutHeight['category_bar_line'],
           ),
           if(_alert != null)
           Container(
-            height: layout_height['alert'],
+            height: layoutHeight['alert'],
             child: Text(_alert!),
           ),
           Container(
-            height: layout_height['youtube_display'],
+            height: layoutHeight['youtube_display'],
             color: Colors.red,
             child:
             YoutubePlayer(
@@ -472,22 +479,61 @@ class _HomePageState extends State<HomePage> {
               progressIndicatorColor: Colors.blueAccent,
             ),
           ),
-          Container(
-            height: layout_height['news_cells'],
-            //margin: EdgeInsets.only(bottom: 100),
-            child: SingleChildScrollView(
-              child: Column(
+          Flexible(    
+            //Flexibleでラップ
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (ScrollNotification scrollNotification) {
+                if (scrollNotification is ScrollEndNotification) {
+                  final before = scrollNotification.metrics.extentBefore;
+                  final max = scrollNotification.metrics.maxScrollExtent;
+                  if (before == max) {
+                    print("した");
+                    setState(() {
+                      //挿入可能な記事があれば記事を挿入
+                      _pressCount += _pressUnitCount;
+                      if (_pressCount > _press.length) { //ロード過多
+                        _pressCount = _press.length;
+                        _displayLoadingScreen = false;
+                      }else{
+                        _displayLoadingScreen = true;
+                      }
+                    });
+                  }
+                }//
+                return false;
+              },
+              child: 
+              ListView(
+                controller: _scrollController,
                 children: [
-                  for (var i = 0; i < _press.length; i++)
-                    VideoCell(context, _press[i])
-                    //VideoCellContainer(
-                    //  press:_press[i],
-                    //  context: context,
-                    //  youtubeController: youtubeController,
-                    //  openYoutube: openYoutube,
-                    //)
+                for(var i=0; i<_pressCount; i++)
+                  videoCell(context, _press[i]),
+                if(_displayLoadingScreen)
+                Container(
+                  alignment: Alignment.center,
+                  width: _deviceWidth,
+                  child: 
+                    SizedBox(
+                      height: 50,
+                      width: 50,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 8.0,
+                        backgroundColor: Colors.black,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue)
+                        ),
+                    ),
+                  )
                 ],
-              ),
+              )
+              //for(var i=0; i<_press.length; i++)
+              //    videoCell(context, _press[i]);
+              //  ],
+              //ListView.builder(
+              //  itemCount: _press.length,
+              //  itemBuilder: (BuildContext context, int position) {
+              //    return videoCell(context, _press[position]);
+              //  },
+              //),
             )
           ),
         ],
@@ -498,6 +544,7 @@ class _HomePageState extends State<HomePage> {
         currentIndex: currentIndex,
         onTap: (index) {
           setState(() {
+            _pressCount = 0;
             currentIndex = index;
             youtubeController.pause();
           });
