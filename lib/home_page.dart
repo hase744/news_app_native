@@ -6,7 +6,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'history.dart';
-
+import 'favorite.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -14,30 +14,33 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-   List<Color> colors = [
-    const Color.fromRGBO(250, 100, 100, 1),
-    const Color.fromRGBO(250, 140, 60, 1),
-    const Color.fromRGBO(90, 255, 110, 1),
-    const Color.fromRGBO(90, 145, 255, 1),
-    const Color.fromRGBO(185, 90, 255, 1),
-   ];
-   double? _deviceWidth, _deviceHeight, _innerHeight;
-   String? _categories = "";
-   List _press = [];
-   List _categoriesJson = [];
-   YoutubePlayerController youtubeController = YoutubePlayerController(
+  List<Color> colors = [
+   const Color.fromRGBO(250, 100, 100, 1),
+   const Color.fromRGBO(250, 140, 60, 1),
+   const Color.fromRGBO(90, 255, 110, 1),
+   const Color.fromRGBO(90, 145, 255, 1),
+   const Color.fromRGBO(185, 90, 255, 1),
+  ];
+  double? _deviceWidth, _deviceHeight, _innerHeight;
+  String? _categories = "";
+  List _press = [];
+  List _categoriesJson = [];
+  YoutubePlayerController youtubeController = YoutubePlayerController(
     initialVideoId: '4b6DuHGcltI',
     flags: YoutubePlayerFlags(
         autoPlay: false,  // 自動再生しない
       ),
     );
-   bool displayYoutube = true;
-  var history = History();  // History クラスのインスタンスを作成
+  bool displayYoutube = true;
+  var history = History(); 
+  var favorite = Favorite(); // History クラスのインスタンスを作成
    
-   Map<String, double> layout_height = {};
-   String _category_name = "ビジネス";
-   Color _color = Color.fromRGBO(250, 100, 100, 1);
-   int currentIndex = 0;
+  Map<String, double> layout_height = {};
+  String _category_name = "ビジネス";
+  Color _color = Color.fromRGBO(250, 100, 100, 1);
+  int currentIndex = 0;
+  String? _alert;
+  final prefs = SharedPreferences.getInstance();
 
   late List<Map<dynamic, dynamic>> mixedMap = [
     {
@@ -45,18 +48,45 @@ class _HomePageState extends State<HomePage> {
     "item":BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム')
     },
     {
-    "name": 'history',
-    "item":BottomNavigationBarItem(icon: Icon(Icons.history), label: '履歴')
+    "name": 'favorite',
+    "item":BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'お気に入り')
     },
     {
-    "name": 'notification',
-    "item":BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'お知らせ')
+    "name": 'history',
+    "item":BottomNavigationBarItem(icon: Icon(Icons.history), label: '履歴')
     },
     {
     "name": 'setting',
     "item":BottomNavigationBarItem(icon: Icon(Icons.settings), label: '設定')
     },
   ];
+
+  @override
+  void initState() {
+    init();
+  }
+
+  void init() async {
+    final prefs = await SharedPreferences.getInstance();
+    String defaultYoutubeId = prefs.getString('default_youtube_id')!;
+    setState(() {
+      //youtubeController.load(lastYoutubeId,startAt:0);
+      var _padding = MediaQuery.of(context).padding;
+      _deviceWidth = MediaQuery.of(context).size.width;
+      _deviceHeight = MediaQuery.of(context).size.height;
+      _innerHeight = _deviceHeight! - _padding.top - _padding.bottom;
+      _categories = prefs.getString('categories')!;
+      _categoriesJson = json.decode(_categories!);
+      favorite.deleteTable;
+      youtubeController =  YoutubePlayerController(
+        initialVideoId: defaultYoutubeId,
+        flags: YoutubePlayerFlags(
+          autoPlay: false,  // 自動再生しない
+        ),);
+      setDefauldLayout();
+      SelectCategory(0);
+    });
+  }
 
   Future<void> displayHistory() async {
     print("履歴");
@@ -70,43 +100,35 @@ class _HomePageState extends State<HomePage> {
       layout_height['category_bar_line'] = 0;
       layout_height['youtube_display'] = 0;
       print(layout_height);
-      set_news_cells_height();
+      setNesCellsHeight();
       _press = histories; // 取得したデータを _press 変数に代入
     });
   }
 
   Future<void> displayNews() async {
-    print("ニュース");
     setState(() {
       setDefauldLayout();
       SelectCategory(0);
     });
   }
 
-   final prefs = SharedPreferences.getInstance();
-  @override
-  void initState() {
-    final prefs = SharedPreferences.getInstance();
-    init();
-    // ここに初期化時に実行したい特定の処理を記述します
-    // 例えば、API呼び出しやデータの読み込みなどです
-    print("HomePage initialized"); // これは例です
-  }
-
-  void init() async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<void> displayFavorites() async {
+    _press = [];
+    await favorite.initDatabase();
+    await Future.delayed(Duration.zero);
+    List<Map<String, dynamic>> favorites = await favorite.all();
+    favorites = favorites.reversed.toList();// あなたの非同期処理;
+    print(favorites);
     setState(() {
-      //　データの読み込み
-      var _padding = MediaQuery.of(context).padding;
-      _deviceWidth = MediaQuery.of(context).size.width;
-      _deviceHeight = MediaQuery.of(context).size.height;
-      _innerHeight = _deviceHeight! - _padding.top - _padding.bottom;
-      _categories = prefs.getString('categories')!;
-      _categoriesJson = json.decode(_categories!);
-      //_deleteHistoriesTable();
       setDefauldLayout();
-      SelectCategory(0);
+      layout_height['category_bar'] = 0;
+      layout_height['category_bar_line'] = 0;
+      layout_height['youtube_display'] = 0;
+      print(layout_height);
+      setNesCellsHeight();
+      _press = favorites; // 取得したデータを _press 変数に代入
     });
+    print("お気に入り");
   }
 
   void setDefauldLayout(){
@@ -117,12 +139,13 @@ class _HomePageState extends State<HomePage> {
       'category_bar_line':5,
       'youtube_display':_deviceWidth!/16*9,
       'bottom_nabigation_bar': bar.height,
+      'alert':0
     };
-    set_news_cells_height();
+    setNesCellsHeight();
     print(layout_height);
   }
 
-  void set_news_cells_height(){
+  void setNesCellsHeight(){
     layout_height['news_cells'] = 0;
     layout_height['news_cells'] = _innerHeight! - layout_height.values.reduce((a, b) => a + b) - 2;
   }
@@ -130,10 +153,13 @@ class _HomePageState extends State<HomePage> {
   void openYoutube(Map press) async {
     String youtube_id = press["youtube_id"];
     layout_height['youtube_display'] = _deviceWidth!/16*9;
-    set_news_cells_height();
+    setNesCellsHeight();
     displayYoutube = true;
+    //最後に再生した動画を保存機能
+    final prefs = await SharedPreferences.getInstance();
     await Future.delayed(Duration.zero);
     youtubeController.load( youtube_id,startAt:0);
+    await prefs.setString('default_youtube_id', youtube_id);
     await history.initDatabase(); 
     List<Map<String, dynamic>> histories = await history.all();
     print(histories);
@@ -142,7 +168,7 @@ class _HomePageState extends State<HomePage> {
 
   void closeYoutube(){
     layout_height['youtube_display'] = 0;
-    set_news_cells_height();
+    setNesCellsHeight();
     youtubeController.pause();
     displayYoutube = false;
   }
@@ -157,13 +183,13 @@ class _HomePageState extends State<HomePage> {
     return fontSize -1;
   }
 
-  void SelectCategory(int category_num) {
+  Future<void> SelectCategory(int category_num) async {
     setState(() {
       closeYoutube();
       _category_name = _categoriesJson[category_num]['japanese_name'];
       _color =  colors[category_num % colors.length];
-      _press = json.decode(_categoriesJson[category_num]['press']);
     });
+    _press = await json.decode(_categoriesJson[category_num]['press']);
   }
 
   Future<Database> openDatabaseConnection() async {
@@ -184,9 +210,8 @@ class _HomePageState extends State<HomePage> {
     return list.map<String>((String value) => value).join(',');
   }
   
-  modalWindow(String youtubeId, BuildContext context) {
-    //String value = "";
-    List? values;
+  modalWindow(Map press, BuildContext context) {
+    bool isFavorite = mixedMap[currentIndex]['name'] == 'favorite';
     return Container(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -197,7 +222,7 @@ class _HomePageState extends State<HomePage> {
               width: _deviceWidth,
               child: Center(
                 child:Text(
-                "＋お気に入りに追加",
+                isFavorite ? "ーお気に入りから削除" : "＋お気に入りに追加",
                 style: TextStyle(
                     fontSize: _deviceWidth!/15,
                     color: Colors.grey
@@ -209,10 +234,8 @@ class _HomePageState extends State<HomePage> {
               primary: Colors.black,
             ),
             onPressed: () async {
-              //final prefs = await SharedPreferences.getInstance();
-              //values = stringToList(prefs.getString("favoriteYoutubeIds")!);
-              //values!.add(youtubeId);
-              //prefs.setString('favoriteYoutubeIds', values!.join(','));
+              isFavorite ? favorite.delete(press['id']) : favorite.create(press);
+              updateScreen();
               print("お気に入り追加");
               Navigator.of(context).pop();
             },
@@ -231,6 +254,22 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+  
+  void updateScreen(){
+    switch(mixedMap[currentIndex]['name']) {
+      case 'home':
+        displayNews();
+        break;
+      case 'favorite':
+        displayFavorites();
+        break;
+      case 'history':
+        displayHistory();
+        break;
+      default:
+        break;
+    }
   }
 
   Widget VideoCell(BuildContext context, Map press){
@@ -309,7 +348,7 @@ class _HomePageState extends State<HomePage> {
                         child:Row(
                           children:[
                             Container(
-                              width: cellWidth/2 - 25,
+                              width: cellWidth/2 - 35,
                               //color: Colors.blue,
                               child: Text(
                                 press['channel_name'],
@@ -326,15 +365,19 @@ class _HomePageState extends State<HomePage> {
                                 showModalBottomSheet(
                                   context: context,
                                   builder: (BuildContext context) {
-                                    return modalWindow(youtube_id, context);
+                                    return modalWindow(press, context);
                                   },
                                 );
                               },
                               child:Container(
-                                height: 25,
-                                width: 25,
-                                //color: Colors.red,
-                                child: Icon(Icons.more_horiz),
+                                height: 35,
+                                width: 35,
+                                alignment: Alignment.bottomRight,
+                                child: Container(
+                                  height: 25,
+                                  width: 25,
+                                  child: Icon(Icons.more_horiz),
+                                )
                               )
                             ),
                           ],
@@ -412,7 +455,12 @@ class _HomePageState extends State<HomePage> {
             color: _color,
             width: _deviceWidth,
             height: layout_height['category_bar_line'],
-            ),
+          ),
+          if(_alert != null)
+          Container(
+            height: layout_height['alert'],
+            child: Text(_alert!),
+          ),
           Container(
             height: layout_height['youtube_display'],
             color: Colors.red,
@@ -451,20 +499,9 @@ class _HomePageState extends State<HomePage> {
         onTap: (index) {
           setState(() {
             currentIndex = index;
+            youtubeController.pause();
           });
-          switch(mixedMap[currentIndex]['name']) {
-            case 'home':
-              displayNews();
-              break;
-            case 'history':
-              displayHistory();
-              break;
-            case 'notification':
-              displayNews();
-              break;
-            default:
-              break;
-          }
+          updateScreen();
         },
         items: itemList,
         type: BottomNavigationBarType.fixed,

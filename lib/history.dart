@@ -20,6 +20,25 @@ class History{
     );
   }
 
+  Future<String?> LastYouTubeId() async {
+  final db = await _database;
+  final List<Map<String, dynamic>> result = await db.query(
+    'Histories',
+    orderBy: 'id DESC', // idを降順にソートして最後の行を取得
+    limit: 1, // 1行だけ取得
+  );
+
+print('ユーチューブ');
+  if (result.isNotEmpty) {
+    final Map<String, dynamic> lastRow = result.first;
+    final String? youtubeId = lastRow['youtube_id'];
+    print(youtubeId);
+    return youtubeId;
+  } else {
+    return null; // データが存在しない場合はnullを返します
+  }
+}
+
   Future<void> deleteTable() async {
     final dbPath = p.join(await getDatabasesPath(), 'my_database.db');
     await deleteDatabase(dbPath);

@@ -40,24 +40,21 @@ class _FirstPageState extends State<FirstPage> {
   }
 
   Future<void> fetchData() async {
-  final url = 'http://18.178.58.191/categories/index.json';
-  final response = await http.get(Uri.parse(url));
+    final url = 'http://18.178.58.191/categories/index.json';
+    final response = await http.get(Uri.parse(url));
 
-  if (response.statusCode == 200) {
-    final data = response.body;
-
-        // Save the data to SharedPreferences
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('categories', data);
-
-        // Navigate to the next page
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) =>HomePage()),
-        );
-    //await prefs.setString('categoriesData', data);
-  } else {
-    throw Exception('Failed to load data');
+    if (response.statusCode == 200) {
+      final data = response.body;
+      final prefs = await SharedPreferences.getInstance();
+      String defaultYoutubeId = prefs.getString('default_youtube_id') ?? '4b6DuHGcltI';
+          await prefs.setString('default_youtube_id', defaultYoutubeId);
+          await prefs.setString('categories', data);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) =>HomePage()),
+          );
+    } else {
+      throw Exception('Failed to load data');
+    }
   }
-}
 }
