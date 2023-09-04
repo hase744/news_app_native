@@ -3,17 +3,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'bottom_navigation_bar.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart' as p;
 import 'history.dart';
 import 'favorite.dart';
+import 'setting_page.dart';
+import 'category_setting.dart';
+import 'package:settings_ui/settings_ui.dart';
+import 'package:flutter/scheduler.dart';
+import 'setting_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>  {
   List<Color> colors = [
    const Color.fromRGBO(250, 100, 100, 1),
    const Color.fromRGBO(250, 140, 60, 1),
@@ -22,19 +25,23 @@ class _HomePageState extends State<HomePage> {
    const Color.fromRGBO(185, 90, 255, 1),
   ];
   double? _deviceWidth, _deviceHeight, _innerHeight;
-  String? _categories = "";
+  String? _pressesJson = "";
   List _press = [];
-  List _categoriesJson = [];
+  List _presses = [];
   YoutubePlayerController youtubeController = YoutubePlayerController(
     initialVideoId: '4b6DuHGcltI',
     flags: YoutubePlayerFlags(
         autoPlay: false,  // 自動再生しない
       ),
     );
-  ScrollController _scrollController = ScrollController();
+  ScrollController _innerScrollController = ScrollController();
+  ScrollController _outerScrollController = ScrollController();
+  bool ableInnerScroll = false;
+  bool ableOuterScroll = true;
   bool displayYoutube = true;
   var history = History(); 
   var favorite = Favorite(); // History クラスのインスタンスを作成
+  var category_setting = CategorySetting();
    
   Map<String, double> layoutHeight = {};
   String _categoryName = "ビジネス";
@@ -42,6 +49,7 @@ class _HomePageState extends State<HomePage> {
   int currentIndex = 0;
   int currentCategoryIndex = 0;
   int _pressUnitCount = 8;
+  int _scrollUperCount = 0;
   late int _pressCount =  _pressUnitCount;
   bool _displayLoadingScreen = false;
   String? _alert;
@@ -62,7 +70,7 @@ class _HomePageState extends State<HomePage> {
     },
     {
     "name": 'setting',
-    "item":BottomNavigationBarItem(icon: Icon(Icons.settings), label: '設定')
+    "item":BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'アカウント')
     },
   ];
 
@@ -74,21 +82,24 @@ class _HomePageState extends State<HomePage> {
   void init() async {
     final prefs = await SharedPreferences.getInstance();
     String defaultYoutubeId = prefs.getString('default_youtube_id')!;
+    category_setting = CategorySetting();
+    List presses = await category_setting.getPressOrder();
     setState(() {
-      //youtubeController.load(lastYoutubeId,startAt:0);
       var _padding = MediaQuery.of(context).padding;
       _deviceWidth = MediaQuery.of(context).size.width;
       _deviceHeight = MediaQuery.of(context).size.height;
       _innerHeight = _deviceHeight! - _padding.top - _padding.bottom;
-      _categories = prefs.getString('categories')!;
-      _categoriesJson = json.decode(_categories!);
+      category_setting = CategorySetting();
+      _presses = presses;
       favorite.deleteTable;
       youtubeController =  YoutubePlayerController(
         initialVideoId: defaultYoutubeId,
         flags: YoutubePlayerFlags(
           autoPlay: false,  // 自動再生しない
         ),);
+      _outerScrollController = ScrollController(initialScrollOffset: _deviceWidth!/10);
     });
+    SettingPage settingPage = SettingPage();
     await displayNews();
     resetPressCount();
   }
@@ -104,11 +115,12 @@ class _HomePageState extends State<HomePage> {
       layoutHeight['category_bar'] = 0;
       layoutHeight['category_bar_line'] = 0;
       layoutHeight['youtube_display'] = 0;
-      print(layoutHeight);
       setNesCellsHeight();
       _press = histories; // 取得したデータを _press 変数に代入
       resetPressCount();
+      _outerScrollController.jumpTo(0);
     });
+    setForInnerScroll();
   }
 
   void resetPressCount(){
@@ -122,11 +134,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> displayNews() async {
-    setState(() {
-      setDefauldLayout();
-      SelectCategory(currentCategoryIndex);
-    });
+    setDefauldLayout();
+    await SelectCategory(currentCategoryIndex);
     resetPressCount();
+    setState(() {
+      _outerScrollController.jumpTo(_deviceHeight!/10);
+    });
   }
 
   Future<void> displayFavorites() async {
@@ -141,33 +154,56 @@ class _HomePageState extends State<HomePage> {
       layoutHeight['category_bar'] = 0;
       layoutHeight['category_bar_line'] = 0;
       layoutHeight['youtube_display'] = 0;
-      print(layoutHeight);
       setNesCellsHeight();
       _press = favorites; // 取得したデータを _press 変数に代入
-      print("総数${_press.length}");
-      print("表示数${_pressCount}");
       resetPressCount();
+      _outerScrollController.jumpTo(0);
     });
+    setForInnerScroll();
     print("お気に入り");
+  }
+
+  void setForOuterScroll(){
+    setState(() {
+      ableInnerScroll = false;
+      ableOuterScroll = true;
+    });
+  }
+  void setForInnerScroll(){
+    setState(() {
+      ableInnerScroll = true;
+      ableOuterScroll = false;
+    });
   }
 
   void setDefauldLayout(){
     HomeBottomNavigationBar bar = HomeBottomNavigationBar(initialIndex: 0);
-    layoutHeight = {
-      'app_bar':40,
-      'category_bar':_deviceWidth!/10,
-      'category_bar_line':5,
-      'youtube_display':_deviceWidth!/16*9,
-      'bottom_nabigation_bar': bar.height,
-      'alert':0
-    };
+    setState(() {
+      layoutHeight = {
+        'app_bar':40,
+        'category_bar':_deviceWidth!/10,
+        'category_bar_line':5,
+        'menu_area':_deviceWidth!/10,
+        'youtube_display':_deviceWidth!/16*9,
+        'bottom_nabigation_bar': bar.height,
+        'alert':0
+      };
+    });
     setNesCellsHeight();
-    print(layoutHeight);
   }
 
   void setNesCellsHeight(){
     layoutHeight['news_cells'] = 0;
     layoutHeight['news_cells'] = _innerHeight! - layoutHeight.values.reduce((a, b) => a + b) - 2;
+  }
+
+  double getInnerScrollHeight(){
+    double height = layoutHeight['app_bar']! + layoutHeight['category_bar']! + layoutHeight['category_bar_line']! + layoutHeight['youtube_display']! + layoutHeight['news_cells']!;
+    if(mixedMap[currentIndex]['name'] == 'home'){
+      return height;
+    }else{
+      return height - layoutHeight['menu_area']!;
+    }
   }
 
   void openYoutube(Map press) async {
@@ -182,7 +218,6 @@ class _HomePageState extends State<HomePage> {
     await prefs.setString('default_youtube_id', youtube_id);
     await history.initDatabase(); 
     List<Map<String, dynamic>> histories = await history.all();
-    print(histories);
     await history.create(press);
   }
 
@@ -206,16 +241,35 @@ class _HomePageState extends State<HomePage> {
   Future<void> SelectCategory(int category_num) async {
     setState(() {
       closeYoutube();
-      _categoryName = _categoriesJson[category_num]['japanese_name'];
+      _categoryName = _presses[category_num]['japanese_name'];
       _color =  colors[category_num % colors.length];
     });
-    _press = await json.decode(_categoriesJson[category_num]['press']);
-    print("総数${_press.length}");
+    _press = await json.decode(_presses[category_num]['press']);
   }
 
   String listToString(List<String> list) {
     return list.map<String>((String value) => value).join(',');
   }
+
+  settingWindow(BuildContext context){
+    SettingPage settingPage = SettingPage();
+    return settingPage;
+    //category_setting;
+  }
+
+  Future<void> _launchSetting() async {
+    showModalBottomSheet(
+      isScrollControlled: true,
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: _deviceHeight!*0.7,
+          child: category_setting
+        );
+        }
+      );
+  }
+
   
   modalWindow(Map press, BuildContext context) {
     bool isFavorite = mixedMap[currentIndex]['name'] == 'favorite';
@@ -273,6 +327,12 @@ class _HomePageState extends State<HomePage> {
         break;
       case 'history':
         displayHistory();
+        break;
+      case 'setting':
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) =>SettingPage()),
+          );
         break;
       default:
         break;
@@ -405,7 +465,7 @@ class _HomePageState extends State<HomePage> {
     final container_width = _deviceWidth!/5;
     final container_height = layoutHeight['category_bar'];
 
-    _categoriesJson = json.decode(_categories!);
+    //_presses = json.decode(_pressesJson!);
     List<BottomNavigationBarItem> itemList = mixedMap.map((map) => map["item"]).toList()
     .whereType<BottomNavigationBarItem>() // BottomNavigationBarItem型の要素のみ抽出
     .toList();
@@ -415,130 +475,187 @@ class _HomePageState extends State<HomePage> {
          preferredSize: Size.fromHeight(layoutHeight['app_bar']!),
          child: AppBar(
            title: Text("$_categoryName"),
+           leading: Container(),
          ),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (var i = 0; i < _categoriesJson.length; i++)
-                Container(
-                  color: colors[i % colors.length],
-                  width: container_width,
-                  height: container_height,
-                  padding: EdgeInsets.all(0),
-                  margin: EdgeInsets.all(0),
-                  child:TextButton(
-                    onPressed: () {
-                      setState(() {
-                        currentCategoryIndex = i;
-                      });
-                      SelectCategory(currentCategoryIndex);
-                      resetPressCount();
-                    },
-                    child: Text(
-                      _categoriesJson[i]['japanese_name'],
-                      style: TextStyle(
-                        fontSize: fontSize(_categoriesJson[i]['japanese_name'].length),
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.all(0), // ボタンの内側の余白
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(0), // 角丸の半径
-                      ),
-                    ),
-                  )
-                ),
-              ],
-            ),
-          ),
-          Container(
-            color: _color,
-            width: _deviceWidth,
-            height: layoutHeight['category_bar_line'],
-          ),
-          if(_alert != null)
-          Container(
-            height: layoutHeight['alert'],
-            child: Text(_alert!),
-          ),
-          Container(
-            height: layoutHeight['youtube_display'],
-            color: Colors.red,
-            child:
-            YoutubePlayer(
-              controller: youtubeController,
-              //controller: YoutubePlayerController(initialVideoId: youtubeId),
-              showVideoProgressIndicator: true,
-              progressIndicatorColor: Colors.blueAccent,
-            ),
-          ),
-          Flexible(    
+      body: Container(
+        height: _deviceHeight,
+        width: _deviceWidth,
+        //color: Colors.blue,
+        child: Flexible(
             //Flexibleでラップ
             child: NotificationListener<ScrollNotification>(
               onNotification: (ScrollNotification scrollNotification) {
                 if (scrollNotification is ScrollEndNotification) {
                   final before = scrollNotification.metrics.extentBefore;
                   final max = scrollNotification.metrics.maxScrollExtent;
-                  if (before == max) {
-                    print("した");
-                    setState(() {
-                      //挿入可能な記事があれば記事を挿入
-                      _pressCount += _pressUnitCount;
-                      if (_pressCount > _press.length) { //ロード過多
-                        _pressCount = _press.length;
-                        _displayLoadingScreen = false;
-                      }else{
-                        _displayLoadingScreen = true;
-                      }
-                    });
+                  if (before == max &&  mixedMap[currentIndex]['name'] == 'home') {
+                    setForInnerScroll();
                   }
                 }//
                 return false;
               },
               child: 
               ListView(
-                controller: _scrollController,
+                controller: _outerScrollController,
+                 physics: ableOuterScroll ?  const AlwaysScrollableScrollPhysics() : const  NeverScrollableScrollPhysics(),
                 children: [
-                for(var i=0; i<_pressCount; i++)
-                  videoCell(context, _press[i]),
-                if(_displayLoadingScreen)
-                Container(
-                  alignment: Alignment.center,
-                  width: _deviceWidth,
-                  child: 
-                    SizedBox(
-                      height: 50,
-                      width: 50,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 8.0,
-                        backgroundColor: Colors.black,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue)
+                  Container(
+                    height: layoutHeight['menu_area'],
+                    alignment: Alignment.centerRight,
+                      child: IconButton(
+                        icon: Icon(Icons.settings),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            isScrollControlled: true,
+                            context: context,
+                            builder: (BuildContext context) {
+                              return Container(
+                                height: _deviceHeight!*0.7,
+                                width: double.infinity,
+                                //color: Colors.red,//Color.fromRGBO(245, 245, 245, 1),
+                                child: settingWindow(context),
+                              );
+                            },
+                          );
+                        },
+                        //style: ElevatedButton.styleFrom(
+                        //  primary: Colors.red,
+                        //),
+                      ),
+                  ),
+                  Container(
+                    height: getInnerScrollHeight(),
+                    child: 
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: <Widget>[
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            for (var i = 0; i < _presses.length; i++)
+                            Container(
+                              color: colors[i % colors.length],
+                              width: container_width,
+                              height: container_height,
+                              padding: EdgeInsets.all(0),
+                              margin: EdgeInsets.all(0),
+                              child:TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    currentCategoryIndex = i;
+                                  });
+                                  SelectCategory(currentCategoryIndex);
+                                  resetPressCount();
+                                },
+                                child: Text(
+                                  _presses[i]['japanese_name'],
+                                  style: TextStyle(
+                                    fontSize: fontSize(_presses[i]['japanese_name'].length),
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.all(0), // ボタンの内側の余白
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(0), // 角丸の半径
+                                  ),
+                                ),
+                              )
+                            ),
+                          ],
                         ),
-                    ),
-                  )
-                ],
-              )
-              //for(var i=0; i<_press.length; i++)
-              //    videoCell(context, _press[i]);
-              //  ],
-              //ListView.builder(
-              //  itemCount: _press.length,
-              //  itemBuilder: (BuildContext context, int position) {
-              //    return videoCell(context, _press[position]);
-              //  },
-              //),
+                      ),
+                      Container(
+                        color: _color,
+                        width: _deviceWidth,
+                        height: layoutHeight['category_bar_line'],
+                      ),
+                      if(_alert != null)
+                      Container(
+                        height: layoutHeight['alert'],
+                        child: Text(_alert!),
+                      ),
+                      //if(layoutHeight['menu_area']! > 0)
+                      Container(
+                        height: layoutHeight['youtube_display'],
+                        color: Colors.red,
+                        child:
+                        YoutubePlayer(
+                          controller: youtubeController,
+                          //controller: YoutubePlayerController(initialVideoId: youtubeId),
+                          showVideoProgressIndicator: true,
+                          progressIndicatorColor: Colors.blueAccent,
+                        ),
+                      ),
+                      Flexible(    
+                        //Flexibleでラップ
+                        child: NotificationListener<ScrollNotification>(
+                          onNotification: (ScrollNotification scrollNotification) {
+                            if (scrollNotification is ScrollEndNotification) {
+                              final before = scrollNotification.metrics.extentBefore;
+                              final max = scrollNotification.metrics.maxScrollExtent;
+                              if (before == 0 && mixedMap[currentIndex]['name'] == 'home') {
+                                setForOuterScroll();
+                              }
+                              if (before == max) {
+                                print("した");
+                                setState(() {
+                                  //挿入可能な記事があれば記事を挿入
+                                  _pressCount += _pressUnitCount;
+                                  if (_pressCount > _press.length) { //ロード過多
+                                    _pressCount = _press.length;
+                                    _displayLoadingScreen = false;
+                                  }else{
+                                    _displayLoadingScreen = true;
+                                  }
+                                });
+                              }
+                            }//
+                            return false;
+                          },
+                          child: 
+                          ListView(
+                            controller: _innerScrollController,
+                            physics: ableInnerScroll ?  const AlwaysScrollableScrollPhysics() : const  NeverScrollableScrollPhysics(),
+                            children: [
+                            for(var i=0; i<_pressCount; i++)
+                              videoCell(context, _press[i]),
+                            if(_displayLoadingScreen)
+                            Container(
+                              alignment: Alignment.center,
+                              width: _deviceWidth,
+                              child: 
+                                SizedBox(
+                                  height: 50,
+                                  width: 50,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 8.0,
+                                    backgroundColor: Colors.black,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue)
+                                    ),
+                                ),
+                              )
+                            ],
+                          )
+                        )
+                      ),
+                    ],
+                  ),
+                )
+              //for(var i=0; i<_pressCount; i++)
+              //  Container(
+              //    width: _deviceWidth,
+              //    height: 100,
+              //    child:Text("ああああああ")
+              //  )
+              ],
             )
-          ),
-        ],
+          )
+        ),
       ),
-      //bottomNavigationBar: HomeBottomNavigationBar(initialIndex: 0)
       bottomNavigationBar: BottomNavigationBar(
         selectedItemColor: Colors.blue,
         currentIndex: currentIndex,
