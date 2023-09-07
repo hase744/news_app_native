@@ -70,7 +70,7 @@ class _HomePageState extends State<HomePage>  {
     },
     {
     "name": 'setting',
-    "item":BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'アカウント')
+    "item":BottomNavigationBarItem(icon: Icon(Icons.settings), label: '設定')
     },
   ];
 
@@ -105,7 +105,6 @@ class _HomePageState extends State<HomePage>  {
   }
 
   Future<void> displayHistory() async {
-    print("履歴");
     _press = [];
     await history.initDatabase();
     List<Map<String, dynamic>> histories = await history.all();
@@ -121,16 +120,6 @@ class _HomePageState extends State<HomePage>  {
       _outerScrollController.jumpTo(0);
     });
     setForInnerScroll();
-  }
-
-  void resetPressCount(){
-    setState(() {
-      _displayLoadingScreen = false;
-      _pressCount =  _pressUnitCount;
-      if (_pressCount > _press.length) {
-        _pressCount = _press.length;
-      }
-    });
   }
 
   Future<void> displayNews() async {
@@ -239,12 +228,30 @@ class _HomePageState extends State<HomePage>  {
   }
 
   Future<void> SelectCategory(int category_num) async {
+    List press = await json.decode(_presses[category_num]['press']);
     setState(() {
       closeYoutube();
       _categoryName = _presses[category_num]['japanese_name'];
       _color =  colors[category_num % colors.length];
+      _press = press;
     });
-    _press = await json.decode(_presses[category_num]['press']);
+    print("カテゴリ");
+    print(_press);
+  }
+
+  Future<void> resetCategory(int category_num) async {
+    await SelectCategory(category_num);
+    await resetPressCount();
+  }
+
+  Future<void> resetPressCount() async {
+    setState(() {
+      _displayLoadingScreen = false;
+      _pressCount =  _pressUnitCount;
+      if (_pressCount > _press.length) {
+        _pressCount = _press.length;
+      }
+    });
   }
 
   String listToString(List<String> list) {
@@ -546,8 +553,9 @@ class _HomePageState extends State<HomePage>  {
                                   setState(() {
                                     currentCategoryIndex = i;
                                   });
-                                  SelectCategory(currentCategoryIndex);
-                                  resetPressCount();
+                                  //SelectCategory(currentCategoryIndex);
+                                  //resetPressCount();
+                                  resetCategory(currentCategoryIndex);
                                 },
                                 child: Text(
                                   _presses[i]['japanese_name'],

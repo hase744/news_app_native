@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_news/setting_page.dart';
+import 'page_transition.dart';
 
 class CategorySetting extends StatefulWidget {
   //const CategorySetting({super.key});
@@ -12,18 +13,18 @@ class CategorySetting extends StatefulWidget {
     final prefs = await SharedPreferences.getInstance();
     String? _currentPress = await prefs.getString('presses');
     List _pressParams = json.decode(_currentPress!);
-    List<Map<String, dynamic>> _perssNames = _pressParams.map((item) {
+    List<Map<String, dynamic>> _perssParams = _pressParams.map((item) {
       return {"name": item["name"], "japanese_name": item["japanese_name"]};
     }).toList();
     //await prefs.remove('categoryOrder');
-    String _categoriesOrder = await prefs.getString('categoryOrder') ?? json.encode(_perssNames);
+    String _categoriesOrder = await prefs.getString('categoryOrder') ?? json.encode(_perssParams);
     List _categoryParams = json.decode(_categoriesOrder);
     List newOrder =  [];
     List newPresses = [];
     List unMatchedPresses = [];
-    _categoryParams.asMap().forEach((int i, press) {
+    _categoryParams.asMap().forEach((int i, category) {
       bool foundMatch = false;
-      _pressParams.asMap().forEach((int j, category) {
+      _pressParams.asMap().forEach((int j, press) {
           //print("$i, $j");
         if(press['name']  == category['name']){
           //print(press);
@@ -35,21 +36,25 @@ class CategorySetting extends StatefulWidget {
           return;
         }
         if(!foundMatch){
-          unMatchedPresses.add(press);
+          unMatchedPresses.add(category);
         }
       });
     });
+    for(var item in unMatchedPresses){
+      
+    }
 
     return newOrder;
   }
   Future<List> getPressOrder() async {
     final prefs = await SharedPreferences.getInstance();
+    //await prefs.remove('categoryOrder');
     String? _currentPress = await prefs.getString('presses');
     List _pressParams = json.decode(_currentPress!);
-    List<Map<String, dynamic>> _perssNames = _pressParams.map((item) {
+    List<Map<String, dynamic>> _perssParams = _pressParams.map((item) {
       return {"name": item["name"], "japanese_name": item["japanese_name"]};
     }).toList();
-    String _categoriesOrder = await prefs.getString('categoryOrder') ?? json.encode(_perssNames);
+    String _categoriesOrder = await prefs.getString('categoryOrder') ?? json.encode(_perssParams);
     List _categoryParams = json.decode(_categoriesOrder);
     List newPersses = [];
 
@@ -68,6 +73,7 @@ class CategorySetting extends StatefulWidget {
 }
 
 class _CategorySetting extends State<CategorySetting>  {
+  PageTransition _pageTransition = PageTransition();
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -80,20 +86,31 @@ class _CategorySetting extends State<CategorySetting>  {
             icon: Icon(Icons.arrow_back),
             color: Colors.black,
             onPressed: () {
-              // Add your back button functionality here
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SettingPage()),
-              );
+              _pageTransition.movePage(SettingPage(), context, false);
             },
           ),
           title: Text('カテゴリー並び替え',style: TextStyle(color: Colors.black)),
         ),
-        body: Container(
-          color: Color.fromRGBO(242, 242, 247, 1),
-          child: const ReorderableExample(),
-        )
-        //const ReorderableExample(),
+        body: 
+          //Flexible(
+          //  child:
+            Container(
+              color: Color.fromRGBO(242, 242, 247, 1),
+              child: 
+              Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  Text("ドラッグ&ドロップで並び替え"),
+                  Flexible(
+                    child:Container(
+                      color: Color.fromRGBO(242, 242, 247, 1),
+                      child: const ReorderableExample(),)
+                  )
+                ]
+              )
+      
+            )
+          //)
       ),
     );
   }
@@ -107,8 +124,9 @@ class ReorderableExample extends StatefulWidget {
 }
 
 class _ReorderableExampleState extends State<ReorderableExample> {
-  final List<int> _items = List<int>.generate(50, (int index) => index);
-  List _pesses = [];
+  List _presses = [];
+  double? _deviceHeight;
+  List  _deleteSetting = [];
 
   @override
   void initState() {
@@ -121,19 +139,43 @@ class _ReorderableExampleState extends State<ReorderableExample> {
     List _press = await categorySetting.categoryOrder();
     setState(() {
       print(_press);
-      _pesses = _press;
+      _presses = _press;
+      _deviceHeight = MediaQuery.of(context).size.height;
+      _deleteSetting = _presses.map((press) => {'name':press["name"], 'delete': false}).toList();
     });
   }
 
-  void updateCategoryOrder(List<Map<String, dynamic>> categoryNames) async  {
+  void updateCategoryOrder() async  {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('categoryOrder',json.encode(categoryNames));
+    List<Map<String, dynamic>> _categoryOrder = _presses.map((item) {
+      return {"name": item["name"], "japanese_name": item["japanese_name"]};
+    }).toList();
+    await prefs.setString('categoryOrder',json.encode(_categoryOrder));
+  }
+
+  void deleteCategory(String name) async  {
+    final prefs = await SharedPreferences.getInstance();
+    List<Map<String, dynamic>> _categoryOrder = _presses.map((item) {
+      return {"name": item["name"], "japanese_name": item["japanese_name"]};
+    }).toList();
+    int index = 0;
+    for (var item in _categoryOrder) {
+      if(item['name'] == name){
+        index = _categoryOrder.indexOf(item);
+      }
+    }
+    setState(() {
+      _presses.removeAt(index);
+      _categoryOrder.removeAt(index);
+      _deleteSetting.removeAt(index);
+    });
+    await prefs.setString('categoryOrder',json.encode(_categoryOrder));
   }
 
   @override
   Widget build(BuildContext context) {
     final List<Card> cards = <Card>[
-      for (int index = 0; index < _pesses.length; index += 1)
+      for (int index = 0; index < _presses.length; index += 1)
         Card(
           key: Key('$index'),
           color: Colors.white,
@@ -142,8 +184,49 @@ class _ReorderableExampleState extends State<ReorderableExample> {
             child: Center(
               child: Container(
                 alignment: Alignment.centerLeft,
-                child: Text('${_pesses[index]['japanese_name']}'),
-              )
+                child: 
+                //SingleChildScrollView(
+                //  scrollDirection: Axis.horizontal,
+                  //child: 
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        child: 
+                        IconButton(
+                          icon:   _deleteSetting[index]['delete'] ?
+                          const Icon(Icons.add_circle, color: Colors.red)
+                          :const Icon(Icons.do_not_disturb_on, color: Colors.red),
+                          onPressed: () {
+                            setState(() {
+                                _deleteSetting[index]['delete'] = ! _deleteSetting[index]['delete'];
+                            });
+                          },
+                        ),
+                      ),
+                      Container(
+                        child: Text('${_presses[index]['japanese_name']}')
+                      ),
+                      Spacer(),
+                      Container(
+                        child: Icon(Icons.dehaze_sharp, color: Colors.grey)
+                      ),
+                      if( _deleteSetting[index]['delete'])
+                      Container(
+                        alignment: Alignment.centerRight,
+                        color: Colors.red,
+                        child: 
+                        TextButton(
+                          onPressed: () { 
+                            deleteCategory(_presses[index]['name']);
+                           },
+                          child: Text('削除'),
+                        ),
+                      ),
+                    ]
+                  )
+                )
+              //)
             ),
           ),
         ),
@@ -168,7 +251,7 @@ class _ReorderableExampleState extends State<ReorderableExample> {
     }
 
     return ReorderableListView(
-      padding: const EdgeInsets.symmetric(horizontal: 40),
+      //padding: const EdgeInsets.symmetric(horizontal: 40),
       //proxyDecorator: proxyDecorator,
       children: cards,
       onReorder: (int oldIndex, int newIndex) {
@@ -177,13 +260,9 @@ class _ReorderableExampleState extends State<ReorderableExample> {
           if (oldIndex < newIndex) {
             newIndex -= 1;
           }
-          final Map category = _pesses.removeAt(oldIndex);
-          _pesses.insert(newIndex, category);
-          List<Map<String, dynamic>> _categoryOrder = _pesses.map((item) {
-            return {"name": item["name"], "japanese_name": item["japanese_name"]};
-          }).toList();
-          print(_categoryOrder);
-          updateCategoryOrder(_categoryOrder);
+          final Map category = _presses.removeAt(oldIndex);
+          _presses.insert(newIndex, category);
+          updateCategoryOrder();
         });
       },
       
