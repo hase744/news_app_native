@@ -10,6 +10,10 @@ import 'category_setting.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:flutter/scheduler.dart';
 import 'setting_page.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'web_window.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:async';
 
 class HomePage extends StatefulWidget {
   @override
@@ -48,11 +52,12 @@ class _HomePageState extends State<HomePage>  {
   Color _color = Color.fromRGBO(250, 100, 100, 1);
   int currentIndex = 0;
   int currentCategoryIndex = 0;
-  int _pressUnitCount = 8;
+  int _pressUnitCount = 20;
   int _scrollUperCount = 0;
   late int _pressCount =  _pressUnitCount;
   bool _displayLoadingScreen = false;
   String? _alert;
+  Future<void>? _launched;
   final prefs = SharedPreferences.getInstance();
 
   late List<Map<dynamic, dynamic>> mixedMap = [
@@ -264,19 +269,27 @@ class _HomePageState extends State<HomePage>  {
     //category_setting;
   }
 
-  Future<void> _launchSetting() async {
-    showModalBottomSheet(
-      isScrollControlled: true,
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          height: _deviceHeight!*0.7,
-          child: category_setting
-        );
-        }
-      );
+  Future<void> _launchInWebViewOrVC(Uri url) async {
+    if (!await launchUrl(url, mode: LaunchMode.inAppWebView)) {
+      throw Exception('Could not launch $url');
+    }
   }
 
+  webViewWindow(String youtube_id,BuildContext context) {
+    print("https://emma.tools/magazine/ai-writing-blog/#AI");
+    final controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadRequest(
+        Uri.parse("https://emma.tools/magazine/ai-writing-blog/#AI"),
+      );
+    return
+    Container(
+      height: _deviceHeight!*0.7,
+      child: WebViewWidget(
+        controller: controller,
+      ),
+    );
+  }
   
   modalWindow(Map press, BuildContext context) {
     bool isFavorite = mixedMap[currentIndex]['name'] == 'favorite';
@@ -407,7 +420,14 @@ class _HomePageState extends State<HomePage>  {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
+                      InkWell(
+                      onTap: () {
+                        print('押された');
+                        final Uri toLaunch =
+                            Uri(scheme: 'https', host: 'www.youtube.com', path: "watch",queryParameters: {'v':youtube_id});
+                        _launched = _launchInWebViewOrVC(toLaunch);
+                      },
+                      child: Container(
                         width: cellWidth/2,
                         height: cellHeight/4*3,
                         child:
@@ -415,7 +435,7 @@ class _HomePageState extends State<HomePage>  {
                           press['title'],
                           maxLines: 3,
                         )
-                      ),
+                      )),
                       Container(
                         width: cellWidth/2,
                         height: cellHeight/4,
