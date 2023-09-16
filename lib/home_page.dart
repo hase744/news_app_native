@@ -14,6 +14,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'web_window.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
+import 'models/layout_height.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -46,8 +47,7 @@ class _HomePageState extends State<HomePage>  {
   var history = History(); 
   var favorite = Favorite(); // History クラスのインスタンスを作成
   var category_setting = CategorySetting();
-   
-  Map<String, double> layoutHeight = {};
+  LayoutHeight layoutHeight = LayoutHeight(deviceWidth:0, barHeight:0, innerHeight: 0);
   String _categoryName = "ビジネス";
   Color _color = Color.fromRGBO(250, 100, 100, 1);
   int currentIndex = 0;
@@ -58,6 +58,7 @@ class _HomePageState extends State<HomePage>  {
   bool _displayLoadingScreen = false;
   String? _alert;
   Future<void>? _launched;
+  String mode = 'normal';
   final prefs = SharedPreferences.getInstance();
 
   late List<Map<dynamic, dynamic>> mixedMap = [
@@ -124,8 +125,8 @@ class _HomePageState extends State<HomePage>  {
     _innerScrollController.addListener(() {
       setState(() {
         double position = _innerScrollController.offset;
-        position = position.clamp(0.0, layoutHeight['menu_area']!);
-        synchronizedWidgetPosition = Offset(0, layoutHeight['menu_area']! - position);
+        position = position.clamp(0.0, layoutHeight.menu_area);
+        synchronizedWidgetPosition = Offset(0, layoutHeight.menu_area - position);
       });
     });
     SettingPage settingPage = SettingPage();
@@ -140,10 +141,9 @@ class _HomePageState extends State<HomePage>  {
     histories = histories.reversed.toList();// あなたの非同期処理;
     setState(() {
       setDefauldLayout();
-      layoutHeight['category_bar'] = 0;
-      layoutHeight['category_bar_line'] = 0;
-      layoutHeight['youtube_display'] = 0;
-      setNesCellsHeight();
+      layoutHeight.setForDefault();
+
+      layoutHeight.setForNewsCellsHeight();
       _press = histories; // 取得したデータを _press 変数に代入
       resetPressCount();
       _outerScrollController.jumpTo(0);
@@ -170,10 +170,9 @@ class _HomePageState extends State<HomePage>  {
     print(favorites);
     setState(() {
       setDefauldLayout();
-      layoutHeight['category_bar'] = 0;
-      layoutHeight['category_bar_line'] = 0;
-      layoutHeight['youtube_display'] = 0;
-      setNesCellsHeight();
+      layoutHeight.setForDefault();
+
+      layoutHeight.setForNewsCellsHeight();
       _press = favorites; // 取得したデータを _press 変数に代入
       resetPressCount();
       _outerScrollController.jumpTo(0);
@@ -198,38 +197,23 @@ class _HomePageState extends State<HomePage>  {
   void setDefauldLayout(){
     HomeBottomNavigationBar bar = HomeBottomNavigationBar(initialIndex: 0);
     setState(() {
-      layoutHeight = {
-        'app_bar':40,
-        'category_bar':_deviceWidth!/10,
-        'category_bar_line':5,
-        'menu_area':_deviceWidth!/10,
-        'youtube_display':_deviceWidth!/16*9,
-        'bottom_nabigation_bar': bar.height,
-        'alert':0
-      };
+      var _padding = MediaQuery.of(context).padding;
+      layoutHeight = LayoutHeight(
+        deviceWidth: _deviceWidth!,
+        barHeight: bar.height,
+        innerHeight: _deviceHeight! - _padding.top - _padding.bottom
+      );
       //_innerScrollController.jumpTo(100.0);
     });
-    setNesCellsHeight();
-  }
-
-  void setNesCellsHeight(){
-    layoutHeight['news_cells'] = 0;
-    layoutHeight['news_cells'] = _innerHeight! - layoutHeight.values.reduce((a, b) => a + b) - 2;
-  }
-
-  double getInnerScrollHeight(){
-    double height = layoutHeight['app_bar']! + layoutHeight['category_bar']! + layoutHeight['category_bar_line']! + layoutHeight['youtube_display']! + layoutHeight['news_cells']!;
-    if(mixedMap[currentIndex]['name'] == 'home'){
-      return height;
-    }else{
-      return height - layoutHeight['menu_area']!;
-    }
+    layoutHeight.setForNewsCellsHeight();
   }
 
   void openYoutube(Map press) async {
     String youtube_id = press["youtube_id"];
-    layoutHeight['youtube_display'] = _deviceWidth!/16*9;
-    setNesCellsHeight();
+    layoutHeight.displayYoutube();
+    layoutHeight.setForNewsCellsHeight();
+    print("Youtube開く");
+    print(layoutHeight.youtube_display);
     displayYoutube = true;
     //最後に再生した動画を保存機能
     final prefs = await SharedPreferences.getInstance();
@@ -242,8 +226,8 @@ class _HomePageState extends State<HomePage>  {
   }
 
   void closeYoutube(){
-    layoutHeight['youtube_display'] = 0;
-    setNesCellsHeight();
+    layoutHeight.hideYoutube();
+    layoutHeight.setForNewsCellsHeight();
     youtubeController.pause();
     displayYoutube = false;
   }
@@ -317,13 +301,14 @@ class _HomePageState extends State<HomePage>  {
     );
   }
   
-  modalWindow(Map press, BuildContext context) {
+  modalWindow(Map press, BuildContext context, String mode) {
     bool isFavorite = mixedMap[currentIndex]['name'] == 'favorite';
     return Container(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         //mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
+          if(mode == 'each_video')
           TextButton(
             child: Container(
               width: _deviceWidth,
@@ -347,7 +332,32 @@ class _HomePageState extends State<HomePage>  {
               Navigator.of(context).pop();
             },
           ),
-        ]),
+          if(mode == 'menu')
+          TextButton(
+            child: Container(
+              width: _deviceWidth,
+              child: Center(
+                child:Text(
+                "選択",
+                style: TextStyle(
+                    fontSize: _deviceWidth!/15,
+                    color: Colors.grey
+                  ),
+                )
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              primary: Colors.black,
+            ),
+            onPressed: () async {
+              isFavorite ? favorite.delete(press['id']) : favorite.create(press);
+              updateScreen();
+              print("お気に入り追加");
+              Navigator.of(context).pop();
+            },
+          ),
+          ]
+        ),
         height: 500,
         alignment: Alignment.center,
         width: double.infinity,
@@ -485,7 +495,7 @@ class _HomePageState extends State<HomePage>  {
                                 showModalBottomSheet(
                                   context: context,
                                   builder: (BuildContext context) {
-                                    return modalWindow(press, context);
+                                    return modalWindow(press, context, 'each_video');
                                   },
                                 );
                               },
@@ -513,13 +523,27 @@ class _HomePageState extends State<HomePage>  {
     );
   }
 
+  transitNavigation(index){
+    setState(() {
+      _pressCount = 0;
+      currentIndex = index;
+      youtubeController.pause();
+    });
+    updateScreen();
+  }
+
+  saveMultiple(){
+    updateScreen();
+    print("お気に入り追加");
+  }
+
 
   Offset synchronizedWidgetPosition = Offset(0, 0);
 
   @override
   Widget build(BuildContext context) {
     final container_width = _deviceWidth!/5;
-    final container_height = layoutHeight['category_bar'];
+    final container_height = layoutHeight.category_bar;
 
     //_presses = json.decode(_pressesJson!);
     List<BottomNavigationBarItem> itemList = mixedMap.map((map) => map["item"]).toList()
@@ -528,7 +552,7 @@ class _HomePageState extends State<HomePage>  {
 
     return Scaffold(
       appBar: PreferredSize(
-         preferredSize: Size.fromHeight(layoutHeight['app_bar']!),
+         preferredSize: Size.fromHeight(layoutHeight.app_bar!),
          child: AppBar(
            title: Text("$_categoryName"),
            leading: Container(),
@@ -540,7 +564,7 @@ class _HomePageState extends State<HomePage>  {
         //color: Colors.blue,
         child: 
           Container(
-            height: getInnerScrollHeight(),
+            height: layoutHeight.getInnerScrollHeight(),
             child: 
             Stack(
             children: <Widget>[
@@ -549,9 +573,9 @@ class _HomePageState extends State<HomePage>  {
                   if (scrollNotification is ScrollEndNotification) {
                     final before = scrollNotification.metrics.extentBefore;
                     final max = scrollNotification.metrics.maxScrollExtent;
-                    if(before < layoutHeight['menu_area']!){
+                    if(before < layoutHeight.menu_area!){
                       setState(() {
-                      //layoutHeight['menu_area'] =  before;
+                      //layoutHeight.menu_area =  before;
                       });
                     }
                     if (before == 0 && mixedMap[currentIndex]['name'] == 'home') {
@@ -577,7 +601,7 @@ class _HomePageState extends State<HomePage>  {
                 Positioned(
                   right: 0,
                   left: 0,
-                  top: container_height! +  layoutHeight['category_bar_line']! + layoutHeight['youtube_display']!,
+                  top: container_height! +  layoutHeight.category_bar_line + layoutHeight.youtube_display,
                   bottom: 0,
                   child: 
                   ListView(
@@ -586,7 +610,7 @@ class _HomePageState extends State<HomePage>  {
                     children: [
                       Container(
                         width: _deviceWidth!,
-                        height: layoutHeight['menu_area'],
+                        height: layoutHeight.menu_area,
                         //color: Colors.blue,
                         child: Spacer(),
                       ),
@@ -612,7 +636,7 @@ class _HomePageState extends State<HomePage>  {
                 )
               ),
               Container(
-                height: layoutHeight['menu_area'],
+                height: layoutHeight.menu_area,
                 alignment: Alignment.centerRight,
                   child: IconButton(
                     icon: Icon(Icons.pending),
@@ -621,12 +645,7 @@ class _HomePageState extends State<HomePage>  {
                         isScrollControlled: true,
                         context: context,
                         builder: (BuildContext context) {
-                          return Container(
-                            height: _deviceHeight!*0.7,
-                            width: double.infinity,
-                            //color: Colors.red,//Color.fromRGBO(245, 245, 245, 1),
-                            child: settingWindow(context),
-                          );
+                          return modalWindow({}, context, 'menu');
                         },
                       );
                     },
@@ -684,16 +703,16 @@ class _HomePageState extends State<HomePage>  {
                           Container(
                             color: _color,
                             width: _deviceWidth,
-                            height: layoutHeight['category_bar_line'],
+                            height: layoutHeight.category_bar_line,
                           ),
                           if(_alert != null)
                           Container(
-                            height: layoutHeight['alert'],
+                            height: layoutHeight.alert,
                             child: Text(_alert!),
                           ),
-                          if(layoutHeight['youtube_display']! > 0)
+                          if(layoutHeight.youtube_display! > 0)
                           Container(
-                            height: layoutHeight['youtube_display'],
+                            height: layoutHeight.youtube_display,
                             color: Colors.red,
                             child:
                             YoutubePlayer(
@@ -716,12 +735,7 @@ class _HomePageState extends State<HomePage>  {
         selectedItemColor: Colors.blue,
         currentIndex: currentIndex,
         onTap: (index) {
-          setState(() {
-            _pressCount = 0;
-            currentIndex = index;
-            youtubeController.pause();
-          });
-          updateScreen();
+          transitNavigation(index);
         },
         items: true ? itemList : itemList,
         type: BottomNavigationBarType.fixed,
