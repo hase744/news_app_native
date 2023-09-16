@@ -81,7 +81,6 @@ class _HomePageState extends State<HomePage>  {
 
   @override
   void initState() {
-    super.initState();
     init();
   }
 
@@ -103,30 +102,7 @@ class _HomePageState extends State<HomePage>  {
         flags: YoutubePlayerFlags(
           autoPlay: false,  // 自動再生しない
         ),);
-      _innerScrollController = ScrollController(initialScrollOffset: _deviceWidth!/10);
-    });
-
-    Timer.periodic(
-      // 第一引数：繰り返す間隔の時間を設定
-      const Duration(seconds: 3),
-      // 第二引数：その間隔ごとに動作させたい処理を書く
-      (Timer timer) {
-        setState(() {
-          //_scrollController.animateTo(
-          //        200.0, // Replace with the desired scroll offset
-          //        duration: Duration(seconds: 1), // You can adjust the duration
-          //        curve: Curves.easeInOut, // You can choose a different curve
-          //      );
-        });
-      },
-    );
-    
-    _innerScrollController.addListener(() {
-      setState(() {
-        double position = _innerScrollController.offset;
-        position = position.clamp(0.0, layoutHeight['menu_area']!);
-        synchronizedWidgetPosition = Offset(0, layoutHeight['menu_area']! - position);
-      });
+      _outerScrollController = ScrollController(initialScrollOffset: _deviceWidth!/10);
     });
     SettingPage settingPage = SettingPage();
     await displayNews();
@@ -155,9 +131,8 @@ class _HomePageState extends State<HomePage>  {
     setDefauldLayout();
     await SelectCategory(currentCategoryIndex);
     resetPressCount();
-    print("高さ");
     setState(() {
-      _innerScrollController.jumpTo(_deviceHeight!/10);
+      _outerScrollController.jumpTo(_deviceHeight!/10);
     });
   }
 
@@ -207,7 +182,6 @@ class _HomePageState extends State<HomePage>  {
         'bottom_nabigation_bar': bar.height,
         'alert':0
       };
-      //_innerScrollController.jumpTo(100.0);
     });
     setNesCellsHeight();
   }
@@ -513,9 +487,6 @@ class _HomePageState extends State<HomePage>  {
     );
   }
 
-
-  Offset synchronizedWidgetPosition = Offset(0, 0);
-
   @override
   Widget build(BuildContext context) {
     final container_width = _deviceWidth!/5;
@@ -538,178 +509,185 @@ class _HomePageState extends State<HomePage>  {
         height: _deviceHeight,
         width: _deviceWidth,
         //color: Colors.blue,
-        child: 
-          Container(
-            height: getInnerScrollHeight(),
-            child: 
-            Stack(
-            children: <Widget>[
-              NotificationListener<ScrollNotification>(
-                onNotification: (ScrollNotification scrollNotification) {
-                  if (scrollNotification is ScrollEndNotification) {
-                    final before = scrollNotification.metrics.extentBefore;
-                    final max = scrollNotification.metrics.maxScrollExtent;
-                    if(before < layoutHeight['menu_area']!){
-                      setState(() {
-                      //layoutHeight['menu_area'] =  before;
-                      });
-                    }
-                    if (before == 0 && mixedMap[currentIndex]['name'] == 'home') {
-                      setForOuterScroll();
-                    }
-                    if (before == max) {
-                      print("した");
-                      setState(() {
-                        //挿入可能な記事があれば記事を挿入
-                        _pressCount += _pressUnitCount;
-                        if (_pressCount > _press.length) { //ロード過多
-                          _pressCount = _press.length;
-                          _displayLoadingScreen = false;
-                        }else{
-                          _displayLoadingScreen = true;
-                        }
-                      });
-                    }
-                  }//
-                  return false;
-                },
-                child: 
-                Positioned(
-                  right: 0,
-                  left: 0,
-                  top: container_height! +  layoutHeight['category_bar_line']! + layoutHeight['youtube_display']!,
-                  bottom: 0,
-                  child: 
-                  ListView(
-                    controller: _innerScrollController,
-                    //physics: ableInnerScroll ?  const AlwaysScrollableScrollPhysics() : const  NeverScrollableScrollPhysics(),
-                    children: [
-                      Container(
-                        width: _deviceWidth!,
-                        height: layoutHeight['menu_area'],
-                        //color: Colors.blue,
-                        child: Spacer(),
-                      ),
-                    for(var i=0; i<_pressCount; i++)
-                      videoCell(context, _press[i]),
-                    if(_displayLoadingScreen)
-                    Container(
-                      alignment: Alignment.center,
-                      width: _deviceWidth,
-                      child: 
-                        SizedBox(
-                          height: 50,
-                          width: 50,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 8.0,
-                            backgroundColor: Colors.black,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue)
-                            ),
-                        ),
-                      )
-                    ],
-                  )
-                )
-              ),
-              Container(
-                height: layoutHeight['menu_area'],
-                alignment: Alignment.centerRight,
-                  child: IconButton(
-                    icon: Icon(Icons.pending),
-                    onPressed: () {
-                      showModalBottomSheet(
-                        isScrollControlled: true,
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Container(
-                            height: _deviceHeight!*0.7,
-                            width: double.infinity,
-                            //color: Colors.red,//Color.fromRGBO(245, 245, 245, 1),
-                            child: settingWindow(context),
+        child: Flexible(
+            //Flexibleでラップ
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (ScrollNotification scrollNotification) {
+                if (scrollNotification is ScrollEndNotification) {
+                  final before = scrollNotification.metrics.extentBefore;
+                  final max = scrollNotification.metrics.maxScrollExtent;
+                  if (before == max &&  mixedMap[currentIndex]['name'] == 'home') {
+                    setForInnerScroll();
+                  }
+                }//
+                return false;
+              },
+              child: 
+              ListView(
+                controller: ableOuterScroll ? _outerScrollController : _innerScrollController,
+                 physics: ableOuterScroll ?  const AlwaysScrollableScrollPhysics() : const  NeverScrollableScrollPhysics(),
+                children: [
+                  //上のメニュー
+                  Container(
+                    height: layoutHeight['menu_area'],
+                    alignment: Alignment.centerRight,
+                      child: IconButton(
+                        icon: Icon(Icons.settings),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            isScrollControlled: true,
+                            context: context,
+                            builder: (BuildContext context) {
+                              return Container(
+                                height: _deviceHeight!*0.7,
+                                width: double.infinity,
+                                //color: Colors.red,//Color.fromRGBO(245, 245, 245, 1),
+                                child: settingWindow(context),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                  )
-              ),
-              Container(
-                //height: 200.0, // Height of the synchronized widget
-                child: Transform.translate(
-                  offset: synchronizedWidgetPosition,
-                  child: Container(
-                    //color: Colors.blue,
-                    alignment: Alignment.center,
-                    child: 
-                      Column(
-                        children: [
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                for (var i = 0; i < _presses.length; i++)
-                                Container(
-                                  color: colors[i % colors.length],
-                                  width: container_width,
-                                  height: container_height,
-                                  padding: EdgeInsets.all(0),
-                                  margin: EdgeInsets.all(0),
-                                  child:TextButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        currentCategoryIndex = i;
-                                      });
-                                      //SelectCategory(currentCategoryIndex);
-                                      //resetPressCount();
-                                      resetCategory(currentCategoryIndex);
-                                    },
-                                    child: Text(
-                                      _presses[i]['japanese_name'],
-                                      style: TextStyle(
-                                        fontSize: fontSize(_presses[i]['japanese_name'].length),
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    style: TextButton.styleFrom(
-                                      padding: EdgeInsets.all(0), // ボタンの内側の余白
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(0), // 角丸の半径
-                                      ),
-                                    ),
-                                  )
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            color: _color,
-                            width: _deviceWidth,
-                            height: layoutHeight['category_bar_line'],
-                          ),
-                          if(_alert != null)
-                          Container(
-                            height: layoutHeight['alert'],
-                            child: Text(_alert!),
-                          ),
-                          if(layoutHeight['youtube_display']! > 0)
-                          Container(
-                            height: layoutHeight['youtube_display'],
-                            color: Colors.red,
-                            child:
-                            YoutubePlayer(
-                              controller: youtubeController,
-                              //controller: YoutubePlayerController(initialVideoId: youtubeId),
-                              showVideoProgressIndicator: true,
-                              progressIndicatorColor: Colors.blueAccent,
-                            ),
-                          ),
-                        ],
-                      )
+                        //style: ElevatedButton.styleFrom(
+                        //  primary: Colors.red,
+                        //),
+                      ),
                   ),
-                ),
-              ),
-            ],
-          ),
+                  //カテゴリー選択
+                  Container(
+                    height: getInnerScrollHeight(),
+                    child: 
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: <Widget>[
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            for (var i = 0; i < _presses.length; i++)
+                            Container(
+                              color: colors[i % colors.length],
+                              width: container_width,
+                              height: container_height,
+                              padding: EdgeInsets.all(0),
+                              margin: EdgeInsets.all(0),
+                              child:TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    currentCategoryIndex = i;
+                                  });
+                                  //SelectCategory(currentCategoryIndex);
+                                  //resetPressCount();
+                                  resetCategory(currentCategoryIndex);
+                                },
+                                child: Text(
+                                  _presses[i]['japanese_name'],
+                                  style: TextStyle(
+                                    fontSize: fontSize(_presses[i]['japanese_name'].length),
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.all(0), // ボタンの内側の余白
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(0), // 角丸の半径
+                                  ),
+                                ),
+                              )
+                            ),
+                          ],
+                        ),
+                      ),
+                      //カテゴリー選択の場所のボトムバー
+                      Container(
+                        color: _color,
+                        width: _deviceWidth,
+                        height: layoutHeight['category_bar_line'],
+                      ),
+                      //アラート
+                      if(_alert != null)
+                      Container(
+                        height: layoutHeight['alert'],
+                        child: Text(_alert!),
+                      ),
+                      //if(layoutHeight['menu_area']! > 0)
+                      //youtube再生場所
+                      Container(
+                        height: layoutHeight['youtube_display'],
+                        color: Colors.red,
+                        child:
+                        YoutubePlayer(
+                          controller: youtubeController,
+                          //controller: YoutubePlayerController(initialVideoId: youtubeId),
+                          showVideoProgressIndicator: true,
+                          progressIndicatorColor: Colors.blueAccent,
+                        ),
+                      ),
+                      //youtube一覧
+                      Flexible(    
+                        //Flexibleでラップ
+                        child: NotificationListener<ScrollNotification>(
+                          onNotification: (ScrollNotification scrollNotification) {
+                            if (scrollNotification is ScrollEndNotification) {
+                              final before = scrollNotification.metrics.extentBefore;
+                              final max = scrollNotification.metrics.maxScrollExtent;
+                              if (before == 0 && mixedMap[currentIndex]['name'] == 'home') {
+                                setForOuterScroll();
+                              }
+                              if (before == max) {
+                                print("した");
+                                setState(() {
+                                  //挿入可能な記事があれば記事を挿入
+                                  _pressCount += _pressUnitCount;
+                                  if (_pressCount > _press.length) { //ロード過多
+                                    _pressCount = _press.length;
+                                    _displayLoadingScreen = false;
+                                  }else{
+                                    _displayLoadingScreen = true;
+                                  }
+                                });
+                              }
+                            }//
+                            return false;
+                          },
+                          child: 
+                          ListView(
+                            controller: _innerScrollController,
+                            physics: ableInnerScroll ?  const BouncingScrollPhysics() : const  NeverScrollableScrollPhysics(),
+                            children: [
+                            for(var i=0; i<_pressCount; i++)
+                              videoCell(context, _press[i]),
+                            if(_displayLoadingScreen)
+                            Container(
+                              alignment: Alignment.center,
+                              width: _deviceWidth,
+                              child: 
+                                SizedBox(
+                                  height: 50,
+                                  width: 50,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 8.0,
+                                    backgroundColor: Colors.black,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue)
+                                    ),
+                                ),
+                              )
+                            ],
+                          )
+                        )
+                      ),
+                    ],
+                  ),
+                )
+              //for(var i=0; i<_pressCount; i++)
+              //  Container(
+              //    width: _deviceWidth,
+              //    height: 100,
+              //    child:Text("ああああああ")
+              //  )
+              ],
+            )
+          )
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -723,7 +701,7 @@ class _HomePageState extends State<HomePage>  {
           });
           updateScreen();
         },
-        items: true ? itemList : itemList,
+        items: itemList,
         type: BottomNavigationBarType.fixed,
       ),
     );
