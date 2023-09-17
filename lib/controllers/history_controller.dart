@@ -1,5 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
-class DefaultValue{
+class History{
   SharedPreferences? _preferences;
 
   // Initialize SharedPreferences

@@ -15,6 +15,7 @@ import 'web_window.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'models/layout_height.dart';
+import 'controllers/default_values_controller.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -48,6 +49,7 @@ class _HomePageState extends State<HomePage>  {
   var favorite = Favorite(); // History クラスのインスタンスを作成
   var category_setting = CategorySetting();
   LayoutHeight layoutHeight = LayoutHeight(deviceWidth:0, barHeight:0, innerHeight: 0);
+  DefaultValue defaultValue = DefaultValue();
   String _categoryName = "ビジネス";
   Color _color = Color.fromRGBO(250, 100, 100, 1);
   int currentIndex = 0;
@@ -87,8 +89,8 @@ class _HomePageState extends State<HomePage>  {
   }
 
   void init() async {
-    final prefs = await SharedPreferences.getInstance();
-    String defaultYoutubeId = prefs.getString('default_youtube_id')!;
+    await defaultValue.initialize();
+    String? defaultYoutubeId = defaultValue.getStoredValue('default_youtube_id');
     category_setting = CategorySetting();
     List presses = await category_setting.getPressOrder();
     setState(() {
@@ -100,7 +102,7 @@ class _HomePageState extends State<HomePage>  {
       _presses = presses;
       favorite.deleteTable;
       youtubeController =  YoutubePlayerController(
-        initialVideoId: defaultYoutubeId,
+        initialVideoId: defaultYoutubeId!,
         flags: YoutubePlayerFlags(
           autoPlay: false,  // 自動再生しない
         ),);
@@ -220,6 +222,8 @@ class _HomePageState extends State<HomePage>  {
     await Future.delayed(Duration.zero);
     youtubeController.load( youtube_id,startAt:0);
     await prefs.setString('default_youtube_id', youtube_id);
+
+
     await history.initDatabase(); 
     List<Map<String, dynamic>> histories = await history.all();
     await history.create(press);
