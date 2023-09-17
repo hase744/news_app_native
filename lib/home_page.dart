@@ -125,15 +125,18 @@ class _HomePageState extends State<HomePage>  {
     );
     
     _innerScrollController.addListener(() {
-      setState(() {
-        double position = _innerScrollController.offset;
-        position = position.clamp(0.0, layoutHeight.menu_area);
-        synchronizedWidgetPosition = Offset(0, layoutHeight.menu_area - position);
-      });
+      setOffset();
     });
     SettingPage settingPage = SettingPage();
     await displayNews();
     resetPressCount();
+  }
+
+  setOffset(){
+    setState(() {
+      double offset = _innerScrollController.offset;
+      layoutHeight.scrollOffset = offset.clamp(0.0, layoutHeight.menu_area);//menuが見える時以外offsetは0にする
+    });
   }
 
   Future<void> displayHistory() async {
@@ -157,7 +160,6 @@ class _HomePageState extends State<HomePage>  {
     setDefauldLayout();
     await SelectCategory(currentCategoryIndex);
     resetPressCount();
-    print("高さ");
     setState(() {
       _innerScrollController.jumpTo(_deviceHeight!/10);
     });
@@ -570,6 +572,22 @@ class _HomePageState extends State<HomePage>  {
             child: 
             Stack(
             children: <Widget>[
+              //高さを0にしても透明にしても再生ボタンと再生判定が無くならないので一番手前に配置
+              Transform.translate(
+                offset: layoutHeight.youtubePlayerOffset(),
+                  child: Container(
+                  height: layoutHeight.youtube_display,
+                  color: Colors.red.withOpacity(layoutHeight.youtube_display/_deviceWidth!/16*9),
+                  //if ではなくopacityを使って消すことでopenYoutubeの時に問題なく表示させる
+                  child:
+                  YoutubePlayer(
+                    controller: youtubeController,
+                    //controller: YoutubePlayerController(initialVideoId: youtubeId),
+                    showVideoProgressIndicator: true,
+                    progressIndicatorColor: Colors.blueAccent,
+                  ),
+                ),
+              ),
               NotificationListener<ScrollNotification>(
                 onNotification: (ScrollNotification scrollNotification) {
                   if (scrollNotification is ScrollEndNotification) {
@@ -656,7 +674,7 @@ class _HomePageState extends State<HomePage>  {
               Container(
                 //height: 200.0, // Height of the synchronized widget
                 child: Transform.translate(
-                  offset: synchronizedWidgetPosition,
+                  offset: layoutHeight.categorybarOffset(),
                   child: Container(
                     //color: Colors.blue,
                     alignment: Alignment.center,
@@ -711,18 +729,6 @@ class _HomePageState extends State<HomePage>  {
                           Container(
                             height: layoutHeight.alert,
                             child: Text(_alert!),
-                          ),
-                          Container(
-                            height: layoutHeight.youtube_display,
-                            color: Colors.red.withOpacity(layoutHeight.youtube_display/_deviceWidth!/16*9),
-                            //if ではなくopacityを使って消すことでopenYoutubeの時に問題なく表示させる
-                            child:
-                            YoutubePlayer(
-                              controller: youtubeController,
-                              //controller: YoutubePlayerController(initialVideoId: youtubeId),
-                              showVideoProgressIndicator: true,
-                              progressIndicatorColor: Colors.blueAccent,
-                            ),
                           ),
                         ],
                       )

@@ -5,13 +5,14 @@ class LayoutHeight  {
   double _number = 0;
   double innerHeight = 0;
   late double app_bar = 40;
-  late double category_bar = deviceWidth!/10;
+  late double category_bar = deviceWidth/10;
   late double category_bar_line =5;
-  late double menu_area = deviceWidth!/10;
-  late double youtube_display = deviceWidth!/16*9;
+  late double menu_area = deviceWidth/10;
+  late double youtube_display = deviceWidth/16*9;
   late double bottom_nabigation_bar = barHeight;
   late double alert = 0;
   late double news_cells = 0;
+  late double scrollOffset = deviceWidth/10; //menu_areaと同じ値
   late bool ishome = false;
   double get number => _number;
 
@@ -39,6 +40,14 @@ class LayoutHeight  {
     return menu_area;
   }
 
+  Offset youtubePlayerOffset(){
+    return Offset(0,  menu_area + category_bar + category_bar_line - scrollOffset);
+  }
+
+  Offset categorybarOffset(){
+    return Offset(0, menu_area - scrollOffset) ;
+  }
+
   setForNewsCellsHeight(){
     news_cells = 0;
     news_cells = innerHeight
@@ -62,13 +71,13 @@ class LayoutHeight  {
   }
 
   getInnerScrollHeight(){
-    double height = app_bar! + category_bar! + category_bar_line! + youtube_display! + news_cells!;
+    double height = app_bar + category_bar + category_bar_line + youtube_display + news_cells;
     if(ishome){
       return height;
     }else{
-      return height - menu_area!;
+      return height - menu_area;
     }
-    }
+  }
 
   // Setter
   set name(String s) {
