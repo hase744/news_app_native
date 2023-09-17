@@ -216,14 +216,13 @@ class _HomePageState extends State<HomePage>  {
     layoutHeight.setForNewsCellsHeight();
     print("Youtube開く");
     print(layoutHeight.youtube_display);
-    displayYoutube = true;
     //最後に再生した動画を保存機能
     final prefs = await SharedPreferences.getInstance();
     await Future.delayed(Duration.zero);
-    youtubeController.load( youtube_id,startAt:0);
+    setState(() {
+      youtubeController.load( youtube_id,startAt:0);
+    });
     await prefs.setString('default_youtube_id', youtube_id);
-
-
     await history.initDatabase(); 
     List<Map<String, dynamic>> histories = await history.all();
     await history.create(press);
@@ -233,7 +232,6 @@ class _HomePageState extends State<HomePage>  {
     layoutHeight.hideYoutube();
     layoutHeight.setForNewsCellsHeight();
     youtubeController.pause();
-    displayYoutube = false;
   }
 
   double fontSize(int text_count) {
@@ -714,10 +712,10 @@ class _HomePageState extends State<HomePage>  {
                             height: layoutHeight.alert,
                             child: Text(_alert!),
                           ),
-                          if(layoutHeight.youtube_display! > 0)
                           Container(
                             height: layoutHeight.youtube_display,
-                            color: Colors.red,
+                            color: Colors.red.withOpacity(layoutHeight.youtube_display/_deviceWidth!/16*9),
+                            //if ではなくopacityを使って消すことでopenYoutubeの時に問題なく表示させる
                             child:
                             YoutubePlayer(
                               controller: youtubeController,
