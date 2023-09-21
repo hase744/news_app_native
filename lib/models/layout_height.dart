@@ -4,11 +4,16 @@ class LayoutHeight  {
   double deviceWidth = 0;
   double _number = 0;
   double innerHeight = 0;
+  double deviceHeight = 0;
+  bool isPortrait = true;
   late double app_bar = 40;
   late double category_bar = deviceWidth/10;
   late double category_bar_line =5;
   late double menu_area = deviceWidth/10;
-  late double youtube_display = deviceWidth/16*9;
+  late double youtubeDisplayHieght = deviceWidth/16*9;
+  late double youtubeDisplayWidth = deviceWidth;
+  late double youtubeDisplayTop = 0;
+  late double youtubeDisplayLeft = 0;
   late double bottom_nabigation_bar = barHeight;
   late double alert = 0;
   late double news_cells = 0;
@@ -22,6 +27,7 @@ class LayoutHeight  {
   
   LayoutHeight({
     required this.deviceWidth,
+    required this.deviceHeight,
     required this.barHeight,
     required this.innerHeight,
   });
@@ -29,8 +35,46 @@ class LayoutHeight  {
   setForDefault(){
     category_bar = 0;
     category_bar_line = 0;
-    youtube_display = 0;
+    youtubeDisplayHieght = 0;
   }
+
+  setYoutubeOrientation(){
+  //  if(isPortrait){
+  //    print("縦むき");
+  //  displayYoutube();
+  //  }else{
+  //    print("横むき");
+  //  youtubeDisplayWidth = deviceWidth/9*16;
+  //  youtubeDisplayHieght = deviceWidth;
+  //  }
+  }
+
+  getYoutubeDisplayWidth(context){
+    //画面が縦向きである
+    if(MediaQuery.of(context).orientation == Orientation.portrait){
+      if(youtubeDisplayWidth > 0){ //ディスプレイが開いている
+        return deviceWidth;
+      }else{
+        return 0;
+      }
+    }{//画面が横向きである
+      return deviceHeight;
+    }
+  }
+
+  getYoutubeDisplayHeight(context){
+    //画面が縦向きである
+    if(MediaQuery.of(context).orientation == Orientation.portrait){
+      if(youtubeDisplayWidth > 0){ //ディスプレイが開いている
+        return deviceWidth*9/16;
+      }else{
+        return 0;
+      }
+    }{//画面が横向きである
+      return deviceWidth;
+    }
+  }
+  
 
   categoryBar(){
     return category_bar;
@@ -40,8 +84,17 @@ class LayoutHeight  {
     return menu_area;
   }
 
-  Offset youtubePlayerOffset(){
-    return Offset(0,  menu_area + category_bar + category_bar_line - scrollOffset);
+  Offset youtubePlayerOffset(context){
+    double left = 0;
+    if(youtubeDisplayHieght > 0){
+      left = deviceWidth; 
+    }
+    if(MediaQuery.of(context).orientation == Orientation.portrait){
+      youtubeDisplayTop = app_bar + menu_area + category_bar + category_bar_line - scrollOffset;
+      return Offset(youtubeDisplayLeft,  app_bar + menu_area + category_bar + category_bar_line - scrollOffset);
+    }{
+      return const Offset(0,  0);
+    }
   }
 
   Offset categorybarOffset(){
@@ -55,7 +108,7 @@ class LayoutHeight  {
      - category_bar
      - category_bar_line
      - menu_area
-     - youtube_display
+     - youtubeDisplayHieght
      - bottom_nabigation_bar
      - alert
      - news_cells
@@ -63,15 +116,19 @@ class LayoutHeight  {
   }
 
   displayYoutube(){
-    youtube_display = deviceWidth/16*9;
+    print("ディスプレイ");
+    youtubeDisplayLeft = 0;
+    youtubeDisplayHieght = deviceWidth/16*9;
+    youtubeDisplayWidth = deviceWidth;
   }
 
   hideYoutube(){
-     youtube_display = 0;
+    youtubeDisplayLeft = deviceWidth;
+    youtubeDisplayHieght = 0;
   }
 
   getInnerScrollHeight(){
-    double height = app_bar + category_bar + category_bar_line + youtube_display + news_cells;
+    double height = app_bar + category_bar + category_bar_line + youtubeDisplayHieght + news_cells;
     if(ishome){
       return height;
     }else{

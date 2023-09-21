@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_page.dart';
 import 'web_window.dart';
+import 'package:flutter/services.dart';
 
 class FirstPage extends StatefulWidget {
   const FirstPage({super.key, required this.title});
@@ -25,7 +26,7 @@ class _FirstPageState extends State<FirstPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: Text("${MediaQuery.of(context).orientation}"),
       ),
       body: Center(
         child: Column(
@@ -41,11 +42,12 @@ class _FirstPageState extends State<FirstPage> {
   }
 
   Future<void> fetchData() async {
-    //final url = 'http://10.0.2.2:3000/categories/index.json';
-    final url = 'http://18.178.58.191/categories/index.json';
+    final url = 'http://10.0.2.2:3000/categories/index.json';
+    //final url = 'http://18.178.58.191/categories/index.json';
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
       final data = response.body;
       final prefs = await SharedPreferences.getInstance();
       String defaultYoutubeId = prefs.getString('default_youtube_id') ?? '4b6DuHGcltI';

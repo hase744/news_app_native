@@ -48,7 +48,7 @@ class _HomePageState extends State<HomePage>  {
   var history = History(); 
   var favorite = Favorite(); // History クラスのインスタンスを作成
   var category_setting = CategorySetting();
-  LayoutHeight layoutHeight = LayoutHeight(deviceWidth:0, barHeight:0, innerHeight: 0);
+  LayoutHeight layoutHeight = LayoutHeight(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0);
   DefaultValue defaultValue = DefaultValue();
   String _categoryName = "ビジネス";
   Color _color = Color.fromRGBO(250, 100, 100, 1);
@@ -109,21 +109,6 @@ class _HomePageState extends State<HomePage>  {
       _innerScrollController = ScrollController(initialScrollOffset: _deviceWidth!/10);
     });
 
-    Timer.periodic(
-      // 第一引数：繰り返す間隔の時間を設定
-      const Duration(seconds: 3),
-      // 第二引数：その間隔ごとに動作させたい処理を書く
-      (Timer timer) {
-        setState(() {
-          //_scrollController.animateTo(
-          //        200.0, // Replace with the desired scroll offset
-          //        duration: Duration(seconds: 1), // You can adjust the duration
-          //        curve: Curves.easeInOut, // You can choose a different curve
-          //      );
-        });
-      },
-    );
-    
     _innerScrollController.addListener(() {
       setOffset();
     });
@@ -204,6 +189,7 @@ class _HomePageState extends State<HomePage>  {
       var _padding = MediaQuery.of(context).padding;
       layoutHeight = LayoutHeight(
         deviceWidth: _deviceWidth!,
+        deviceHeight: _deviceHeight!,
         barHeight: bar.height,
         innerHeight: _deviceHeight! - _padding.top - _padding.bottom
       );
@@ -214,10 +200,9 @@ class _HomePageState extends State<HomePage>  {
 
   void openYoutube(Map press) async {
     String youtube_id = press["youtube_id"];
+    print("youtube 開く");
     layoutHeight.displayYoutube();
     layoutHeight.setForNewsCellsHeight();
-    print("Youtube開く");
-    print(layoutHeight.youtube_display);
     //最後に再生した動画を保存機能
     final prefs = await SharedPreferences.getInstance();
     await Future.delayed(Duration.zero);
@@ -553,8 +538,10 @@ class _HomePageState extends State<HomePage>  {
     List<BottomNavigationBarItem> itemList = mixedMap.map((map) => map["item"]).toList()
     .whereType<BottomNavigationBarItem>() // BottomNavigationBarItem型の要素のみ抽出
     .toList();
-
-    return Scaffold(
+    return 
+      Stack(
+            children: <Widget>[
+      Scaffold(
       appBar: PreferredSize(
          preferredSize: Size.fromHeight(layoutHeight.app_bar!),
          child: AppBar(
@@ -573,21 +560,7 @@ class _HomePageState extends State<HomePage>  {
             Stack(
             children: <Widget>[
               //高さを0にしても透明にしても再生ボタンと再生判定が無くならないので一番手前に配置
-              Transform.translate(
-                offset: layoutHeight.youtubePlayerOffset(),
-                  child: Container(
-                  height: layoutHeight.youtube_display,
-                  color: Colors.red.withOpacity(layoutHeight.youtube_display/_deviceWidth!/16*9),
-                  //if ではなくopacityを使って消すことでopenYoutubeの時に問題なく表示させる
-                  child:
-                  YoutubePlayer(
-                    controller: youtubeController,
-                    //controller: YoutubePlayerController(initialVideoId: youtubeId),
-                    showVideoProgressIndicator: true,
-                    progressIndicatorColor: Colors.blueAccent,
-                  ),
-                ),
-              ),
+              
               NotificationListener<ScrollNotification>(
                 onNotification: (ScrollNotification scrollNotification) {
                   if (scrollNotification is ScrollEndNotification) {
@@ -621,7 +594,7 @@ class _HomePageState extends State<HomePage>  {
                 Positioned(
                   right: 0,
                   left: 0,
-                  top: container_height! +  layoutHeight.category_bar_line + layoutHeight.youtube_display,
+                  top: container_height! +  layoutHeight.category_bar_line + layoutHeight.youtubeDisplayHieght,
                   bottom: 0,
                   child: 
                   ListView(
@@ -748,7 +721,48 @@ class _HomePageState extends State<HomePage>  {
         items: true ? itemList : itemList,
         type: BottomNavigationBarType.fixed,
       ),
-    );
+    ),
+    
+    Transform.translate(
+                offset: layoutHeight.youtubePlayerOffset(context),
+                  child: Container(
+                  height: layoutHeight.getYoutubeDisplayHeight(context),//layoutHeight.youtubeDisplayHieght,
+                  width: layoutHeight.getYoutubeDisplayWidth(context),//layoutHeight.youtubeDisplayWidth,
+                  color: Colors.red.withOpacity(layoutHeight.youtubeDisplayHieght/_deviceWidth!/16*9),
+                  //if ではなくopacityを使って消すことでopenYoutubeの時に問題なく表示させる
+                  child:
+                 YoutubePlayerBuilder(
+                   //onEnterFullScreen: () {
+                   //  print("フルスクリーン");
+                   //  layoutHeight.isPortrait = false;
+                   //  layoutHeight.setYoutubeOrientation();
+                   //},
+                   //onExitFullScreen: (){
+                   //  print("フルスクリーン抜ける");
+                   //  layoutHeight.isPortrait = true;
+                   //  layoutHeight.setYoutubeOrientation();
+                   //},
+                    player: YoutubePlayer(
+                        controller: youtubeController,
+                    ),
+                    builder: (context, player){
+                        return Column(
+                            children: [
+                                // some widgets
+                                player,
+                                //some other widgets
+                            ],
+                        );
+                    },
+                ),
+                ),
+              ),
+              
+            ]
+            );
+    
+    
+    
   }
 }
 
