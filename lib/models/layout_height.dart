@@ -6,6 +6,7 @@ class LayoutHeight  {
   double innerHeight = 0;
   double deviceHeight = 0;
   bool isPortrait = true;
+  double youtubePadding = 0.07;
   late double app_bar = 40;
   late double category_bar = deviceWidth/10;
   late double category_bar_line =5;
@@ -20,10 +21,6 @@ class LayoutHeight  {
   late double scrollOffset = deviceWidth/10; //menu_areaと同じ値
   late bool ishome = false;
   double get number => _number;
-
-
-  // Getter
-  //double get number => number;
   
   LayoutHeight({
     required this.deviceWidth,
@@ -37,18 +34,7 @@ class LayoutHeight  {
     category_bar_line = 0;
     youtubeDisplayHieght = 0;
   }
-
-  setYoutubeOrientation(){
-  //  if(isPortrait){
-  //    print("縦むき");
-  //  displayYoutube();
-  //  }else{
-  //    print("横むき");
-  //  youtubeDisplayWidth = deviceWidth/9*16;
-  //  youtubeDisplayHieght = deviceWidth;
-  //  }
-  }
-
+  
   getYoutubeDisplayWidth(context){
     //画面が縦向きである
     if(MediaQuery.of(context).orientation == Orientation.portrait){
@@ -58,7 +44,7 @@ class LayoutHeight  {
         return 0;
       }
     }{//画面が横向きである
-      return deviceHeight;
+      return (deviceWidth *(1 - youtubePadding*2))/9*16;
     }
   }
 
@@ -71,7 +57,7 @@ class LayoutHeight  {
         return 0;
       }
     }{//画面が横向きである
-      return deviceWidth;
+      return deviceWidth *(1 - youtubePadding*2);
     }
   }
   
@@ -85,15 +71,16 @@ class LayoutHeight  {
   }
 
   Offset youtubePlayerOffset(context){
-    double left = 0;
-    if(youtubeDisplayHieght > 0){
-      left = deviceWidth; 
-    }
-    if(MediaQuery.of(context).orientation == Orientation.portrait){
+    if(MediaQuery.of(context).orientation == Orientation.portrait){//縦向き
       youtubeDisplayTop = app_bar + menu_area + category_bar + category_bar_line - scrollOffset;
-      return Offset(youtubeDisplayLeft,  app_bar + menu_area + category_bar + category_bar_line - scrollOffset);
-    }{
-      return const Offset(0,  0);
+      if(youtubeDisplayLeft != deviceWidth){//youtubeが開いている
+        youtubeDisplayLeft = 0;
+      }
+      return Offset(youtubeDisplayLeft,  youtubeDisplayTop);
+    }{//横向き
+      youtubeDisplayTop = deviceWidth * youtubePadding;
+      youtubeDisplayLeft = (deviceHeight - deviceWidth/9*16)/2 + deviceWidth/9*16*youtubePadding;
+      return Offset(youtubeDisplayLeft,  youtubeDisplayTop);
     }
   }
 
@@ -116,7 +103,6 @@ class LayoutHeight  {
   }
 
   displayYoutube(){
-    print("ディスプレイ");
     youtubeDisplayLeft = 0;
     youtubeDisplayHieght = deviceWidth/16*9;
     youtubeDisplayWidth = deviceWidth;
@@ -134,6 +120,10 @@ class LayoutHeight  {
     }else{
       return height - menu_area;
     }
+  }
+
+  listViewTop(){
+    return category_bar + category_bar_line + youtubeDisplayHieght;
   }
 
   // Setter
