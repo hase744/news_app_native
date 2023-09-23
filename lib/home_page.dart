@@ -3,8 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'bottom_navigation_bar.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
-import 'history.dart';
-import 'favorite.dart';
+import 'models/history.dart';
 import 'setting_page.dart';
 import 'category_setting.dart';
 import 'package:settings_ui/settings_ui.dart';
@@ -16,6 +15,10 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'models/layout_height.dart';
 import 'controllers/default_values_controller.dart';
+import 'views/video_cell.dart';
+import 'views/modal_window.dart';
+import 'models/menu_button.dart';
+import 'models/favorite.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -45,8 +48,8 @@ class _HomePageState extends State<HomePage>  {
   bool ableInnerScroll = false;
   bool ableOuterScroll = true;
   bool displayYoutube = true;
-  var history = History(); 
-  var favorite = Favorite(); // History クラスのインスタンスを作成
+  var _history = History(); 
+  Favorite _favorite = Favorite(); // History クラスのインスタンスを作成
   var category_setting = CategorySetting();
   LayoutHeight layoutHeight = LayoutHeight(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0);
   DefaultValue defaultValue = DefaultValue();
@@ -100,7 +103,8 @@ class _HomePageState extends State<HomePage>  {
       _innerHeight = _deviceHeight! - _padding.top - _padding.bottom;
       category_setting = CategorySetting();
       _presses = presses;
-      favorite.deleteTable;
+      //_history.deleteTable();
+      //_favorite.deleteTable();
       youtubeController =  YoutubePlayerController(
         initialVideoId: defaultYoutubeId!,
         flags: YoutubePlayerFlags(
@@ -124,23 +128,6 @@ class _HomePageState extends State<HomePage>  {
     });
   }
 
-  Future<void> displayHistory() async {
-    _press = [];
-    await history.initDatabase();
-    List<Map<String, dynamic>> histories = await history.all();
-    histories = histories.reversed.toList();// あなたの非同期処理;
-    setState(() {
-      setDefauldLayout();
-      layoutHeight.setForDefault();
-
-      layoutHeight.setForNewsCellsHeight();
-      _press = histories; // 取得したデータを _press 変数に代入
-      resetPressCount();
-      _outerScrollController.jumpTo(0);
-    });
-    setForInnerScroll();
-  }
-
   Future<void> displayNews() async {
     setDefauldLayout();
     await SelectCategory(currentCategoryIndex);
@@ -150,24 +137,36 @@ class _HomePageState extends State<HomePage>  {
     });
   }
 
+  Future<void> displayHistory() async {
+    _press = [];
+    await _history.initDatabase();
+    List<Map<String, dynamic>> histories = await _history.all();
+    histories = histories.reversed.toList();// あなたの非同期処理;
+    setState(() {
+      //setDefauldLayout();
+      layoutHeight.setForDefault();
+      layoutHeight.setForNewsCellsHeight();
+      _press = histories; // 取得したデータを _press 変数に代入
+      resetPressCount();
+      _outerScrollController.jumpTo(0);
+    });
+    setForInnerScroll();
+  }
+
   Future<void> displayFavorites() async {
     _press = [];
-    await favorite.initDatabase();
-    await Future.delayed(Duration.zero);
-    List<Map<String, dynamic>> favorites = await favorite.all();
+    List<Map<String, dynamic>> favorites = await _favorite.all();
     favorites = favorites.reversed.toList();// あなたの非同期処理;
-    print(favorites);
     setState(() {
-      setDefauldLayout();
+      //setDefauldLayout();
       layoutHeight.setForDefault();
-
       layoutHeight.setForNewsCellsHeight();
       _press = favorites; // 取得したデータを _press 変数に代入
       resetPressCount();
       _outerScrollController.jumpTo(0);
     });
     setForInnerScroll();
-    print("お気に入り");
+    closeYoutube();
   }
 
   void setForOuterScroll(){
@@ -210,15 +209,16 @@ class _HomePageState extends State<HomePage>  {
       youtubeController.load( youtube_id,startAt:0);
     });
     await prefs.setString('default_youtube_id', youtube_id);
-    await history.initDatabase(); 
-    List<Map<String, dynamic>> histories = await history.all();
-    await history.create(press);
+    await _history.initDatabase(); 
+    List<Map<String, dynamic>> histories = await _history.all();
+    await _history.create(press);
   }
 
   void closeYoutube(){
     layoutHeight.hideYoutube();
     layoutHeight.setForNewsCellsHeight();
     youtubeController.pause();
+    print("閉じる");
   }
 
   double fontSize(int text_count) {
@@ -239,8 +239,6 @@ class _HomePageState extends State<HomePage>  {
       _color =  colors[category_num % colors.length];
       _press = press;
     });
-    print("カテゴリ");
-    print(_press);
   }
 
   Future<void> resetCategory(int category_num) async {
@@ -290,78 +288,6 @@ class _HomePageState extends State<HomePage>  {
     );
   }
   
-  modalWindow(Map press, BuildContext context, String mode) {
-    bool isFavorite = mixedMap[currentIndex]['name'] == 'favorite';
-    return Container(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        //mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          if(mode == 'each_video')
-          TextButton(
-            child: Container(
-              width: _deviceWidth,
-              child: Center(
-                child:Text(
-                isFavorite ? "ーお気に入りから削除" : "＋お気に入りに追加",
-                style: TextStyle(
-                    fontSize: _deviceWidth!/15,
-                    color: Colors.grey
-                  ),
-                )
-              ),
-            ),
-            style: OutlinedButton.styleFrom(
-              primary: Colors.black,
-            ),
-            onPressed: () async {
-              isFavorite ? favorite.delete(press['id']) : favorite.create(press);
-              updateScreen();
-              print("お気に入り追加");
-              Navigator.of(context).pop();
-            },
-          ),
-          if(mode == 'menu')
-          TextButton(
-            child: Container(
-              width: _deviceWidth,
-              child: Center(
-                child:Text(
-                "選択",
-                style: TextStyle(
-                    fontSize: _deviceWidth!/15,
-                    color: Colors.grey
-                  ),
-                )
-              ),
-            ),
-            style: OutlinedButton.styleFrom(
-              primary: Colors.black,
-            ),
-            onPressed: () async {
-              isFavorite ? favorite.delete(press['id']) : favorite.create(press);
-              updateScreen();
-              print("お気に入り追加");
-              Navigator.of(context).pop();
-            },
-          ),
-          ]
-        ),
-        height: 500,
-        alignment: Alignment.center,
-        width: double.infinity,
-        decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey,
-            blurRadius: 20,
-          )
-        ],
-      ),
-    );
-  }
-  
   void updateScreen(){
     switch(mixedMap[currentIndex]['name']) {
       case 'home':
@@ -369,6 +295,7 @@ class _HomePageState extends State<HomePage>  {
         break;
       case 'favorite':
         displayFavorites();
+        closeYoutube();
         break;
       case 'history':
         displayHistory();
@@ -388,127 +315,48 @@ class _HomePageState extends State<HomePage>  {
     String youtube_id = press['youtube_id'];
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth!/2/16*9;
-    return Container(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                Container(
-                  width: cellWidth / 2,
-                  height: cellHeight,
-                  color: Colors.red,
-                  child: InkWell(
-                    onTap: () {
-                      // onPressed イベントの処理をここに書きます
-                      print('Container tapped!');
-                      setState(() {
-                        openYoutube(press);
-                        youtubeController.load( youtube_id,startAt:0);
-                      });
-                    },
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: Image.network(
-                            "http://img.youtube.com/vi/$youtube_id/sddefault.jpg",
-                            fit: BoxFit.cover,
-                            errorBuilder: (c, o, s) {
-                              return const Icon(
-                                Icons.error,
-                                color: Colors.red,
-                              );
-                            },
-                          ),
-                        ),
-                        Positioned.fill(
-                          child: Center(
-                            child: Opacity(
-                              opacity: 0.5,
-                              child: Icon(
-                                Icons.play_circle,
-                                size: 50,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+    bool isFavorite = mixedMap[currentIndex]['name'] == 'favorite';
+    return VideoCellClass(
+      press: press, 
+      cellHeight: cellHeight, 
+      cellWidth: cellWidth, 
+      onPressedYoutube: (){
+        openYoutube(press);
+      },
+      onPressedOptions: (){
+        showModalBottomSheet(
+          context: context,
+          builder: (BuildContext context) {
+            return ModalWindow(
+              windowWidth: _deviceWidth!,
+              buttons: [
+                MenuButton(
+                  onPressed: () async {
+                    if (isFavorite) {
+                      await _favorite.delete(press['id']);
+                    } else {
+                      await _favorite.create(press);
+                    }
+                    updateScreen();
+                    print("お気に入り追加");
+                    Navigator.of(context).pop();
+                  },
+                  name:isFavorite ? "ーお気に入りから削除" : "＋お気に入りに追加"
                 ),
-                Container(
-                  width: cellWidth/2,
-                  height: cellHeight,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      InkWell(
-                      onTap: () {
-                        print('押された');
-                        final Uri toLaunch =
-                            Uri(scheme: 'https', host: 'www.youtube.com', path: "watch",queryParameters: {'v':youtube_id});
-                        _launched = _launchInWebViewOrVC(toLaunch);
-                      },
-                      child: Container(
-                        width: cellWidth/2,
-                        height: cellHeight/4*3,
-                        child:
-                        Text(
-                          press['title'],
-                          maxLines: 3,
-                        )
-                      )),
-                      Container(
-                        width: cellWidth/2,
-                        height: cellHeight/4,
-                        child:Row(
-                          children:[
-                            Container(
-                              width: cellWidth/2 - 35,
-                              //color: Colors.blue,
-                              child: Text(
-                                press['channel_name'],
-                                maxLines: 1,
-                                style: TextStyle(
-                                  fontSize: cellHeight/4/2,
-                                  color: Colors.grey
-                                ),
-                              )
-                            ),
-                            InkWell(
-                              onTap: () {
-                                print("押された");
-                                showModalBottomSheet(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return modalWindow(press, context, 'each_video');
-                                  },
-                                );
-                              },
-                              child:Container(
-                                height: 35,
-                                width: 35,
-                                alignment: Alignment.bottomRight,
-                                child: Container(
-                                  height: 25,
-                                  width: 25,
-                                  child: Icon(Icons.more_horiz),
-                                )
-                              )
-                            ),
-                          ],
-                        )
-                      )
-                    ])
-                )
-              ]
-            )
-          )
-        ]
-      )
+              ],
+            );
+          }
+        );
+      },
+      onPressedTitle: (){
+        print('押された');
+        final Uri toLaunch = Uri(
+            scheme: 'https',
+            host: 'www.youtube.com',
+            path: "watch",
+            queryParameters: {'v': press['youtube_id']});
+        _launched = _launchInWebViewOrVC(toLaunch);
+      },
     );
   }
 
@@ -519,13 +367,14 @@ class _HomePageState extends State<HomePage>  {
       youtubeController.pause();
     });
     updateScreen();
+    closeYoutube();
+    layoutHeight.hideYoutube();
   }
 
   saveMultiple(){
     updateScreen();
     print("お気に入り追加");
   }
-
 
   Offset synchronizedWidgetPosition = Offset(0, 0);
 
@@ -628,18 +477,48 @@ class _HomePageState extends State<HomePage>  {
                     Container(
                       height: layoutHeight.menu_area,
                       alignment: Alignment.centerRight,
-                        child: IconButton(
-                          icon: Icon(Icons.pending),
-                          onPressed: () {
-                            showModalBottomSheet(
-                              isScrollControlled: true,
-                              context: context,
-                              builder: (BuildContext context) {
-                                return modalWindow({}, context, 'menu');
-                              },
-                            );
-                          },
-                        )
+                      child: IconButton(
+                        icon: Icon(Icons.pending),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            isScrollControlled: true,
+                            context: context,
+                            builder: (BuildContext context) {
+                              return ModalWindow(
+                                windowWidth: _deviceWidth!,
+                                buttons: [
+                                  MenuButton(
+                                    onPressed: () async {
+                                      Navigator.of(context).pop();
+                                    },
+                                    name:"選択"
+                                  ),
+                                  if(mixedMap[currentIndex]['name'] == 'favorite')
+                                  MenuButton(
+                                    onPressed: () async {
+                                      _favorite.deleteTable();
+                                      _favorite = Favorite();
+                                      updateScreen();
+                                      Navigator.of(context).pop();
+                                    },
+                                    name:"お気に入りを全て削除"
+                                  ),
+                                  if(mixedMap[currentIndex]['name'] == 'history')
+                                  MenuButton(
+                                    onPressed: () async {
+                                      _history.deleteTable();
+                                      _history = History();
+                                      updateScreen();
+                                      Navigator.of(context).pop();
+                                    },
+                                    name:"履歴を全て削除"
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      )
                     ),
                     Container(
                       //height: 200.0, // Height of the synchronized widget

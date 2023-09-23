@@ -111,6 +111,7 @@ class LayoutHeight  {
   hideYoutube(){
     youtubeDisplayLeft = deviceWidth;
     youtubeDisplayHieght = 0;
+    print("隠す");
   }
 
   getInnerScrollHeight(){
