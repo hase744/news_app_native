@@ -43,28 +43,22 @@ class _HomePageState extends State<HomePage>  {
         autoPlay: false,  // 自動再生しない
       ),
     );
-  ScrollController _innerScrollController = ScrollController();
-  ScrollController _outerScrollController = ScrollController();
-  bool ableInnerScroll = false;
-  bool ableOuterScroll = true;
-  bool displayYoutube = true;
-  var _history = History(); 
+  ScrollController _scrollController = ScrollController();
+  History _history = History(); 
   Favorite _favorite = Favorite(); // History クラスのインスタンスを作成
   var category_setting = CategorySetting();
   LayoutHeight layoutHeight = LayoutHeight(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0);
   DefaultValue defaultValue = DefaultValue();
   String _categoryName = "ビジネス";
-  Color _color = Color.fromRGBO(250, 100, 100, 1);
   int currentIndex = 0;
   int currentCategoryIndex = 0;
   int _pressUnitCount = 20;
   int _scrollUperCount = 0;
-  late int _pressCount =  _pressUnitCount;
   bool _displayLoadingScreen = false;
   String? _alert;
   Future<void>? _launched;
-  String mode = 'normal';
-  final prefs = SharedPreferences.getInstance();
+  late int _pressCount =  _pressUnitCount;
+  late Color _curretColor = colors[0];
 
   late List<Map<dynamic, dynamic>> mixedMap = [
     {
@@ -110,10 +104,10 @@ class _HomePageState extends State<HomePage>  {
         flags: YoutubePlayerFlags(
           autoPlay: false,  // 自動再生しない
         ),);
-      _innerScrollController = ScrollController(initialScrollOffset: _deviceWidth!/10);
+      _scrollController = ScrollController(initialScrollOffset: _deviceWidth!/10);
     });
 
-    _innerScrollController.addListener(() {
+    _scrollController.addListener(() {
       setOffset();
     });
     SettingPage settingPage = SettingPage();
@@ -123,7 +117,7 @@ class _HomePageState extends State<HomePage>  {
 
   setOffset(){
     setState(() {
-      double offset = _innerScrollController.offset;
+      double offset = _scrollController.offset;
       layoutHeight.scrollOffset = offset.clamp(0.0, layoutHeight.menu_area);//menuが見える時以外offsetは0にする
     });
   }
@@ -133,7 +127,7 @@ class _HomePageState extends State<HomePage>  {
     await SelectCategory(currentCategoryIndex);
     resetPressCount();
     setState(() {
-      _innerScrollController.jumpTo(_deviceHeight!/10);
+      _scrollController.jumpTo(_deviceHeight!/10);
     });
   }
 
@@ -148,9 +142,7 @@ class _HomePageState extends State<HomePage>  {
       layoutHeight.setForNewsCellsHeight();
       _press = histories; // 取得したデータを _press 変数に代入
       resetPressCount();
-      _outerScrollController.jumpTo(0);
     });
-    setForInnerScroll();
   }
 
   Future<void> displayFavorites() async {
@@ -163,23 +155,8 @@ class _HomePageState extends State<HomePage>  {
       layoutHeight.setForNewsCellsHeight();
       _press = favorites; // 取得したデータを _press 変数に代入
       resetPressCount();
-      _outerScrollController.jumpTo(0);
     });
-    setForInnerScroll();
     closeYoutube();
-  }
-
-  void setForOuterScroll(){
-    setState(() {
-      ableInnerScroll = false;
-      ableOuterScroll = true;
-    });
-  }
-  void setForInnerScroll(){
-    setState(() {
-      ableInnerScroll = true;
-      ableOuterScroll = false;
-    });
   }
 
   void setDefauldLayout(){
@@ -192,14 +169,13 @@ class _HomePageState extends State<HomePage>  {
         barHeight: bar.height,
         innerHeight: _deviceHeight! - _padding.top - _padding.bottom
       );
-      //_innerScrollController.jumpTo(100.0);
+      //_scrollController.jumpTo(100.0);
     });
     layoutHeight.setForNewsCellsHeight();
   }
 
   void openYoutube(Map press) async {
     String youtube_id = press["youtube_id"];
-    print("youtube 開く");
     layoutHeight.displayYoutube();
     layoutHeight.setForNewsCellsHeight();
     //最後に再生した動画を保存機能
@@ -218,7 +194,6 @@ class _HomePageState extends State<HomePage>  {
     layoutHeight.hideYoutube();
     layoutHeight.setForNewsCellsHeight();
     youtubeController.pause();
-    print("閉じる");
   }
 
   double fontSize(int text_count) {
@@ -236,7 +211,7 @@ class _HomePageState extends State<HomePage>  {
     setState(() {
       closeYoutube();
       _categoryName = _presses[category_num]['japanese_name'];
-      _color =  colors[category_num % colors.length];
+      _curretColor =  colors[category_num % colors.length];
       _press = press;
     });
   }
@@ -258,12 +233,6 @@ class _HomePageState extends State<HomePage>  {
 
   String listToString(List<String> list) {
     return list.map<String>((String value) => value).join(',');
-  }
-
-  settingWindow(BuildContext context){
-    SettingPage settingPage = SettingPage();
-    return settingPage;
-    //category_setting;
   }
 
   Future<void> _launchInWebViewOrVC(Uri url) async {
@@ -349,7 +318,6 @@ class _HomePageState extends State<HomePage>  {
         );
       },
       onPressedTitle: (){
-        print('押された');
         final Uri toLaunch = Uri(
             scheme: 'https',
             host: 'www.youtube.com',
@@ -417,9 +385,6 @@ class _HomePageState extends State<HomePage>  {
                             //layoutHeight.menu_area =  before;
                             });
                           }
-                          if (before == 0 && mixedMap[currentIndex]['name'] == 'home') {
-                            setForOuterScroll();
-                          }
                           if (before == max) {
                             print("した");
                             setState(() {
@@ -444,7 +409,7 @@ class _HomePageState extends State<HomePage>  {
                         bottom: 0,
                         child: 
                         ListView(
-                          controller: _innerScrollController,
+                          controller: _scrollController,
                           //physics: ableInnerScroll ?  const AlwaysScrollableScrollPhysics() : const  NeverScrollableScrollPhysics(),
                           children: [
                             Container(
@@ -491,7 +456,7 @@ class _HomePageState extends State<HomePage>  {
                                     onPressed: () async {
                                       Navigator.of(context).pop();
                                     },
-                                    name:"選択"
+                                    name:"複数選択"
                                   ),
                                   if(mixedMap[currentIndex]['name'] == 'favorite')
                                   MenuButton(
@@ -570,7 +535,7 @@ class _HomePageState extends State<HomePage>  {
                                   ),
                                 ),
                                 Container(
-                                  color: _color,
+                                  color: _curretColor,
                                   width: _deviceWidth,
                                   height: layoutHeight.category_bar_line,
                                 ),
