@@ -32,23 +32,31 @@ class VideoCellClass extends StatelessWidget {
             child: Row(
               children: [
                 Container(
-                  width: cellWidth / 2,
-                  height: cellHeight,
-                  color: Colors.red,
+                  width: (cellWidth / 2)*0.9,
+                  height: cellHeight*0.9,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.blue,
+                  ),
+                  //color: Colors.red,
+                  margin: EdgeInsets.symmetric(horizontal:cellWidth/2*0.05, vertical: cellHeight*0.05),
                   child: InkWell(
                     onTap: onPressedYoutube,
                     child: Stack(
                       children: [
                         Positioned.fill(
-                          child: Image.network(
-                            "http://img.youtube.com/vi/$youtube_id/sddefault.jpg",
-                            fit: BoxFit.cover,
-                            errorBuilder: (c, o, s) {
-                              return const Icon(
-                                Icons.error,
-                                color: Colors.red,
-                              );
-                            },
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8.0),
+                            child:Image.network(
+                              "http://img.youtube.com/vi/$youtube_id/sddefault.jpg",
+                              fit: BoxFit.cover,
+                              errorBuilder: (c, o, s) {
+                                return const Icon(
+                                  Icons.error,
+                                  color: Colors.red,
+                                );
+                              },
+                            )
                           ),
                         ),
                         Positioned.fill(
@@ -74,41 +82,50 @@ class VideoCellClass extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       InkWell(
-                          onTap: onPressedTitle,
-                          child: Container(
-                              width: cellWidth / 2,
-                              height: cellHeight / 4 * 3,
-                              child: Text(
-                                press['title'],
-                                maxLines: 3,
-                              ))),
-                      Container(
+                        onTap: onPressedTitle,
+                        child: Container(
                           width: cellWidth / 2,
-                          height: cellHeight / 4,
-                          child: Row(
-                            children: [
-                              Container(
-                                  width: cellWidth / 2 - 35,
-                                  child: Text(
-                                    press['channel_name'],
-                                    maxLines: 1,
-                                    style: TextStyle(
-                                        fontSize: cellHeight / 4 / 2,
-                                        color: Colors.grey),
-                                  )),
-                              InkWell(
-                                  onTap: onPressedOptions,
-                                  child: Container(
-                                      height: 35,
-                                      width: 35,
-                                      alignment: Alignment.bottomRight,
-                                      child: Container(
-                                        height: 25,
-                                        width: 25,
-                                        child: Icon(Icons.more_horiz),
-                                      ))),
-                            ],
-                          ))
+                          height: cellHeight / 4 * 3,
+                          child: Text(
+                            press['title'],
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 3,
+                          )
+                        )
+                      ),
+                      Container(
+                        width: cellWidth / 2,
+                        height: cellHeight / 4,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: cellWidth / 2 - 35,
+                              child: Text(
+                                press['channel_name'],
+                                maxLines: 1,
+                                style: TextStyle(
+                                    fontSize: cellHeight / 4 / 2,
+                                    color: Colors.grey),
+                              )
+                            ),
+                            InkWell(
+                              onTap: onPressedOptions,
+                              child: Container(
+                                height: 35,
+                                width: 35,
+                                alignment: Alignment.bottomRight,
+                                child: Container(
+                                  height: 25,
+                                  width: 25,
+                                  child: Icon(Icons.more_horiz),
+                                )
+                              )
+                            ),
+                          ],
+                        )
+                      )
                     ],
                   ),
                 )
