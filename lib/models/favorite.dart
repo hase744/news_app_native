@@ -32,9 +32,14 @@ class Favorite{
   }
 
   Future<void> create(Map press) async {
-    Map<String, String> stringMap = press.map((key, value) {
-      return MapEntry(key.toString(), value.toString());
-    });
+    print(press['title']);
+    Map<String, dynamic> stringMap = {
+      'youtube_id': press['youtube_id'],
+      'title': press['title'],
+      'channel_id': press['channel_id'],
+      'channel_name': press['channel_name'],
+      'second': press['second'],
+    };
     print("お気に入り追加");
     stringMap['created_at'] = "$DateTime.now()";
     await _database.insert(

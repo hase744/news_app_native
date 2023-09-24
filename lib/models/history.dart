@@ -48,10 +48,14 @@ class History{
     await deleteDatabase(dbPath);
   }
 
-  Future<void> create(Map press) async {
-    Map<String, String> stringMap = press.map((key, value) {
-      return MapEntry(key.toString(), value.toString());
-    });
+  Future<void> create(Map video) async {
+    Map<String, dynamic> stringMap = {
+      'youtube_id': video['youtube_id'],
+      'title': video['title'],
+      'channel_id': video['channel_id'],
+      'channel_name': video['channel_name'],
+      'second': video['second'],
+    };
     await _database.insert(
       'Histories',
       stringMap,
