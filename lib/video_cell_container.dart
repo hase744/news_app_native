@@ -86,7 +86,7 @@ class _VideoCellContainerState extends State<VideoCellContainer> {
           )
         ],
       ),
-    );;
+    );
   }
 
   Widget videoCell(BuildContext context, Map press){

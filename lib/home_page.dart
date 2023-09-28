@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'bottom_navigation_bar.dart';
+import 'views/bottom_navigation_bar.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'models/history.dart';
 import 'setting_page.dart';
 import 'category_setting.dart';
-import 'package:settings_ui/settings_ui.dart';
-import 'package:flutter/scheduler.dart';
-import 'setting_page.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'web_window.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'models/layout_height.dart';
@@ -19,6 +15,9 @@ import 'views/video_cell.dart';
 import 'views/modal_window.dart';
 import 'models/menu_button.dart';
 import 'models/favorite.dart';
+import 'package:video_news/views/bottom_menu_bar.dart';
+import 'package:video_news/consts/navigation_list_config.dart';
+import 'package:video_news/models/navigation_item.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -37,6 +36,8 @@ class _HomePageState extends State<HomePage>  {
   String? _pressesJson = "";
   List _press = [];
   List _presses = [];
+  List<Map> selection = [];
+  List selectedVideos = [];
   YoutubePlayerController youtubeController = YoutubePlayerController(
     initialVideoId: '4b6DuHGcltI',
     flags: YoutubePlayerFlags(
@@ -46,38 +47,21 @@ class _HomePageState extends State<HomePage>  {
   ScrollController _scrollController = ScrollController();
   History _history = History(); 
   Favorite _favorite = Favorite(); // History クラスのインスタンスを作成
-  var category_setting = CategorySetting();
+  CategorySetting category_setting = CategorySetting();
   LayoutHeight layoutHeight = LayoutHeight(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0);
   DefaultValue defaultValue = DefaultValue();
   String _categoryName = "ビジネス";
-  int currentIndex = 0;
+  int pageIndex = 0;
   int currentCategoryIndex = 0;
   int _pressUnitCount = 20;
-  int _scrollUperCount = 0;
   bool _displayLoadingScreen = false;
   String? _alert;
+  bool isSelectMode = false;
   Future<void>? _launched;
   late int _pressCount =  _pressUnitCount;
   late Color _curretColor = colors[0];
-
-  late List<Map<dynamic, dynamic>> mixedMap = [
-    {
-    "name": 'home',
-    "item":BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム')
-    },
-    {
-    "name": 'favorite',
-    "item":BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'お気に入り')
-    },
-    {
-    "name": 'history',
-    "item":BottomNavigationBarItem(icon: Icon(Icons.history), label: '履歴')
-    },
-    {
-    "name": 'setting',
-    "item":BottomNavigationBarItem(icon: Icon(Icons.settings), label: '設定')
-    },
-  ];
+  List<NavigationItem> menuList = NavigationListConfig.menuList;
+  List<NavigationItem> pageList = NavigationListConfig.pageList;
 
   @override
   void initState() {
@@ -160,13 +144,12 @@ class _HomePageState extends State<HomePage>  {
   }
 
   void setDefauldLayout(){
-    HomeBottomNavigationBar bar = HomeBottomNavigationBar(initialIndex: 0);
     setState(() {
       var _padding = MediaQuery.of(context).padding;
       layoutHeight = LayoutHeight(
         deviceWidth: _deviceWidth!,
         deviceHeight: _deviceHeight!,
-        barHeight: bar.height,
+        barHeight: 100,
         innerHeight: _deviceHeight! - _padding.top - _padding.bottom
       );
       //_scrollController.jumpTo(100.0);
@@ -258,7 +241,7 @@ class _HomePageState extends State<HomePage>  {
   }
   
   void updateScreen(){
-    switch(mixedMap[currentIndex]['name']) {
+    switch(pageList[pageIndex].name) {
       case 'home':
         displayNews();
         break;
@@ -271,26 +254,93 @@ class _HomePageState extends State<HomePage>  {
         break;
       case 'setting':
         Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) =>SettingPage()),
-          );
+          context,
+          MaterialPageRoute(builder: (context) =>SettingPage()),
+        );
         break;
       default:
         break;
     }
   }
 
-  Widget videoCell(BuildContext context, Map press){
-    String youtube_id = press['youtube_id'];
+  selectVideo(Map video){
+    setState(() {
+      if(selection.contains(video)){
+        selection.remove(video);
+      }else{
+        selection.add(video);
+      }
+    });
+  }
+
+  displayAlert(String alert){
+    setState(() {
+    _alert = alert;
+    layoutHeight.alert = 20;
+    });
+    Future.delayed(const Duration(seconds: 2), () {
+      setState(() {
+        layoutHeight.alert = 0;
+        _alert = null;
+      });
+    });
+  }
+
+  bottmBar(){
+    if(isSelectMode){
+      return BottomMenuNavigationBar(
+        initialIndex: pageIndex, 
+        onTap: (int index){
+            switch(menuList[index].name){
+              case 'favorite':
+                if(selection.isNotEmpty){
+                  _favorite.createBatch(selection);
+                  displayAlert("お気に入りに追加しました");
+                  setState(() {
+                    isSelectMode = false;
+                    selection = [];
+                  });
+                }else{
+                  displayAlert("選択されてません");
+                }
+              case 'close':
+                  setState(() {
+                    isSelectMode = false;
+                    selection = [];
+                  });
+              default:
+            }
+        }, 
+      );
+    }else{
+      return HomeBottomNavigationBar(
+        initialIndex: pageIndex, 
+        onTap: (int index){
+          pageIndex = index;
+          updateScreen();
+          print(index);
+        }, 
+        isSelectMode: isSelectMode
+      );
+    }
+  }
+
+  Widget videoCell(BuildContext context, Map video){
+    String youtube_id = video['youtube_id'];
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth!/2/16*9;
-    bool isFavorite = mixedMap[currentIndex]['name'] == 'favorite';
+    bool isFavorite = pageList[pageIndex].name == 'favorite';
     return VideoCellClass(
-      press: press, 
+      press: video, 
+      isSelectMode: isSelectMode,
+      isSelected: selection.contains(video),
       cellHeight: cellHeight, 
       cellWidth: cellWidth, 
+      onSelected: (){
+        selectVideo(video);
+      },
       onPressedYoutube: (){
-        openYoutube(press);
+        openYoutube(video);
       },
       onPressedOptions: (){
         showModalBottomSheet(
@@ -302,13 +352,13 @@ class _HomePageState extends State<HomePage>  {
                 MenuButton(
                   onPressed: () async {
                     if (isFavorite) {
-                      await _favorite.delete(press['id']);
+                      await _favorite.delete(video['id']);
                     } else {
-                      await _favorite.create(press);
+                      await _favorite.create(video);
                     }
                     updateScreen();
-                    print("お気に入り追加");
                     Navigator.of(context).pop();
+                    displayAlert(isFavorite ? "削除しました" : "追加しました");
                   },
                   name:isFavorite ? "ーお気に入りから削除" : "＋お気に入りに追加"
                 ),
@@ -322,7 +372,8 @@ class _HomePageState extends State<HomePage>  {
             scheme: 'https',
             host: 'www.youtube.com',
             path: "watch",
-            queryParameters: {'v': press['youtube_id']});
+            queryParameters: {'v': video['youtube_id']}
+            );
         _launched = _launchInWebViewOrVC(toLaunch);
       },
     );
@@ -331,7 +382,7 @@ class _HomePageState extends State<HomePage>  {
   transitNavigation(index){
     setState(() {
       _pressCount = 0;
-      currentIndex = index;
+      pageIndex = index;
       youtubeController.pause();
     });
     updateScreen();
@@ -339,19 +390,11 @@ class _HomePageState extends State<HomePage>  {
     layoutHeight.hideYoutube();
   }
 
-  saveMultiple(){
-    updateScreen();
-    print("お気に入り追加");
-  }
-
   Offset synchronizedWidgetPosition = Offset(0, 0);
 
   @override
   Widget build(BuildContext context) {
     //_presses = json.decode(_pressesJson!);
-    List<BottomNavigationBarItem> itemList = mixedMap.map((map) => map["item"]).toList()
-    .whereType<BottomNavigationBarItem>() // BottomNavigationBarItem型の要素のみ抽出
-    .toList();
     return 
       SafeArea(
       child:
@@ -418,8 +461,9 @@ class _HomePageState extends State<HomePage>  {
                               //color: Colors.blue,
                               child: Spacer(),
                             ),
-                          for(var i=0; i<_pressCount; i++)
-                            videoCell(context, _press[i]),
+                          if(_press.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
+                            for(var i=0; i<_pressCount; i++)
+                              videoCell(context, _press[i]),
                           if(_displayLoadingScreen)
                           Container(
                             alignment: Alignment.center,
@@ -455,26 +499,31 @@ class _HomePageState extends State<HomePage>  {
                                   MenuButton(
                                     onPressed: () async {
                                       Navigator.of(context).pop();
+                                      setState(() {
+                                        isSelectMode = true;
+                                         updateScreen();
+                                      });
                                     },
                                     name:"複数選択"
                                   ),
-                                  if(mixedMap[currentIndex]['name'] == 'favorite')
+                                  if(pageList[pageIndex].name == 'favorite')
                                   MenuButton(
                                     onPressed: () async {
                                       _favorite.deleteTable();
                                       _favorite = Favorite();
-                                      updateScreen();
                                       Navigator.of(context).pop();
+                                      displayFavorites();
+                                      displayAlert("削除しました");
                                     },
                                     name:"お気に入りを全て削除"
                                   ),
-                                  if(mixedMap[currentIndex]['name'] == 'history')
+                                  if(pageList[pageIndex].name == 'history')
                                   MenuButton(
                                     onPressed: () async {
                                       _history.deleteTable();
-                                      _history = History();
-                                      updateScreen();
                                       Navigator.of(context).pop();
+                                      displayHistory();
+                                      displayAlert("削除しました");
                                     },
                                     name:"履歴を全て削除"
                                   ),
@@ -542,7 +591,16 @@ class _HomePageState extends State<HomePage>  {
                                 if(_alert != null)
                                 Container(
                                   height: layoutHeight.alert,
-                                  child: Text(_alert!),
+                                  width: _deviceWidth,
+                                  color: Colors.orange,
+                                  child: Text(
+                                    _alert!, 
+                                    style: 
+                                    const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold
+                                    ),
+                                  ),
                                 ),
                               ],
                             )
@@ -553,15 +611,7 @@ class _HomePageState extends State<HomePage>  {
                 ),
               ),
             ),
-            bottomNavigationBar: BottomNavigationBar(
-              selectedItemColor: Colors.blue,
-              currentIndex: currentIndex,
-              onTap: (index) {
-                transitNavigation(index);
-              },
-              items: true ? itemList : itemList,
-              type: BottomNavigationBarType.fixed,
-            ),
+            bottomNavigationBar: bottmBar(),
           ),
           Transform.translate(
             offset: layoutHeight.youtubePlayerOffset(context),//Offset(0, 0),

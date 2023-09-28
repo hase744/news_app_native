@@ -31,14 +31,14 @@ class Favorite{
     await deleteDatabase(dbPath);
   }
 
-  Future<void> create(Map press) async {
-    print(press['title']);
+  Future<void> create(Map videoMap) async {
+    print(videoMap['title']);
     Map<String, dynamic> stringMap = {
-      'youtube_id': press['youtube_id'],
-      'title': press['title'],
-      'channel_id': press['channel_id'],
-      'channel_name': press['channel_name'],
-      'second': press['second'],
+      'youtube_id': videoMap['youtube_id'],
+      'title': videoMap['title'],
+      'channel_id': videoMap['channel_id'],
+      'channel_name': videoMap['channel_name'],
+      'second': videoMap['second'],
     };
     print("お気に入り追加");
     stringMap['created_at'] = "$DateTime.now()";
@@ -47,6 +47,12 @@ class Favorite{
       stringMap,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  Future<void> createBatch(List<Map> videosList) async {
+    for(var video in videosList){
+      create(video);
+    }
   }
 
   Future<void> delete(int id) async {
