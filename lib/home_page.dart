@@ -263,16 +263,6 @@ class _HomePageState extends State<HomePage>  {
     }
   }
 
-  selectVideo(Map video){
-    setState(() {
-      if(selection.contains(video)){
-        selection.remove(video);
-      }else{
-        selection.add(video);
-      }
-    });
-  }
-
   displayAlert(String alert){
     setState(() {
     _alert = alert;
@@ -325,15 +315,27 @@ class _HomePageState extends State<HomePage>  {
     }
   }
 
+  selectVideo(Map video){
+    int index = selection.indexWhere((map) => map["youtube_id"] == video['youtube_id']);
+    setState(() {
+      if(index != -1){
+        selection.removeAt(index);
+      }else{
+        selection.add(video);
+      }
+    });
+  }
+
   Widget videoCell(BuildContext context, Map video){
     String youtube_id = video['youtube_id'];
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth!/2/16*9;
     bool isFavorite = pageList[pageIndex].name == 'favorite';
+    List youtubeIds = selection.map((map) => map["youtube_id"]).toList();
     return VideoCellClass(
       press: video, 
       isSelectMode: isSelectMode,
-      isSelected: selection.map((map) => map["youtube_id"]).toList().contains(youtube_id),
+      isSelected: youtubeIds.contains(youtube_id),
       cellHeight: cellHeight, 
       cellWidth: cellWidth, 
       onSelected: (){
