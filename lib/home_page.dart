@@ -390,7 +390,23 @@ class _HomePageState extends State<HomePage>  {
     layoutHeight.hideYoutube();
   }
 
-  Offset synchronizedWidgetPosition = Offset(0, 0);
+  scrollToPoint(double offset){
+    Future.delayed(Duration(seconds: 0), () {
+      _scrollController.animateTo(
+        offset,
+        duration: Duration(seconds: 1),
+        curve: Curves.ease,
+      );
+    });
+  }
+
+  scrollForMenu(double offest){
+    if(offest < layoutHeight.menu_area/2){
+      scrollToPoint(0);
+    }else if(offest > layoutHeight.menu_area/2 && offest < layoutHeight.menu_area){
+      scrollToPoint(layoutHeight.menu_area);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -421,13 +437,10 @@ class _HomePageState extends State<HomePage>  {
                     NotificationListener<ScrollNotification>(
                       onNotification: (ScrollNotification scrollNotification) {
                         if (scrollNotification is ScrollEndNotification) {
+                          // The ListView has stopped scrolling
                           final before = scrollNotification.metrics.extentBefore;
                           final max = scrollNotification.metrics.maxScrollExtent;
-                          if(before < layoutHeight.menu_area!){
-                            setState(() {
-                            //layoutHeight.menu_area =  before;
-                            });
-                          }
+                          scrollForMenu(before);
                           if (before == max) {
                             print("した");
                             setState(() {
