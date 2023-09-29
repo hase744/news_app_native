@@ -291,25 +291,25 @@ class _HomePageState extends State<HomePage>  {
       return BottomMenuNavigationBar(
         initialIndex: pageIndex, 
         onTap: (int index){
-            switch(menuList[index].name){
-              case 'favorite':
-                if(selection.isNotEmpty){
-                  _favorite.createBatch(selection);
-                  displayAlert("お気に入りに追加しました");
-                  setState(() {
-                    isSelectMode = false;
-                    selection = [];
-                  });
-                }else{
-                  displayAlert("選択されてません");
-                }
-              case 'close':
-                  setState(() {
-                    isSelectMode = false;
-                    selection = [];
-                  });
-              default:
-            }
+          switch(menuList[index].name){
+            case 'favorite':
+              if(selection.isNotEmpty){
+                _favorite.createBatch(selection);
+                displayAlert("お気に入りに追加しました");
+                setState(() {
+                  isSelectMode = false;
+                  selection = [];
+                });
+              }else{
+                displayAlert("選択されてません");
+              }
+            case 'close':
+                setState(() {
+                  isSelectMode = false;
+                  selection = [];
+                });
+            default:
+          }
         }, 
       );
     }else{
@@ -333,7 +333,7 @@ class _HomePageState extends State<HomePage>  {
     return VideoCellClass(
       press: video, 
       isSelectMode: isSelectMode,
-      isSelected: selection.contains(video),
+      isSelected: selection.map((map) => map["youtube_id"]).toList().contains(youtube_id),
       cellHeight: cellHeight, 
       cellWidth: cellWidth, 
       onSelected: (){
@@ -369,11 +369,11 @@ class _HomePageState extends State<HomePage>  {
       },
       onPressedTitle: (){
         final Uri toLaunch = Uri(
-            scheme: 'https',
-            host: 'www.youtube.com',
-            path: "watch",
-            queryParameters: {'v': video['youtube_id']}
-            );
+          scheme: 'https',
+          host: 'www.youtube.com',
+          path: "watch",
+          queryParameters: {'v': video['youtube_id']}
+        );
         _launched = _launchInWebViewOrVC(toLaunch);
       },
     );
