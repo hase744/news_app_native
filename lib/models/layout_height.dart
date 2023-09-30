@@ -10,15 +10,17 @@ class LayoutHeight  {
   late double app_bar = 40;
   late double category_bar = deviceWidth/10;
   late double category_bar_line =5;
-  late double menu_area = deviceWidth/10;
-  late double youtubeDisplayHieght = deviceWidth/16*9;
+  //late double menu_area = deviceWidth/5;
+  late double search_area = deviceWidth/10;
+  late double load_area = deviceWidth/10;
+  late double youtubeDisplayHeight = deviceWidth/16*9;
   late double youtubeDisplayWidth = deviceWidth;
   late double youtubeDisplayTop = 0;
   late double youtubeDisplayLeft = 0;
   late double bottom_nabigation_bar = barHeight;
   late double alert = 0;
   late double news_cells = 0;
-  late double scrollOffset = deviceWidth/10; //menu_areaと同じ値
+  late double videoCellsOffset = deviceWidth/5; //menu_areaと同じ値
   late bool ishome = false;
   double get number => _number;
   
@@ -32,7 +34,18 @@ class LayoutHeight  {
   setForDefault(){
     category_bar = 0;
     category_bar_line = 0;
-    youtubeDisplayHieght = 0;
+    youtubeDisplayHeight = 0;
+  }
+
+  setForList(){
+    category_bar = 0;
+    category_bar_line = 0;
+    youtubeDisplayHeight = 0;
+    load_area = 0;
+  }
+
+  double getTopMenuHeight(){
+    return search_area + load_area;
   }
   
   getYoutubeDisplayWidth(context){
@@ -66,13 +79,9 @@ class LayoutHeight  {
     return category_bar;
   }
 
-  double menuArea(){
-    return menu_area;
-  }
-
   Offset youtubePlayerOffset(context){
     if(MediaQuery.of(context).orientation == Orientation.portrait){//縦向き
-      youtubeDisplayTop = app_bar + menu_area + category_bar + category_bar_line - scrollOffset;
+      youtubeDisplayTop = app_bar + getTopMenuHeight() + category_bar + category_bar_line - videoCellsOffset;
       if(youtubeDisplayLeft != deviceWidth){//youtubeが開いている
         youtubeDisplayLeft = 0;
       }
@@ -85,17 +94,21 @@ class LayoutHeight  {
   }
 
   Offset categorybarOffset(){
-    return Offset(0, menu_area - scrollOffset) ;
+    return Offset(0, getTopMenuHeight() - videoCellsOffset) ;
   }
+   Offset getTopMenuOffset(){
+    return Offset(0, - videoCellsOffset.clamp(0.0, load_area));
+   }
 
-  setForNewsCellsHeight(){
+  setHeightForVideoCells(){
     news_cells = 0;
     news_cells = innerHeight
      - app_bar
      - category_bar
      - category_bar_line
-     - menu_area
-     - youtubeDisplayHieght
+     - load_area
+     - search_area
+     - youtubeDisplayHeight
      - bottom_nabigation_bar
      - alert
      - news_cells
@@ -104,27 +117,27 @@ class LayoutHeight  {
 
   displayYoutube(){
     youtubeDisplayLeft = 0;
-    youtubeDisplayHieght = deviceWidth/16*9;
+    youtubeDisplayHeight = deviceWidth/16*9;
     youtubeDisplayWidth = deviceWidth;
   }
 
   hideYoutube(){
     youtubeDisplayLeft = deviceWidth;
-    youtubeDisplayHieght = 0;
+    youtubeDisplayHeight = 0;
     print("隠す");
   }
 
   getInnerScrollHeight(){
-    double height = app_bar + category_bar + category_bar_line + youtubeDisplayHieght + news_cells;
+    double height = app_bar + category_bar + category_bar_line + youtubeDisplayHeight + news_cells;
     if(ishome){
       return height;
     }else{
-      return height - menu_area;
+      return height - getTopMenuHeight();
     }
   }
 
   listViewTop(){
-    return category_bar + category_bar_line + youtubeDisplayHieght;
+    return category_bar + category_bar_line + youtubeDisplayHeight;
   }
 
   // Setter

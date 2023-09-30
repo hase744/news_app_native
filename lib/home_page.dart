@@ -88,7 +88,7 @@ class _HomePageState extends State<HomePage>  {
         flags: YoutubePlayerFlags(
           autoPlay: false,  // 自動再生しない
         ),);
-      _scrollController = ScrollController(initialScrollOffset: _deviceWidth!/10);
+      _scrollController = ScrollController(initialScrollOffset: _deviceWidth!/5);
     });
 
     _scrollController.addListener(() {
@@ -102,7 +102,7 @@ class _HomePageState extends State<HomePage>  {
   setOffset(){
     setState(() {
       double offset = _scrollController.offset;
-      layoutHeight.scrollOffset = offset.clamp(0.0, layoutHeight.menu_area);//menuが見える時以外offsetは0にする
+      layoutHeight.videoCellsOffset = offset.clamp(0.0, layoutHeight.getTopMenuHeight());//menuが見える時以外offsetは0にする
     });
   }
 
@@ -111,7 +111,7 @@ class _HomePageState extends State<HomePage>  {
     await SelectCategory(currentCategoryIndex);
     resetPressCount();
     setState(() {
-      _scrollController.jumpTo(_deviceHeight!/10);
+      _scrollController.jumpTo(layoutHeight.getTopMenuHeight());
     });
   }
 
@@ -121,12 +121,12 @@ class _HomePageState extends State<HomePage>  {
     List<Map<String, dynamic>> histories = await _history.all();
     histories = histories.reversed.toList();// あなたの非同期処理;
     setState(() {
-      //setDefauldLayout();
-      layoutHeight.setForDefault();
-      layoutHeight.setForNewsCellsHeight();
+      layoutHeight.setForList();
+      layoutHeight.setHeightForVideoCells();
       _press = histories; // 取得したデータを _press 変数に代入
       resetPressCount();
     });
+    closeYoutube();
   }
 
   Future<void> displayFavorites() async {
@@ -134,9 +134,8 @@ class _HomePageState extends State<HomePage>  {
     List<Map<String, dynamic>> favorites = await _favorite.all();
     favorites = favorites.reversed.toList();// あなたの非同期処理;
     setState(() {
-      //setDefauldLayout();
-      layoutHeight.setForDefault();
-      layoutHeight.setForNewsCellsHeight();
+      layoutHeight.setForList();
+      layoutHeight.setHeightForVideoCells();
       _press = favorites; // 取得したデータを _press 変数に代入
       resetPressCount();
     });
@@ -150,17 +149,17 @@ class _HomePageState extends State<HomePage>  {
         deviceWidth: _deviceWidth!,
         deviceHeight: _deviceHeight!,
         barHeight: 100,
-        innerHeight: _deviceHeight! - _padding.top - _padding.bottom
+        innerHeight: _deviceHeight! - _padding.top - _padding.bottom,
       );
       //_scrollController.jumpTo(100.0);
     });
-    layoutHeight.setForNewsCellsHeight();
+    layoutHeight.setHeightForVideoCells();
   }
 
   void openYoutube(Map press) async {
     String youtube_id = press["youtube_id"];
     layoutHeight.displayYoutube();
-    layoutHeight.setForNewsCellsHeight();
+    layoutHeight.setHeightForVideoCells();
     //最後に再生した動画を保存機能
     final prefs = await SharedPreferences.getInstance();
     await Future.delayed(Duration.zero);
@@ -175,7 +174,7 @@ class _HomePageState extends State<HomePage>  {
 
   void closeYoutube(){
     layoutHeight.hideYoutube();
-    layoutHeight.setForNewsCellsHeight();
+    layoutHeight.setHeightForVideoCells();
     youtubeController.pause();
   }
 
@@ -403,10 +402,12 @@ class _HomePageState extends State<HomePage>  {
   }
 
   scrollForMenu(double offest){
-    if(offest < layoutHeight.menu_area/2){
-      scrollToPoint(0);
-    }else if(offest > layoutHeight.menu_area/2 && offest < layoutHeight.menu_area){
-      scrollToPoint(layoutHeight.menu_area);
+    if(layoutHeight.load_area > 0 && offest < layoutHeight.load_area){
+      scrollToPoint(layoutHeight.load_area);
+    }else if(offest > layoutHeight.load_area && offest < layoutHeight.load_area + layoutHeight.search_area/2){
+      scrollToPoint(layoutHeight.load_area);
+    }else if(offest > layoutHeight.load_area + layoutHeight.search_area/2 && offest < layoutHeight.getTopMenuHeight()){
+      scrollToPoint(layoutHeight.getTopMenuHeight());
     }
   }
 
@@ -472,7 +473,7 @@ class _HomePageState extends State<HomePage>  {
                           children: [
                             Container(
                               width: _deviceWidth!,
-                              height: layoutHeight.menu_area,
+                              height: layoutHeight.getTopMenuHeight(),
                               //color: Colors.blue,
                               child: Spacer(),
                             ),
@@ -498,55 +499,68 @@ class _HomePageState extends State<HomePage>  {
                         )
                       )
                     ),
-                    Container(
-                      height: layoutHeight.menu_area,
-                      alignment: Alignment.centerRight,
-                      child: IconButton(
-                        icon: Icon(Icons.pending),
-                        onPressed: () {
-                          showModalBottomSheet(
-                            isScrollControlled: true,
-                            context: context,
-                            builder: (BuildContext context) {
-                              return ModalWindow(
-                                windowWidth: _deviceWidth!,
-                                buttons: [
-                                  MenuButton(
-                                    onPressed: () async {
-                                      Navigator.of(context).pop();
-                                      setState(() {
-                                        isSelectMode = true;
-                                         updateScreen();
-                                      });
-                                    },
-                                    name:"複数選択"
-                                  ),
-                                  if(pageList[pageIndex].name == 'favorite')
-                                  MenuButton(
-                                    onPressed: () async {
-                                      _favorite.deleteTable();
-                                      _favorite = Favorite();
-                                      Navigator.of(context).pop();
-                                      displayFavorites();
-                                      displayAlert("削除しました");
-                                    },
-                                    name:"お気に入りを全て削除"
-                                  ),
-                                  if(pageList[pageIndex].name == 'history')
-                                  MenuButton(
-                                    onPressed: () async {
-                                      _history.deleteTable();
-                                      Navigator.of(context).pop();
-                                      displayHistory();
-                                      displayAlert("削除しました");
-                                    },
-                                    name:"履歴を全て削除"
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        },
+                    Transform.translate(
+                      offset: layoutHeight.getTopMenuOffset(),
+                      child:
+                       Column(
+                          children: [
+                          Container(
+                            height: layoutHeight.load_area,
+                            child: 
+                              Text(" ↓ 引き下げて更新"),
+                          ),
+                          Container(
+                            height: layoutHeight.search_area,
+                            alignment: Alignment.centerRight,
+                            child: IconButton(
+                              icon: Icon(Icons.pending),
+                              onPressed: () {
+                                showModalBottomSheet(
+                                  isScrollControlled: true,
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return ModalWindow(
+                                      windowWidth: _deviceWidth!,
+                                      buttons: [
+                                        MenuButton(
+                                          onPressed: () async {
+                                            Navigator.of(context).pop();
+                                            setState(() {
+                                              isSelectMode = true;
+                                               updateScreen();
+                                            });
+                                          },
+                                          name:"複数選択"
+                                        ),
+                                        if(pageList[pageIndex].name == 'favorite')
+                                        MenuButton(
+                                          onPressed: () async {
+                                            _favorite.deleteTable();
+                                            _favorite = Favorite();
+                                            Navigator.of(context).pop();
+                                            displayFavorites();
+                                            displayAlert("削除しました");
+                                          },
+                                          name:"お気に入りを全て削除"
+                                        ),
+                                        if(pageList[pageIndex].name == 'history')
+                                        MenuButton(
+                                          onPressed: () async {
+                                            _history.deleteTable();
+                                            Navigator.of(context).pop();
+                                            displayHistory();
+                                            displayAlert("削除しました");
+                                          },
+                                          name:"履歴を全て削除"
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                            )
+                          )
+                        ]
                       )
                     ),
                     Container(
