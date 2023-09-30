@@ -18,6 +18,7 @@ import 'models/favorite.dart';
 import 'package:video_news/views/bottom_menu_bar.dart';
 import 'package:video_news/consts/navigation_list_config.dart';
 import 'package:video_news/models/navigation_item.dart';
+import 'package:flutter/services.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -48,7 +49,7 @@ class _HomePageState extends State<HomePage>  {
   History _history = History(); 
   Favorite _favorite = Favorite(); // History クラスのインスタンスを作成
   CategorySetting category_setting = CategorySetting();
-  LayoutHeight layoutHeight = LayoutHeight(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0);
+  HomeLayout homeLayout = HomeLayout(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0);
   DefaultValue defaultValue = DefaultValue();
   String _categoryName = "ビジネス";
   int pageIndex = 0;
@@ -74,6 +75,12 @@ class _HomePageState extends State<HomePage>  {
     String? defaultYoutubeId = defaultValue.getStoredValue('default_youtube_id');
     category_setting = CategorySetting();
     List presses = await category_setting.getPressOrder();
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarBrightness: Brightness.light,     // for iOS
+        statusBarIconBrightness: Brightness.light,  // for Android
+      ),
+    );
     setState(() {
       var _padding = MediaQuery.of(context).padding;
       _deviceWidth = MediaQuery.of(context).size.width;
@@ -88,7 +95,7 @@ class _HomePageState extends State<HomePage>  {
         flags: YoutubePlayerFlags(
           autoPlay: false,  // 自動再生しない
         ),);
-      _scrollController = ScrollController(initialScrollOffset: _deviceWidth!/5);
+      _scrollController = ScrollController(initialScrollOffset: (_deviceWidth!*homeLayout.topMenuRatio));
       _scrollController.addListener(_onScroll);
     });
 
@@ -103,7 +110,7 @@ class _HomePageState extends State<HomePage>  {
   setOffset(){
     setState(() {
       double offset = _scrollController.offset;
-      layoutHeight.videoCellsOffset = offset.clamp(0.0, layoutHeight.getTopMenuHeight());//menuが見える時以外offsetは0にする
+      homeLayout.videoCellsOffset = offset.clamp(0.0, homeLayout.getTopMenuHeight());//menuが見える時以外offsetは0にする
     });
   }
 
@@ -112,7 +119,7 @@ class _HomePageState extends State<HomePage>  {
     await SelectCategory(currentCategoryIndex);
     resetPressCount();
     setState(() {
-      _scrollController.jumpTo(layoutHeight.getTopMenuHeight());
+      _scrollController.jumpTo(homeLayout.getTopMenuHeight());
     });
   }
 
@@ -122,8 +129,8 @@ class _HomePageState extends State<HomePage>  {
     List<Map<String, dynamic>> histories = await _history.all();
     histories = histories.reversed.toList();// あなたの非同期処理;
     setState(() {
-      layoutHeight.setForList();
-      layoutHeight.setHeightForVideoCells();
+      homeLayout.setForList();
+      homeLayout.setHeightForVideoCells();
       _press = histories; // 取得したデータを _press 変数に代入
       resetPressCount();
     });
@@ -135,8 +142,8 @@ class _HomePageState extends State<HomePage>  {
     List<Map<String, dynamic>> favorites = await _favorite.all();
     favorites = favorites.reversed.toList();// あなたの非同期処理;
     setState(() {
-      layoutHeight.setForList();
-      layoutHeight.setHeightForVideoCells();
+      homeLayout.setForList();
+      homeLayout.setHeightForVideoCells();
       _press = favorites; // 取得したデータを _press 変数に代入
       resetPressCount();
     });
@@ -146,7 +153,7 @@ class _HomePageState extends State<HomePage>  {
   void setDefauldLayout(){
     setState(() {
       var _padding = MediaQuery.of(context).padding;
-      layoutHeight = LayoutHeight(
+      homeLayout = HomeLayout(
         deviceWidth: _deviceWidth!,
         deviceHeight: _deviceHeight!,
         barHeight: 100,
@@ -154,13 +161,13 @@ class _HomePageState extends State<HomePage>  {
       );
       //_scrollController.jumpTo(100.0);
     });
-    layoutHeight.setHeightForVideoCells();
+    homeLayout.setHeightForVideoCells();
   }
 
   void openYoutube(Map press) async {
     String youtube_id = press["youtube_id"];
-    layoutHeight.displayYoutube();
-    layoutHeight.setHeightForVideoCells();
+    homeLayout.displayYoutube();
+    homeLayout.setHeightForVideoCells();
     //最後に再生した動画を保存機能
     final prefs = await SharedPreferences.getInstance();
     await Future.delayed(Duration.zero);
@@ -174,8 +181,8 @@ class _HomePageState extends State<HomePage>  {
   }
 
   void closeYoutube(){
-    layoutHeight.hideYoutube();
-    layoutHeight.setHeightForVideoCells();
+    homeLayout.hideYoutube();
+    homeLayout.setHeightForVideoCells();
     youtubeController.pause();
   }
 
@@ -266,11 +273,11 @@ class _HomePageState extends State<HomePage>  {
   displayAlert(String alert){
     setState(() {
     _alert = alert;
-    layoutHeight.alert = 20;
+    homeLayout.alertHeight = 20;
     });
     Future.delayed(const Duration(seconds: 2), () {
       setState(() {
-        layoutHeight.alert = 0;
+        homeLayout.alertHeight = 0;
         _alert = null;
       });
     });
@@ -389,7 +396,7 @@ class _HomePageState extends State<HomePage>  {
     });
     updateScreen();
     closeYoutube();
-    layoutHeight.hideYoutube();
+    homeLayout.hideYoutube();
   }
 
   scrollToPoint(double offset){
@@ -403,12 +410,12 @@ class _HomePageState extends State<HomePage>  {
   }
 
   scrollForMenu(double offest){
-    if(layoutHeight.load_area > 0 && offest < layoutHeight.load_area){
-      scrollToPoint(layoutHeight.load_area);
-    }else if(offest > layoutHeight.load_area && offest < layoutHeight.load_area + layoutHeight.search_area/2){
-      scrollToPoint(layoutHeight.load_area);
-    }else if(offest > layoutHeight.load_area + layoutHeight.search_area/2 && offest < layoutHeight.getTopMenuHeight()){
-      scrollToPoint(layoutHeight.getTopMenuHeight());
+    if(homeLayout.loadAreaHeight > 0 && offest < homeLayout.loadAreaHeight){
+      scrollToPoint(homeLayout.loadAreaHeight);
+    }else if(offest > homeLayout.loadAreaHeight && offest < homeLayout.loadAreaHeight + homeLayout.searchAreaHeight/2){
+      scrollToPoint(homeLayout.loadAreaHeight);
+    }else if(offest > homeLayout.loadAreaHeight + homeLayout.searchAreaHeight/2 && offest < homeLayout.getTopMenuHeight()){
+      scrollToPoint(homeLayout.getTopMenuHeight());
     }
   }
 
@@ -431,7 +438,7 @@ class _HomePageState extends State<HomePage>  {
         children: <Widget>[
           Scaffold(
             appBar: PreferredSize(
-               preferredSize: Size.fromHeight(layoutHeight.app_bar!),
+               preferredSize: Size.fromHeight(homeLayout.appBarHeight),
                child: AppBar(
                  title: Text("$_categoryName"),
                  leading: Container(),
@@ -443,7 +450,7 @@ class _HomePageState extends State<HomePage>  {
               //color: Colors.blue,
               child: 
                 Container(
-                  height: layoutHeight.getInnerScrollHeight(),
+                  height: homeLayout.getInnerScrollHeight(),
                   child: 
                   Stack(
                   children: <Widget>[
@@ -473,7 +480,7 @@ class _HomePageState extends State<HomePage>  {
                       Positioned(
                         right: 0,
                         left: 0,
-                        top: layoutHeight.listViewTop(),
+                        top: homeLayout.listViewTop(),
                         bottom: 0,
                         child: 
                         ListView(
@@ -482,7 +489,7 @@ class _HomePageState extends State<HomePage>  {
                           children: [
                             Container(
                               width: _deviceWidth!,
-                              height: layoutHeight.getTopMenuHeight(),
+                              height: homeLayout.getTopMenuHeight(),
                               //color: Colors.blue,
                               child: Spacer(),
                             ),
@@ -510,18 +517,21 @@ class _HomePageState extends State<HomePage>  {
                       )
                     ),
                     Transform.translate(
-                      offset: layoutHeight.getTopMenuOffset(),
+                      offset: homeLayout.getTopMenuOffset(),
                       child:
                        Column(
                           children: [
                           Container(
-                            height: layoutHeight.load_area,
+                            height: homeLayout.loadAreaHeight,
+                            alignment: Alignment.bottomCenter,
+                            color: Colors.white,
                             child: 
                               Text(" ↓ 引き下げて更新"),
                           ),
                           Container(
-                            height: layoutHeight.search_area,
+                            height: homeLayout.searchAreaHeight,
                             alignment: Alignment.centerRight,
+                            color: Colors.white,
                             child: IconButton(
                               icon: Icon(Icons.pending, color: Colors.blue,),
                               onPressed: () {
@@ -576,7 +586,7 @@ class _HomePageState extends State<HomePage>  {
                     Container(
                       //height: 200.0, // Height of the synchronized widget
                       child: Transform.translate(
-                        offset: layoutHeight.categorybarOffset(),
+                        offset: homeLayout.categorybarOffset(),
                         child: Container(
                           //color: Colors.blue,
                           alignment: Alignment.center,
@@ -591,7 +601,7 @@ class _HomePageState extends State<HomePage>  {
                                       Container(
                                         color: colors[i % colors.length],
                                         width: _deviceWidth!/5,
-                                        height: layoutHeight.category_bar,
+                                        height: homeLayout.categoryBarHeight,
                                         padding: EdgeInsets.all(0),
                                         margin: EdgeInsets.all(0),
                                         child:TextButton(
@@ -625,11 +635,11 @@ class _HomePageState extends State<HomePage>  {
                                 Container(
                                   color: _curretColor,
                                   width: _deviceWidth,
-                                  height: layoutHeight.category_bar_line,
+                                  height: homeLayout.categoryBarLineHeight,
                                 ),
                                 if(_alert != null)
                                 Container(
-                                  height: layoutHeight.alert,
+                                  height: homeLayout.alertHeight,
                                   width: _deviceWidth,
                                   color: Colors.orange,
                                   child: Text(
@@ -653,10 +663,10 @@ class _HomePageState extends State<HomePage>  {
             bottomNavigationBar: bottmBar(),
           ),
           Transform.translate(
-            offset: layoutHeight.youtubePlayerOffset(context),//Offset(0, 0),
+            offset: homeLayout.youtubePlayerOffset(context),//Offset(0, 0),
               child: SizedBox(
-              height: layoutHeight.getYoutubeDisplayHeight(context),
-              width: layoutHeight.getYoutubeDisplayWidth(context),
+              height: homeLayout.getYoutubeDisplayHeight(context),
+              width: homeLayout.getYoutubeDisplayWidth(context),
               child:
                 YoutubePlayerBuilder(
                   player: YoutubePlayer(

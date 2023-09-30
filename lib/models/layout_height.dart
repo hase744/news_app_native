@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-class LayoutHeight  {
+class HomeLayout  {
   double barHeight = 0;
   double deviceWidth = 0;
   double _number = 0;
@@ -7,24 +7,32 @@ class LayoutHeight  {
   double deviceHeight = 0;
   bool isPortrait = true;
   double youtubePadding = 0.07;
-  late double app_bar = 40;
-  late double category_bar = deviceWidth/10;
-  late double category_bar_line =5;
+
+  //deviceWidthに対し高さの割合
+  double categoryBarRatio = 1/10;
+  double searchAreaRatio = 1/10;
+  double loadAreaRatio = 1/5;
+  double youtubeDisplayRatio = 9/16;
+  late double topMenuRatio = searchAreaRatio + loadAreaRatio;
+
+  late double appBarHeight = 40;
+  late double categoryBarHeight = deviceWidth*categoryBarRatio;
+  late double categoryBarLineHeight = 5;
   //late double menu_area = deviceWidth/5;
-  late double search_area = deviceWidth/10;
-  late double load_area = deviceWidth/10;
-  late double youtubeDisplayHeight = deviceWidth/16*9;
+  late double searchAreaHeight = deviceWidth*searchAreaRatio;
+  late double loadAreaHeight = deviceWidth*loadAreaRatio;
+  late double youtubeDisplayHeight = deviceWidth*youtubeDisplayRatio;
   late double youtubeDisplayWidth = deviceWidth;
   late double youtubeDisplayTop = 0;
   late double youtubeDisplayLeft = 0;
-  late double bottom_nabigation_bar = barHeight;
-  late double alert = 0;
-  late double news_cells = 0;
-  late double videoCellsOffset = deviceWidth/5; //menu_areaと同じ値
+  late double bottomNavigationBarHeight = barHeight;
+  late double alertHeight = 0;
+  late double pressHeight = 0;
+  late double videoCellsOffset = deviceWidth*topMenuRatio; //menu_areaと同じ値
   late bool ishome = false;
   double get number => _number;
   
-  LayoutHeight({
+  HomeLayout({
     required this.deviceWidth,
     required this.deviceHeight,
     required this.barHeight,
@@ -32,20 +40,20 @@ class LayoutHeight  {
   });
 
   setForDefault(){
-    category_bar = 0;
-    category_bar_line = 0;
+    categoryBarHeight = 0;
+    categoryBarLineHeight = 0;
     youtubeDisplayHeight = 0;
   }
 
   setForList(){
-    category_bar = 0;
-    category_bar_line = 0;
+    categoryBarHeight = 0;
+    categoryBarLineHeight = 0;
     youtubeDisplayHeight = 0;
-    load_area = 0;
+    loadAreaHeight = 0;
   }
 
   double getTopMenuHeight(){
-    return search_area + load_area;
+    return searchAreaHeight + loadAreaHeight;
   }
   
   getYoutubeDisplayWidth(context){
@@ -57,7 +65,7 @@ class LayoutHeight  {
         return 0;
       }
     }{//画面が横向きである
-      return (deviceWidth *(1 - youtubePadding*2))/9*16;
+      return (deviceWidth *(1 - youtubePadding*2))/youtubeDisplayRatio;
     }
   }
 
@@ -65,7 +73,7 @@ class LayoutHeight  {
     //画面が縦向きである
     if(MediaQuery.of(context).orientation == Orientation.portrait){
       if(youtubeDisplayWidth > 0){ //ディスプレイが開いている
-        return deviceWidth*9/16;
+        return deviceWidth*youtubeDisplayRatio;
       }else{
         return 0;
       }
@@ -76,19 +84,19 @@ class LayoutHeight  {
   
 
   categoryBar(){
-    return category_bar;
+    return categoryBarHeight;
   }
 
   Offset youtubePlayerOffset(context){
     if(MediaQuery.of(context).orientation == Orientation.portrait){//縦向き
-      youtubeDisplayTop = app_bar + getTopMenuHeight() + category_bar + category_bar_line - videoCellsOffset;
+      youtubeDisplayTop = appBarHeight + getTopMenuHeight() + categoryBarHeight + categoryBarLineHeight - videoCellsOffset;
       if(youtubeDisplayLeft != deviceWidth){//youtubeが開いている
         youtubeDisplayLeft = 0;
       }
       return Offset(youtubeDisplayLeft,  youtubeDisplayTop);
     }{//横向き
       youtubeDisplayTop = deviceWidth * youtubePadding;
-      youtubeDisplayLeft = (deviceHeight - deviceWidth/9*16)/2 + deviceWidth/9*16*youtubePadding;
+      youtubeDisplayLeft = (deviceHeight - deviceWidth*youtubeDisplayRatio)/2 + deviceWidth*youtubeDisplayRatio*youtubePadding;
       return Offset(youtubeDisplayLeft,  youtubeDisplayTop);
     }
   }
@@ -97,27 +105,27 @@ class LayoutHeight  {
     return Offset(0, getTopMenuHeight() - videoCellsOffset) ;
   }
    Offset getTopMenuOffset(){
-    return Offset(0, - videoCellsOffset.clamp(0.0, load_area));
+    return Offset(0, - videoCellsOffset.clamp(0.0, loadAreaHeight));
    }
 
   setHeightForVideoCells(){
-    news_cells = 0;
-    news_cells = innerHeight
-     - app_bar
-     - category_bar
-     - category_bar_line
-     - load_area
-     - search_area
+    pressHeight = 0;
+    pressHeight = innerHeight
+     - appBarHeight
+     - categoryBarHeight
+     - categoryBarLineHeight
+     - loadAreaHeight
+     - searchAreaHeight
      - youtubeDisplayHeight
-     - bottom_nabigation_bar
-     - alert
-     - news_cells
+     - bottomNavigationBarHeight
+     - alertHeight
+     - pressHeight
      - 2;
   }
 
   displayYoutube(){
     youtubeDisplayLeft = 0;
-    youtubeDisplayHeight = deviceWidth/16*9;
+    youtubeDisplayHeight = deviceWidth*youtubeDisplayRatio;
     youtubeDisplayWidth = deviceWidth;
   }
 
@@ -128,7 +136,7 @@ class LayoutHeight  {
   }
 
   getInnerScrollHeight(){
-    double height = app_bar + category_bar + category_bar_line + youtubeDisplayHeight + news_cells;
+    double height = appBarHeight + categoryBarHeight + categoryBarLineHeight + youtubeDisplayHeight + pressHeight;
     if(ishome){
       return height;
     }else{
@@ -137,7 +145,7 @@ class LayoutHeight  {
   }
 
   listViewTop(){
-    return category_bar + category_bar_line + youtubeDisplayHeight;
+    return categoryBarHeight + categoryBarLineHeight + youtubeDisplayHeight;
   }
 
   // Setter
