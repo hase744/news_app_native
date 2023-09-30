@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage>  {
   String _categoryName = "ビジネス";
   int pageIndex = 0;
   int currentCategoryIndex = 0;
-  int _pressUnitCount = 8;
+  int _pressUnitCount = 20;
   bool _displayLoadingScreen = true;
   String? _alert;
   bool isSelectMode = false;
@@ -206,7 +206,7 @@ class _HomePageState extends State<HomePage>  {
 
   Future<void> resetPressCount() async {
     setState(() {
-      //_displayLoadingScreen = false;
+      _displayLoadingScreen = false;
       _pressCount =  _pressUnitCount;
       if (_pressCount > _press.length) {
         _pressCount = _press.length;
