@@ -53,8 +53,8 @@ class _HomePageState extends State<HomePage>  {
   String _categoryName = "ビジネス";
   int pageIndex = 0;
   int currentCategoryIndex = 0;
-  int _pressUnitCount = 20;
-  bool _displayLoadingScreen = false;
+  int _pressUnitCount = 8;
+  bool _displayLoadingScreen = true;
   String? _alert;
   bool isSelectMode = false;
   Future<void>? _launched;
@@ -89,6 +89,7 @@ class _HomePageState extends State<HomePage>  {
           autoPlay: false,  // 自動再生しない
         ),);
       _scrollController = ScrollController(initialScrollOffset: _deviceWidth!/5);
+      _scrollController.addListener(_onScroll);
     });
 
     _scrollController.addListener(() {
@@ -205,7 +206,7 @@ class _HomePageState extends State<HomePage>  {
 
   Future<void> resetPressCount() async {
     setState(() {
-      _displayLoadingScreen = false;
+      //_displayLoadingScreen = false;
       _pressCount =  _pressUnitCount;
       if (_pressCount > _press.length) {
         _pressCount = _press.length;
@@ -395,7 +396,7 @@ class _HomePageState extends State<HomePage>  {
     Future.delayed(Duration(seconds: 0), () {
       _scrollController.animateTo(
         offset,
-        duration: Duration(seconds: 1),
+        duration: Duration(milliseconds: 500),
         curve: Curves.ease,
       );
     });
@@ -409,6 +410,15 @@ class _HomePageState extends State<HomePage>  {
     }else if(offest > layoutHeight.load_area + layoutHeight.search_area/2 && offest < layoutHeight.getTopMenuHeight()){
       scrollToPoint(layoutHeight.getTopMenuHeight());
     }
+  }
+
+  void _onScroll() {
+    setState(() {
+      if (_scrollController.position.pixels ==
+          _scrollController.position.maxScrollExtent) {
+            _displayLoadingScreen = true;
+      }
+    });
   }
 
   @override
@@ -445,15 +455,14 @@ class _HomePageState extends State<HomePage>  {
                           final max = scrollNotification.metrics.maxScrollExtent;
                           scrollForMenu(before);
                           if (before == max) {
-                            print("した");
                             setState(() {
                               //挿入可能な記事があれば記事を挿入
                               _pressCount += _pressUnitCount;
                               if (_pressCount > _press.length) { //ロード過多
                                 _pressCount = _press.length;
-                                _displayLoadingScreen = false;
-                              }else{
-                                _displayLoadingScreen = true;
+                                if(_displayLoadingScreen){
+                                  _displayLoadingScreen = false;
+                                }
                               }
                             });
                           }
@@ -469,7 +478,7 @@ class _HomePageState extends State<HomePage>  {
                         child: 
                         ListView(
                           controller: _scrollController,
-                          //physics: ableInnerScroll ?  const AlwaysScrollableScrollPhysics() : const  NeverScrollableScrollPhysics(),
+                          physics: ClampingScrollPhysics(),
                           children: [
                             Container(
                               width: _deviceWidth!,
@@ -477,9 +486,9 @@ class _HomePageState extends State<HomePage>  {
                               //color: Colors.blue,
                               child: Spacer(),
                             ),
-                          if(_press.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
-                            for(var i=0; i<_pressCount; i++)
-                              videoCell(context, _press[i]),
+                            if(_press.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
+                              for(var i=0; i<_pressCount; i++)
+                                videoCell(context, _press[i]),
                           if(_displayLoadingScreen)
                           Container(
                             alignment: Alignment.center,
@@ -488,11 +497,12 @@ class _HomePageState extends State<HomePage>  {
                               SizedBox(
                                 height: 50,
                                 width: 50,
-                                child: CircularProgressIndicator(
+                                child: 
+                                CircularProgressIndicator(
                                   strokeWidth: 8.0,
                                   backgroundColor: Colors.black,
                                   valueColor: AlwaysStoppedAnimation<Color>(Colors.blue)
-                                  ),
+                                ),
                               ),
                             )
                           ],
@@ -513,7 +523,7 @@ class _HomePageState extends State<HomePage>  {
                             height: layoutHeight.search_area,
                             alignment: Alignment.centerRight,
                             child: IconButton(
-                              icon: Icon(Icons.pending),
+                              icon: Icon(Icons.pending, color: Colors.blue,),
                               onPressed: () {
                                 showModalBottomSheet(
                                   isScrollControlled: true,
