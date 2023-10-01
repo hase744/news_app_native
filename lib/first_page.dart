@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_page.dart';
-import 'web_window.dart';
 import 'package:flutter/services.dart';
 
 class FirstPage extends StatefulWidget {
@@ -18,6 +17,7 @@ class _FirstPageState extends State<FirstPage> {
   @override
   void initState() {
     super.initState();
+    saveLayout();
     fetchData();
   }
 
@@ -39,6 +39,14 @@ class _FirstPageState extends State<FirstPage> {
         ),
       ),
     );
+  }
+
+  Future<void> saveLayout() async {
+    double _deviceWidth = MediaQuery.of(context).size.width;
+    double _deviceHeight = MediaQuery.of(context).size.height;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('device_width', _deviceWidth);
+    await prefs.setDouble('device_height', _deviceHeight);
   }
 
   Future<void> fetchData() async {

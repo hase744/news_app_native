@@ -16,6 +16,7 @@ import 'views/modal_window.dart';
 import 'models/menu_button.dart';
 import 'models/favorite.dart';
 import 'package:video_news/views/bottom_menu_bar.dart';
+import 'package:video_news/views/alert.dart';
 import 'package:video_news/consts/navigation_list_config.dart';
 import 'package:video_news/models/navigation_item.dart';
 import 'package:flutter/services.dart';
@@ -607,24 +608,27 @@ class _HomePageState extends State<HomePage>  {
                           child: 
                             Column(
                               children: [
-                                SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
+                                Container(
+                                  width: _deviceWidth,
+                                  height: homeLayout.categoryBarHeight,
+                                  child: 
+                                  ListView(
+                                    scrollDirection: Axis.horizontal,
                                     children: [
                                       for (var i = 0; i < _presses.length; i++)
                                       Container(
                                         color: colors[i % colors.length],
-                                        width: _deviceWidth!/5,
+                                        width: _deviceWidth! / 5,
                                         height: homeLayout.categoryBarHeight,
                                         padding: EdgeInsets.all(0),
                                         margin: EdgeInsets.all(0),
-                                        child:TextButton(
+                                        child: TextButton(
                                           onPressed: () {
                                             setState(() {
                                               currentCategoryIndex = i;
                                             });
-                                            //SelectCategory(currentCategoryIndex);
-                                            //resetPressCount();
+                                            // SelectCategory(currentCategoryIndex);
+                                            // resetPressCount();
                                             resetCategory(currentCategoryIndex);
                                           },
                                           child: Text(
@@ -641,10 +645,10 @@ class _HomePageState extends State<HomePage>  {
                                               borderRadius: BorderRadius.circular(0), // 角丸の半径
                                             ),
                                           ),
-                                        )
+                                        ),
                                       ),
                                     ],
-                                  ),
+                                  )
                                 ),
                                 Container(
                                   color: _curretColor,
@@ -652,19 +656,11 @@ class _HomePageState extends State<HomePage>  {
                                   height: homeLayout.categoryBarLineHeight,
                                 ),
                                 if(_alert != null)
-                                Container(
-                                  height: homeLayout.alertHeight,
-                                  width: _deviceWidth,
-                                  color: Colors.orange,
-                                  child: Text(
-                                    _alert!, 
-                                    style: 
-                                    const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold
-                                    ),
-                                  ),
-                                ),
+                                Alert(
+                                  text: _alert!, 
+                                  width: _deviceWidth!,
+                                  height: homeLayout.alertHeight
+                                )
                               ],
                             )
                         ),

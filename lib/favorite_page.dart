@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'bottom_navigation_bar.dart';  // 新しいファイルをインポート
+import 'views/bottom_navigation_bar.dart';  // 新しいファイルをインポート
 
 class FavoritePage extends StatefulWidget {
   @override
