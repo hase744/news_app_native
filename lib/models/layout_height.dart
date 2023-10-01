@@ -6,6 +6,7 @@ class HomeLayout  {
   double innerHeight = 0;
   double deviceHeight = 0;
   bool isPortrait = true;
+  bool isLoading = false;
   double youtubePadding = 0.07;
 
   //deviceWidthに対し高さの割合
@@ -96,7 +97,7 @@ class HomeLayout  {
       return Offset(youtubeDisplayLeft,  youtubeDisplayTop);
     }{//横向き
       youtubeDisplayTop = deviceWidth * youtubePadding;
-      youtubeDisplayLeft = (deviceHeight - deviceWidth*youtubeDisplayRatio)/2 + deviceWidth*youtubeDisplayRatio*youtubePadding;
+      youtubeDisplayLeft = (deviceHeight - deviceWidth/youtubeDisplayRatio)/2 + deviceWidth/youtubeDisplayRatio*youtubePadding;
       return Offset(youtubeDisplayLeft,  youtubeDisplayTop);
     }
   }

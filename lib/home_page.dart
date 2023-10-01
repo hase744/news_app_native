@@ -56,6 +56,7 @@ class _HomePageState extends State<HomePage>  {
   int currentCategoryIndex = 0;
   int _pressUnitCount = 20;
   bool _displayLoadingScreen = true;
+  String loadText = " ↓ 引き下げて更新";
   String? _alert;
   bool isSelectMode = false;
   Future<void>? _launched;
@@ -77,8 +78,7 @@ class _HomePageState extends State<HomePage>  {
     List presses = await category_setting.getPressOrder();
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
-        statusBarBrightness: Brightness.light,     // for iOS
-        statusBarIconBrightness: Brightness.light,  // for Android
+        statusBarColor: Colors.white
       ),
     );
     setState(() {
@@ -420,10 +420,24 @@ class _HomePageState extends State<HomePage>  {
   }
 
   void _onScroll() {
+    final before = _scrollController.position.pixels;
+    final end = _scrollController.position.maxScrollExtent;
     setState(() {
-      if (_scrollController.position.pixels ==
-          _scrollController.position.maxScrollExtent) {
+      if (before == end) {
             _displayLoadingScreen = true;
+      }
+      if(homeLayout.isLoading){
+        loadText = "更新中";
+      }
+      if(before >= homeLayout.loadAreaHeight){
+        homeLayout.isLoading = false;
+      }
+      if(!homeLayout.isLoading){
+        loadText = " ↓ 引き下げて更新";
+      }
+      if(before == 0){
+        loadText = " ↑ はなして更新";
+        homeLayout.isLoading = true;
       }
     });
   }
@@ -526,7 +540,7 @@ class _HomePageState extends State<HomePage>  {
                             alignment: Alignment.bottomCenter,
                             color: Colors.white,
                             child: 
-                              Text(" ↓ 引き下げて更新"),
+                              Text(loadText),
                           ),
                           Container(
                             height: homeLayout.searchAreaHeight,
