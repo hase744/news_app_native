@@ -17,4 +17,6 @@ class DefaultValue{
   Future<void> setStoredValue(String key, String value) async {
     await _preferences?.setString(key, value);
   }
+
+  Future<void>setNews() async {}
 }

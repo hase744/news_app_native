@@ -9,7 +9,7 @@ import 'category_setting.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
-import 'models/layout_height.dart';
+import 'models/home_layout.dart';
 import 'controllers/default_values_controller.dart';
 import 'views/video_cell.dart';
 import 'views/modal_window.dart';
@@ -291,7 +291,7 @@ class _HomePageState extends State<HomePage>  {
   bottmBar(){
     if(isSelectMode){
       return BottomMenuNavigationBar(
-        initialIndex: pageIndex, 
+        initialIndex: 0, 
         onTap: (int index){
           switch(menuList[index].name){
             case 'favorite':
@@ -427,12 +427,13 @@ class _HomePageState extends State<HomePage>  {
   updatePresses() async {
     print("アップデート");
     AccessController access = AccessController();
+    final prefs = await SharedPreferences.getInstance();
     await access.accessPress();
       if (access.statusCode == 200) {
+        await prefs.setString('presses', access.data);
         List press = await category_setting.getPressOrder();
-        print(press);
         setState(() {
-        _presses = press;
+          _presses = press;
         });
       } else {
         throw Exception('Failed to load data');
@@ -490,7 +491,7 @@ class _HomePageState extends State<HomePage>  {
           Navigator.of(context).pop();
           setState(() {
             isSelectMode = true;
-             updateScreen();
+            updateScreen();
           });
         },
         name:"複数選択"
@@ -590,11 +591,11 @@ class _HomePageState extends State<HomePage>  {
                             if(_press.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
                               for(var i=0; i<_pressCount; i++)
                                 videoCell(context, _press[i]),
-                          if(_displayLoadingScreen)
-                          Container(
-                            alignment: Alignment.center,
-                            width: _deviceWidth,
-                            child: 
+                            if(_displayLoadingScreen)
+                            Container(
+                              alignment: Alignment.center,
+                              width: _deviceWidth,
+                              child: 
                               SizedBox(
                                 height: 50,
                                 width: 50,
@@ -645,19 +646,24 @@ class _HomePageState extends State<HomePage>  {
                             color: Colors.white,
                             child: 
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
                               children: <Widget>[
+                                if(homeLayout.displaySearch)
                                 Container(
                                   color: Colors.white,
-                                  width: _deviceWidth! - homeLayout.searchAreaHeight,
+                                  width: _deviceWidth!,
                                   child: TextField(
                                     controller: _controller,
                                     decoration: InputDecoration(
                                       hintText: 'キーワードで検索',
                                       prefixIcon: IconButton(
-                                        icon: Icon(Icons.search),
+                                        icon: Icon(Icons.arrow_back_ios_new),
                                         onPressed: () {
                                           String searchText = _controller.text;
                                           print(searchText);
+                                          setState(() {
+                                            homeLayout.displaySearch = false;
+                                          });
                                         },
                                       ),
                                       suffixIcon: IconButton(
@@ -667,11 +673,22 @@ class _HomePageState extends State<HomePage>  {
                                         },
                                       ),
                                     ),
-                                    onSubmitted: (text) => (){
-                                      print("検索$text");
+                                    onSubmitted: (String searchText) {
+                                      print("検索");
+                                      print(searchText);
                                     },
                                   ),
                                 ),
+                                if(!homeLayout.displaySearch)
+                                IconButton(
+                                  onPressed: (){
+                                    setState(() {
+                                      homeLayout.displaySearch = true;
+                                    });
+                                  }, 
+                                  icon: Icon(Icons.search)
+                                ),
+                                if(!homeLayout.displaySearch)
                                 SizedBox(
                                   width: homeLayout.searchAreaHeight,
                                   child:

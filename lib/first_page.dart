@@ -63,12 +63,12 @@ class _FirstPageState extends State<FirstPage> {
       SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
       final prefs = await SharedPreferences.getInstance();
       String defaultYoutubeId = prefs.getString('default_youtube_id') ?? '4b6DuHGcltI';
-          await prefs.setString('default_youtube_id', defaultYoutubeId);
-          await prefs.setString('presses', data);
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) =>HomePage()),
-          );
+      await prefs.setString('default_youtube_id', defaultYoutubeId);
+      await prefs.setString('presses', data);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) =>HomePage()),
+      );
     } else {
       throw Exception('Failed to load data');
     }

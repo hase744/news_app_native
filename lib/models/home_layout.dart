@@ -7,6 +7,7 @@ class HomeLayout  {
   double deviceHeight = 0;
   bool isPortrait = true;
   bool isLoading = false;
+  bool displaySearch = false;
   double youtubePadding = 0.07;
 
   int loadCount = 1;
