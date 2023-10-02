@@ -20,6 +20,8 @@ import 'package:video_news/views/alert.dart';
 import 'package:video_news/consts/navigation_list_config.dart';
 import 'package:video_news/models/navigation_item.dart';
 import 'package:flutter/services.dart';
+import 'package:video_news/controllers/access_controller.dart';
+import 'package:flutter/cupertino.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -63,6 +65,7 @@ class _HomePageState extends State<HomePage>  {
   Future<void>? _launched;
   late int _pressCount =  _pressUnitCount;
   late Color _curretColor = colors[0];
+  final _controller = TextEditingController();
   List<NavigationItem> menuList = NavigationListConfig.menuList;
   List<NavigationItem> pageList = NavigationListConfig.pageList;
 
@@ -82,6 +85,7 @@ class _HomePageState extends State<HomePage>  {
         statusBarColor: Colors.white
       ),
     );
+    FocusScope.of(context).unfocus();
     setState(() {
       var _padding = MediaQuery.of(context).padding;
       _deviceWidth = MediaQuery.of(context).size.width;
@@ -420,12 +424,43 @@ class _HomePageState extends State<HomePage>  {
     }
   }
 
+  updatePresses() async {
+    print("アップデート");
+    AccessController access = AccessController();
+    await access.accessPress();
+      if (access.statusCode == 200) {
+        List press = await category_setting.getPressOrder();
+        print(press);
+        setState(() {
+        _presses = press;
+        });
+      } else {
+        throw Exception('Failed to load data');
+      }
+  }
+
+  countLoad(){
+      Timer.periodic(Duration(milliseconds: 25), (timer) {
+        setState(() {
+          homeLayout.loadCount += 1;
+        });
+        if(!homeLayout.loadCounting || homeLayout.loadCount >= homeLayout.maxLoadCount){
+          setState(() {
+            loadText = " ↑ はなして更新";
+            homeLayout.isLoading = true;
+          });
+          timer.cancel();
+        }
+      }
+    );
+  }
+
   void _onScroll() {
     final before = _scrollController.position.pixels;
     final end = _scrollController.position.maxScrollExtent;
     setState(() {
       if (before == end) {
-            _displayLoadingScreen = true;
+        _displayLoadingScreen = true;
       }
       if(homeLayout.isLoading){
         loadText = "更新中";
@@ -434,13 +469,54 @@ class _HomePageState extends State<HomePage>  {
         homeLayout.isLoading = false;
       }
       if(!homeLayout.isLoading){
-        loadText = " ↓ 引き下げて更新";
+        loadText = " ↓ 引き下げて更新 ";
       }
-      if(before == 0){
-        loadText = " ↑ はなして更新";
-        homeLayout.isLoading = true;
+      if(before <= 0 && !homeLayout.loadCounting){
+        homeLayout.loadCounting = true;
+        countLoad();
       }
+      if(before > 0 || homeLayout.loadCount >= homeLayout.maxLoadCount){
+        homeLayout.loadCounting = false;
+        homeLayout.loadCount = 1;
+      }
+      FocusScope.of(context).unfocus();
     });
+  }
+  
+  List<MenuButton> menuButtons(context){
+    return [
+      MenuButton(
+        onPressed: () async {
+          Navigator.of(context).pop();
+          setState(() {
+            isSelectMode = true;
+             updateScreen();
+          });
+        },
+        name:"複数選択"
+      ),
+      if(pageList[pageIndex].name == 'favorite')
+      MenuButton(
+        onPressed: () async {
+          _favorite.deleteTable();
+          _favorite = Favorite();
+          Navigator.of(context).pop();
+          displayFavorites();
+          displayAlert("削除しました");
+        },
+        name:"お気に入りを全て削除"
+      ),
+      if(pageList[pageIndex].name == 'history')
+      MenuButton(
+        onPressed: () async {
+          _history.deleteTable();
+          Navigator.of(context).pop();
+          displayHistory();
+          displayAlert("削除しました");
+        },
+        name:"履歴を全て削除"
+      ),
+    ];
   }
 
   @override
@@ -453,11 +529,11 @@ class _HomePageState extends State<HomePage>  {
         children: <Widget>[
           Scaffold(
             appBar: PreferredSize(
-               preferredSize: Size.fromHeight(homeLayout.appBarHeight),
-               child: AppBar(
-                 title: Text("$_categoryName"),
-                 leading: Container(),
-               ),
+              preferredSize: Size.fromHeight(homeLayout.appBarHeight),
+              child: AppBar(
+                title: Text("$_categoryName"),
+                leading: Container(),
+              ),
             ),
             body: Container(
               height: _deviceHeight,
@@ -487,6 +563,9 @@ class _HomePageState extends State<HomePage>  {
                                 }
                               }
                             });
+                          }
+                          if(before == 0 && homeLayout.isLoading){
+                            updatePresses();
                           }
                         }//
                         return false;
@@ -541,59 +620,79 @@ class _HomePageState extends State<HomePage>  {
                             alignment: Alignment.bottomCenter,
                             color: Colors.white,
                             child: 
-                              Text(loadText),
+                            Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  Text(loadText),
+                                  if(homeLayout.loadCounting && homeLayout.loadCount < homeLayout.maxLoadCount)
+                                  Container(
+                                    height: homeLayout.loadAreaHeight/4,
+                                    width: homeLayout.loadAreaHeight/4,
+                                    child: 
+                                    CircularProgressIndicator(
+                                      value: homeLayout.loadCount/homeLayout.maxLoadCount,
+                                      color: Colors.grey,
+                                    ),
+                                  )
+                                ]
+                              )
+                            )
                           ),
                           Container(
                             height: homeLayout.searchAreaHeight,
                             alignment: Alignment.centerRight,
                             color: Colors.white,
-                            child: IconButton(
-                              icon: Icon(Icons.pending, color: Colors.blue,),
-                              onPressed: () {
-                                showModalBottomSheet(
-                                  isScrollControlled: true,
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return ModalWindow(
-                                      windowWidth: _deviceWidth!,
-                                      buttons: [
-                                        MenuButton(
-                                          onPressed: () async {
-                                            Navigator.of(context).pop();
-                                            setState(() {
-                                              isSelectMode = true;
-                                               updateScreen();
-                                            });
-                                          },
-                                          name:"複数選択"
-                                        ),
-                                        if(pageList[pageIndex].name == 'favorite')
-                                        MenuButton(
-                                          onPressed: () async {
-                                            _favorite.deleteTable();
-                                            _favorite = Favorite();
-                                            Navigator.of(context).pop();
-                                            displayFavorites();
-                                            displayAlert("削除しました");
-                                          },
-                                          name:"お気に入りを全て削除"
-                                        ),
-                                        if(pageList[pageIndex].name == 'history')
-                                        MenuButton(
-                                          onPressed: () async {
-                                            _history.deleteTable();
-                                            Navigator.of(context).pop();
-                                            displayHistory();
-                                            displayAlert("削除しました");
-                                          },
-                                          name:"履歴を全て削除"
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              },
-                            )
+                            child: 
+                            Row(
+                              children: <Widget>[
+                                Container(
+                                  color: Colors.white,
+                                  width: _deviceWidth! - homeLayout.searchAreaHeight,
+                                  child: TextField(
+                                    controller: _controller,
+                                    decoration: InputDecoration(
+                                      hintText: 'キーワードで検索',
+                                      prefixIcon: IconButton(
+                                        icon: Icon(Icons.search),
+                                        onPressed: () {
+                                          String searchText = _controller.text;
+                                          print(searchText);
+                                        },
+                                      ),
+                                      suffixIcon: IconButton(
+                                        icon: Icon(Icons.clear),
+                                        onPressed: () {
+                                          _controller.clear();
+                                        },
+                                      ),
+                                    ),
+                                    onSubmitted: (text) => (){
+                                      print("検索$text");
+                                    },
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: homeLayout.searchAreaHeight,
+                                  child:
+                                  IconButton(
+                                    icon: Icon(Icons.more_vert, color: Colors.blue,),
+                                    onPressed: () {
+                                      showModalBottomSheet(
+                                        isScrollControlled: true,
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return ModalWindow(
+                                            windowWidth: _deviceWidth!,
+                                            buttons: menuButtons(context),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  )
+                                )
+                              ],
+                            ),
                           )
                         ]
                       )

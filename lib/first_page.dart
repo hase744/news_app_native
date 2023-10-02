@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_page.dart';
 import 'package:flutter/services.dart';
+import 'package:video_news/controllers/access_controller.dart';
 
 class FirstPage extends StatefulWidget {
   const FirstPage({super.key, required this.title});
@@ -53,10 +54,13 @@ class _FirstPageState extends State<FirstPage> {
     //final url = 'http://10.0.2.2:3000/categories/index.json';
     final url = 'http://18.178.58.191/categories/index.json';
     final response = await http.get(Uri.parse(url));
+    String data = "";
+    AccessController access = AccessController();
+    await access.accessPress();
+    data =  access.data;
 
-    if (response.statusCode == 200) {
+    if (access.statusCode == 200) {
       SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-      final data = response.body;
       final prefs = await SharedPreferences.getInstance();
       String defaultYoutubeId = prefs.getString('default_youtube_id') ?? '4b6DuHGcltI';
           await prefs.setString('default_youtube_id', defaultYoutubeId);

@@ -9,6 +9,10 @@ class HomeLayout  {
   bool isLoading = false;
   double youtubePadding = 0.07;
 
+  int loadCount = 1;
+  int maxLoadCount = 20;
+  bool loadCounting = false;
+  
   //deviceWidthに対し高さの割合
   double categoryBarRatio = 1/10;
   double searchAreaRatio = 1/10;
