@@ -22,6 +22,7 @@ import 'package:video_news/models/navigation_item.dart';
 import 'package:flutter/services.dart';
 import 'package:video_news/controllers/access_controller.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:video_news/views/top_navigation.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -338,6 +339,40 @@ class _HomePageState extends State<HomePage>  {
     });
   }
 
+  Widget topNavigation(context){
+    return TopNavigation(
+      homeLayout: homeLayout, 
+      loadText: loadText, 
+      width: _deviceWidth!, 
+      controller: _controller, 
+      onSearched: (String text){}, 
+      onClosesd: () {
+        String searchText = _controller.text;
+        print(searchText);
+        setState(() {
+          homeLayout.displaySearch = false;
+        });
+      }, 
+      menuOpened: () {
+        showModalBottomSheet(
+          isScrollControlled: true,
+          context: context,
+          builder: (BuildContext context) {
+            return ModalWindow(
+              windowWidth: _deviceWidth!,
+              buttons: menuButtons(context),
+            );
+          },
+        );
+      },
+      searchOpened: (){
+        setState(() {
+          homeLayout.displaySearch = true;
+        });
+      }
+    );
+  }
+
   Widget videoCell(BuildContext context, Map video){
     String youtube_id = video['youtube_id'];
     double cellWidth = _deviceWidth!;
@@ -435,6 +470,7 @@ class _HomePageState extends State<HomePage>  {
         setState(() {
           _presses = press;
         });
+        SelectCategory(currentCategoryIndex);
       } else {
         throw Exception('Failed to load data');
       }
@@ -613,113 +649,12 @@ class _HomePageState extends State<HomePage>  {
                     ),
                     Transform.translate(
                       offset: homeLayout.getTopMenuOffset(),
-                      child:
-                       Column(
-                          children: [
-                          Container(
-                            height: homeLayout.loadAreaHeight,
-                            alignment: Alignment.bottomCenter,
-                            color: Colors.white,
-                            child: 
-                            Center(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  Text(loadText),
-                                  if(homeLayout.loadCounting && homeLayout.loadCount < homeLayout.maxLoadCount)
-                                  Container(
-                                    height: homeLayout.loadAreaHeight/4,
-                                    width: homeLayout.loadAreaHeight/4,
-                                    child: 
-                                    CircularProgressIndicator(
-                                      value: homeLayout.loadCount/homeLayout.maxLoadCount,
-                                      color: Colors.grey,
-                                    ),
-                                  )
-                                ]
-                              )
-                            )
-                          ),
-                          Container(
-                            height: homeLayout.searchAreaHeight,
-                            alignment: Alignment.centerRight,
-                            color: Colors.white,
-                            child: 
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: <Widget>[
-                                if(homeLayout.displaySearch)
-                                Container(
-                                  color: Colors.white,
-                                  width: _deviceWidth!,
-                                  child: TextField(
-                                    controller: _controller,
-                                    decoration: InputDecoration(
-                                      hintText: 'キーワードで検索',
-                                      prefixIcon: IconButton(
-                                        icon: Icon(Icons.arrow_back_ios_new),
-                                        onPressed: () {
-                                          String searchText = _controller.text;
-                                          print(searchText);
-                                          setState(() {
-                                            homeLayout.displaySearch = false;
-                                          });
-                                        },
-                                      ),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(Icons.clear),
-                                        onPressed: () {
-                                          _controller.clear();
-                                        },
-                                      ),
-                                    ),
-                                    onSubmitted: (String searchText) {
-                                      print("検索");
-                                      print(searchText);
-                                    },
-                                  ),
-                                ),
-                                if(!homeLayout.displaySearch)
-                                IconButton(
-                                  onPressed: (){
-                                    setState(() {
-                                      homeLayout.displaySearch = true;
-                                    });
-                                  }, 
-                                  icon: Icon(Icons.search)
-                                ),
-                                if(!homeLayout.displaySearch)
-                                SizedBox(
-                                  width: homeLayout.searchAreaHeight,
-                                  child:
-                                  IconButton(
-                                    icon: Icon(Icons.more_vert, color: Colors.blue,),
-                                    onPressed: () {
-                                      showModalBottomSheet(
-                                        isScrollControlled: true,
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return ModalWindow(
-                                            windowWidth: _deviceWidth!,
-                                            buttons: menuButtons(context),
-                                          );
-                                        },
-                                      );
-                                    },
-                                  )
-                                )
-                              ],
-                            ),
-                          )
-                        ]
-                      )
+                      child:topNavigation(context),
                     ),
                     Container(
-                      //height: 200.0, // Height of the synchronized widget
                       child: Transform.translate(
                         offset: homeLayout.categorybarOffset(),
                         child: Container(
-                          //color: Colors.blue,
                           alignment: Alignment.center,
                           child: 
                             Column(
@@ -743,8 +678,6 @@ class _HomePageState extends State<HomePage>  {
                                             setState(() {
                                               currentCategoryIndex = i;
                                             });
-                                            // SelectCategory(currentCategoryIndex);
-                                            // resetPressCount();
                                             resetCategory(currentCategoryIndex);
                                           },
                                           child: Text(
