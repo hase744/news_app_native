@@ -1,12 +1,21 @@
-class Press{
-  String youtubeId = '';
-  String title = '';
-  String channelName = '';
-  String channelId = '';
-  String createdAt = '';
+class Video{
+  String youtubeId;
+  String title;
+  String channelName;
+  String channelId;
+  String createdAt;
+  int totalSeconds;
   //int second = 0;
-  init(){}
-
+  
+  Video({
+    required this.youtubeId,
+    required this.title,
+    required this.channelName,
+    required this.channelId,
+    required this.createdAt,
+    required this.totalSeconds,
+  });
+  
   Map<String, dynamic> toMap() {
     return {
       'youtube_id': youtubeId,
