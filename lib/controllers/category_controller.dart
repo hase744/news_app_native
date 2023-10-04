@@ -29,10 +29,15 @@ class CategoryController{
   }
 
   Future<List> getSavedOrder() async {
+    List<dynamic> categoryParams  = [];
     final prefs = await SharedPreferences.getInstance();
     //await prefs.remove('categoryOrder');
-    String categoriesOrder = prefs.getString('categoryOrder') ?? json.encode(getCurrentVideos());
-    List categoryParams = json.decode(categoriesOrder);
+    String? categoriesOrder = prefs.getString('categoryOrder');
+    if(categoriesOrder == null){
+      categoryParams = await getCurrentVideos();
+    }else{
+      categoryParams = json.decode(categoriesOrder);
+    }
     return categoryParams;
   }
 
