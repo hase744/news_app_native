@@ -4,69 +4,11 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_news/setting_page.dart';
 import 'page_transition.dart';
+import 'package:video_news/controllers/category_controller.dart';
+import 'package:video_news/models/category.dart';
 
 class CategorySetting extends StatefulWidget {
-  //const CategorySetting({super.key});
-  List _press = [];
-  
-  categoryOrder() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? _currentPress = await prefs.getString('presses');
-    List _pressParams = json.decode(_currentPress!);
-    List<Map<String, dynamic>> _perssParams = _pressParams.map((item) {
-      return {"name": item["name"], "japanese_name": item["japanese_name"]};
-    }).toList();
-    //await prefs.remove('categoryOrder');
-    String _categoriesOrder = await prefs.getString('categoryOrder') ?? json.encode(_perssParams);
-    List _categoryParams = json.decode(_categoriesOrder);
-    List newOrder =  [];
-    List newPresses = [];
-    List unMatchedPresses = [];
-    _categoryParams.asMap().forEach((int i, category) {
-      bool foundMatch = false;
-      _pressParams.asMap().forEach((int j, press) {
-          //print("$i, $j");
-        if(press['name']  == category['name']){
-          //print(press);
-          //print(category);
-          newOrder.add(category);
-          newPresses.add(press);
-          foundMatch;
-          //print("return");
-          return;
-        }
-        if(!foundMatch){
-          unMatchedPresses.add(category);
-        }
-      });
-    });
-    for(var item in unMatchedPresses){
-      
-    }
 
-    return newOrder;
-  }
-  Future<List> getPressOrder() async {
-    final prefs = await SharedPreferences.getInstance();
-    //await prefs.remove('categoryOrder');
-    String? _currentPress = await prefs.getString('presses');
-    List _pressParams = json.decode(_currentPress!);
-    List<Map<String, dynamic>> _perssParams = _pressParams.map((item) {
-      return {"name": item["name"], "japanese_name": item["japanese_name"]};
-    }).toList();
-    String _categoriesOrder = await prefs.getString('categoryOrder') ?? json.encode(_perssParams);
-    List _categoryParams = json.decode(_categoriesOrder);
-    List newPersses = [];
-
-    for (var category in _categoryParams ) {
-      for (var press in _pressParams ) {
-        if(category['name'] == press['name']){
-          newPersses.add(press);
-        }
-      }
-    }
-    return newPersses;
-  }
 
 
   _CategorySetting createState() => _CategorySetting();
@@ -124,9 +66,8 @@ class ReorderableExample extends StatefulWidget {
 }
 
 class _ReorderableExampleState extends State<ReorderableExample> {
-  List _presses = [];
   double? _deviceHeight;
-  List  _deleteSetting = [];
+  CategoryController categoryController = CategoryController();
 
   @override
   void initState() {
@@ -134,48 +75,20 @@ class _ReorderableExampleState extends State<ReorderableExample> {
     init();
   }
   void init() async {
-    final prefs = await SharedPreferences.getInstance();
-    CategorySetting categorySetting = CategorySetting();
-    List _press = await categorySetting.categoryOrder();
+      categoryController = await CategoryController();
     setState(() {
-      print(_press);
-      _presses = _press;
+      categoryController = CategoryController();
       _deviceHeight = MediaQuery.of(context).size.height;
-      _deleteSetting = _presses.map((press) => {'name':press["name"], 'delete': false}).toList();
     });
   }
-
-  void updateCategoryOrder() async  {
-    final prefs = await SharedPreferences.getInstance();
-    List<Map<String, dynamic>> _categoryOrder = _presses.map((item) {
-      return {"name": item["name"], "japanese_name": item["japanese_name"]};
-    }).toList();
-    await prefs.setString('categoryOrder',json.encode(_categoryOrder));
-  }
-
-  void deleteCategory(String name) async  {
-    final prefs = await SharedPreferences.getInstance();
-    List<Map<String, dynamic>> _categoryOrder = _presses.map((item) {
-      return {"name": item["name"], "japanese_name": item["japanese_name"]};
-    }).toList();
-    int index = 0;
-    for (var item in _categoryOrder) {
-      if(item['name'] == name){
-        index = _categoryOrder.indexOf(item);
-      }
-    }
-    setState(() {
-      _presses.removeAt(index);
-      _categoryOrder.removeAt(index);
-      _deleteSetting.removeAt(index);
-    });
-    await prefs.setString('categoryOrder',json.encode(_categoryOrder));
+  
+  countCategory()async{
   }
 
   @override
   Widget build(BuildContext context) {
     final List<Card> cards = <Card>[
-      for (int index = 0; index < _presses.length; index += 1)
+      for (int index = 0; index < categoryController.categories.length; index += 1)
         Card(
           key: Key('$index'),
           color: Colors.white,
@@ -194,31 +107,33 @@ class _ReorderableExampleState extends State<ReorderableExample> {
                       Container(
                         child: 
                         IconButton(
-                          icon:   _deleteSetting[index]['delete'] ?
+                          icon:   categoryController.categories[index].isDeleting ?
                           const Icon(Icons.add_circle, color: Colors.red)
                           :const Icon(Icons.do_not_disturb_on, color: Colors.red),
                           onPressed: () {
                             setState(() {
-                                _deleteSetting[index]['delete'] = ! _deleteSetting[index]['delete'];
+                                categoryController.categories[index].isDeleting = ! categoryController.categories[index].isDeleting;
                             });
                           },
                         ),
                       ),
                       Container(
-                        child: Text('${_presses[index]['japanese_name']}')
+                        child: Text('${categoryController.categories[index].japaneseName}')
                       ),
                       Spacer(),
                       Container(
                         child: Icon(Icons.dehaze_sharp, color: Colors.grey)
                       ),
-                      if( _deleteSetting[index]['delete'])
+                      if( categoryController.categories[index].isDeleting)
                       Container(
                         alignment: Alignment.centerRight,
                         color: Colors.red,
                         child: 
                         TextButton(
                           onPressed: () { 
-                            deleteCategory(_presses[index]['name']);
+                            setState(() {
+                            categoryController.delete(index);
+                            });
                            },
                           child: Text('削除'),
                         ),
@@ -251,18 +166,16 @@ class _ReorderableExampleState extends State<ReorderableExample> {
     }
 
     return ReorderableListView(
-      //padding: const EdgeInsets.symmetric(horizontal: 40),
-      //proxyDecorator: proxyDecorator,
       children: cards,
       onReorder: (int oldIndex, int newIndex) {
-          print("並び替え");
         setState(() {
           if (oldIndex < newIndex) {
             newIndex -= 1;
           }
-          final Map category = _presses.removeAt(oldIndex);
-          _presses.insert(newIndex, category);
-          updateCategoryOrder();
+          Category category = categoryController.categories.removeAt(oldIndex);
+          categoryController.categories.insert(newIndex, category);
+          categoryController.updateCategoryOrder();
+          
         });
       },
       

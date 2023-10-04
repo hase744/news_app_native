@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:video_news/models/press.dart';
+import 'package:video_news/models/video.dart';
 import 'package:video_news/models/menu_button.dart';
 class ModalWindow extends StatelessWidget  {
   double windowWidth = 0;

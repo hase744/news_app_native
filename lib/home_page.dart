@@ -1,11 +1,13 @@
+// ignore_for_file: unused_field
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_news/controllers/category_controller.dart';
 import 'dart:convert';
 import 'views/bottom_navigation_bar.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'models/history.dart';
 import 'setting_page.dart';
-import 'category_setting.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
@@ -23,6 +25,8 @@ import 'package:flutter/services.dart';
 import 'package:video_news/controllers/access_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:video_news/views/top_navigation.dart';
+import 'package:video_news/controllers/video_controller.dart';
+import 'package:video_news/models/category.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -37,8 +41,7 @@ class _HomePageState extends State<HomePage>  {
    const Color.fromRGBO(90, 145, 255, 1),
    const Color.fromRGBO(185, 90, 255, 1),
   ];
-  double? _deviceWidth, _deviceHeight, _innerHeight;
-  String? _pressesJson = "";
+  double? _deviceWidth, _deviceHeight;
   List _press = [];
   List _presses = [];
   List<Map> selection = [];
@@ -52,12 +55,11 @@ class _HomePageState extends State<HomePage>  {
   ScrollController _scrollController = ScrollController();
   History _history = History(); 
   Favorite _favorite = Favorite(); // History クラスのインスタンスを作成
-  CategorySetting category_setting = CategorySetting();
+  CategoryController categoryController = CategoryController();
   HomeLayout homeLayout = HomeLayout(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0);
   DefaultValue defaultValue = DefaultValue();
-  String _categoryName = "ビジネス";
   int pageIndex = 0;
-  int currentCategoryIndex = 0;
+  //int currentCategoryIndex = 0;
   int _pressUnitCount = 20;
   bool _displayLoadingScreen = true;
   String loadText = " ↓ 引き下げて更新";
@@ -65,8 +67,8 @@ class _HomePageState extends State<HomePage>  {
   bool isSelectMode = false;
   Future<void>? _launched;
   late int _pressCount =  _pressUnitCount;
-  late Color _curretColor = colors[0];
   final _controller = TextEditingController();
+  VideoController _videoController = VideoController();
   List<NavigationItem> menuList = NavigationListConfig.menuList;
   List<NavigationItem> pageList = NavigationListConfig.pageList;
 
@@ -79,8 +81,7 @@ class _HomePageState extends State<HomePage>  {
   void init() async {
     await defaultValue.initialize();
     String? defaultYoutubeId = defaultValue.getStoredValue('default_youtube_id');
-    category_setting = CategorySetting();
-    List presses = await category_setting.getPressOrder();
+    List presses = await categoryController.getPressOrder();
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: Colors.white
@@ -91,8 +92,6 @@ class _HomePageState extends State<HomePage>  {
       var _padding = MediaQuery.of(context).padding;
       _deviceWidth = MediaQuery.of(context).size.width;
       _deviceHeight = MediaQuery.of(context).size.height;
-      _innerHeight = _deviceHeight! - _padding.top - _padding.bottom;
-      category_setting = CategorySetting();
       _presses = presses;
       //_history.deleteTable();
       //_favorite.deleteTable();
@@ -122,7 +121,7 @@ class _HomePageState extends State<HomePage>  {
 
   Future<void> displayNews() async {
     setDefauldLayout();
-    await SelectCategory(currentCategoryIndex);
+    await SelectCategory(categoryController.categoryIndex);
     resetPressCount();
     setState(() {
       _scrollController.jumpTo(homeLayout.getTopMenuHeight());
@@ -206,8 +205,6 @@ class _HomePageState extends State<HomePage>  {
     List press = await json.decode(_presses[category_num]['press']);
     setState(() {
       closeYoutube();
-      _categoryName = _presses[category_num]['japanese_name'];
-      _curretColor =  colors[category_num % colors.length];
       _press = press;
     });
   }
@@ -440,10 +437,10 @@ class _HomePageState extends State<HomePage>  {
   }
 
   scrollToPoint(double offset){
-    Future.delayed(Duration(seconds: 0), () {
+    Future.delayed(const Duration(seconds: 0), () {
       _scrollController.animateTo(
         offset,
-        duration: Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 500),
         curve: Curves.ease,
       );
     });
@@ -466,11 +463,11 @@ class _HomePageState extends State<HomePage>  {
     await access.accessPress();
       if (access.statusCode == 200) {
         await prefs.setString('presses', access.data);
-        List press = await category_setting.getPressOrder();
+        List press = await categoryController.getPressOrder();
         setState(() {
           _presses = press;
         });
-        SelectCategory(currentCategoryIndex);
+        SelectCategory(categoryController.categoryIndex);
       } else {
         throw Exception('Failed to load data');
       }
@@ -480,14 +477,12 @@ class _HomePageState extends State<HomePage>  {
       Timer.periodic(Duration(milliseconds: 25), (timer) {
         setState(() {
           homeLayout.loadCount += 1;
-        });
-        if(!homeLayout.loadCounting || homeLayout.loadCount >= homeLayout.maxLoadCount){
-          setState(() {
+          if(!homeLayout.loadCounting || homeLayout.loadCount >= homeLayout.maxLoadCount){
             loadText = " ↑ はなして更新";
             homeLayout.isLoading = true;
-          });
-          timer.cancel();
-        }
+            timer.cancel();
+          }
+        });
       }
     );
   }
@@ -568,7 +563,7 @@ class _HomePageState extends State<HomePage>  {
             appBar: PreferredSize(
               preferredSize: Size.fromHeight(homeLayout.appBarHeight),
               child: AppBar(
-                title: Text("$_categoryName"),
+                title: Text(categoryController.currentCategory.japaneseName),
                 leading: Container(),
               ),
             ),
@@ -674,20 +669,21 @@ class _HomePageState extends State<HomePage>  {
                                         padding: EdgeInsets.all(0),
                                         margin: EdgeInsets.all(0),
                                         child: TextButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              currentCategoryIndex = i;
-                                            });
-                                            resetCategory(currentCategoryIndex);
-                                          },
-                                          child: Text(
-                                            _presses[i]['japanese_name'],
+                                          child: 
+                                          Text(
+                                            categoryController.categories[i].japaneseName,
                                             style: TextStyle(
-                                              fontSize: fontSize(_presses[i]['japanese_name'].length),
+                                              fontSize: fontSize(categoryController.categories[i].japaneseName.length),
                                               fontWeight: FontWeight.bold,
                                               color: Colors.white,
                                             ),
                                           ),
+                                          onPressed: () {
+                                            setState(() {
+                                              categoryController.categoryIndex = i;
+                                            });
+                                            resetCategory(categoryController.categoryIndex);
+                                          },
                                           style: TextButton.styleFrom(
                                             padding: EdgeInsets.all(0), // ボタンの内側の余白
                                             shape: RoundedRectangleBorder(
@@ -700,7 +696,7 @@ class _HomePageState extends State<HomePage>  {
                                   )
                                 ),
                                 Container(
-                                  color: _curretColor,
+                                  color: colors[categoryController.categoryIndex%5],
                                   width: _deviceWidth,
                                   height: homeLayout.categoryBarLineHeight,
                                 ),

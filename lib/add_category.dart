@@ -6,6 +6,7 @@ import 'setting_page.dart';
 import 'category_setting.dart';
 import 'dart:convert';
 import 'page_transition.dart';
+import 'package:video_news/controllers/category_controller.dart';
 
 class AddCategoyPage extends StatefulWidget {
   const AddCategoyPage({super.key, required this.title});
@@ -17,10 +18,8 @@ class AddCategoyPage extends StatefulWidget {
 }
 
 class _AddCategoyPageState extends State<AddCategoyPage> {
-  List _categories = [];
-  List _pressParams = [];
-  List _unChosedCategories = [];
   PageTransition _pageTransition = PageTransition();
+    CategoryController categoryController = CategoryController();
   double? _deviceHeight, _deviceWidth;
   @override
   void initState() {
@@ -29,47 +28,14 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
   }
 
   void init() async {
-    final prefs = await SharedPreferences.getInstance();
-    CategorySetting categorySetting = CategorySetting();
-
-    List _category = await categorySetting.categoryOrder();
-    String? _currentPress = await prefs.getString('presses');
-    PageTransition _pageTransition  = PageTransition();
-
-    _pressParams = json.decode(_currentPress!);
+    List _category = await categoryController.categoryOrder();
     setState(() {
       //print(_category);
-      _categories = _category;
       _deviceHeight = MediaQuery.of(context).size.height;
       _deviceWidth = MediaQuery.of(context).size.width;
-      for(var i=0; i<_pressParams.length; i++){
-        Map press = _pressParams[i];
-        bool rooping = true;
-        for(var j=0; j<_categories.length; j++){
-          //print(_categories[i]);
-          print("$i, $j");
-          if(press['name'] == _categories[j]['name']){
-            print('return');
-            rooping = false;
-          };
-
-          if(j+1 == _categories.length && rooping){
-            print('追加');
-            _unChosedCategories.add({'name':press['name'], 'japanese_name':press['japanese_name'], 'is_added':false});
-          }
-        }
-      }
     });
   }
   
-  void addCategory(String name) async  {
-    final prefs = await SharedPreferences.getInstance();
-    Map press = _pressParams.firstWhere((element) => element["name"] == name);
-    Map category_param = {'name':press['name'], 'japanese_name':press['japanese_name']};
-    _categories.add(category_param);
-    await prefs.setString('categoryOrder',  json.encode(_categories));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -93,9 +59,9 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              if(_unChosedCategories.length > 0)
+              if(categoryController.unusedCategories.length > 0)
               Text("追加ボタンからカテゴリーを追加"),
-              if(_unChosedCategories.length == 0)
+              if(categoryController.unusedCategories.length == 0)
               Text(
                 "追加可能なカテゴリーはありません",
                 style: TextStyle(
@@ -106,9 +72,9 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
               Flexible(
               child: 
               ListView.builder(
-                itemCount: _unChosedCategories.length,
+                itemCount: categoryController.unusedCategories.length,
                 itemBuilder: (context, index) {
-                  final category = _unChosedCategories[index];
+                  final category = categoryController.unusedCategories[index];
                   return 
                   Container(
                     width: _deviceWidth! - 2,
@@ -118,27 +84,28 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            category['japanese_name'],
+                            category.japaneseName,
                             style: TextStyle(
                               fontSize: 20,
                             ),
                           ),
                           Spacer(),
                           Container(
-                            child: _unChosedCategories[index]['is_added'] ?
+                            child: categoryController.unusedCategories[index].isAdded ?
                               IconButton(
                                 icon:  Icon(Icons.check_circle, color: Colors.green) ,
                                 onPressed: () {
                                   setState(() {
-                                    //_unChosedCategories[index]['is_added'] = !_unChosedCategories[index]['is_added'];
+                                    //categoryController.unusedCategories[index]['is_added'] = !categoryController.unusedCategories[index]['is_added'];
                                   });
                                 },
                               ):
                             InkWell(
                               onTap: () {
                                 setState(() {
-                                  _unChosedCategories[index]['is_added'] = !_unChosedCategories[index]['is_added'];
-                                  addCategory(category['name']);
+                                  categoryController.unusedCategories[index].isAdded = !categoryController.unusedCategories[index].isAdded;
+                                  //addCategory(category.name);
+                                  categoryController.add(categoryController.unusedCategories[index]);
                                 });
                               },
                               child: 
