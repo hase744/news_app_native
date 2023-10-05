@@ -38,7 +38,7 @@ class VideoCellClass extends StatelessWidget {
             child: Stack(
               children: [
                 Container(
-                  color: isSelected ?Colors.blue :Colors.white,
+                  color: isSelected ?Colors.grey.shade300 :Colors.white,
                   child:
                   Row(
                     children: [
@@ -74,9 +74,9 @@ class VideoCellClass extends StatelessWidget {
                               Positioned.fill(
                                 child: Center(
                                   child: Opacity(
-                                    opacity: 0.5,
+                                    opacity: isSelectMode ? 1 : 0.5,
                                     child: Icon(
-                                      Icons.play_circle,
+                                      isSelectMode ? (isSelected ? Icons.check_circle_sharp : Icons.check_circle_outline)  : Icons.play_circle,
                                       size: 50,
                                       color: isSelected ?Colors.blue :Colors.white,
                                     ),
