@@ -61,16 +61,20 @@ class CategoryController{
   Future<List> getPressOrder() async {
     List pressParams = await getCurrentPress();
     List categoryParams = await getSavedOrder();
-    List newPersses = [];
+    List videosList = [];
 
     for (var category in categoryParams ) {
       for (var press in pressParams ) {
         if(category['name'] == press['name']){
-          newPersses.add(press);
+          List videos = [];
+          for(var video in json.decode(press['press'])){
+            videos.add(video);
+          }
+          videosList.add(videos);
         }
       }
     }
-    return newPersses;
+    return videosList;
   }
 
   setSavedCategory() async {

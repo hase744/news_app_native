@@ -27,6 +27,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:video_news/views/top_navigation.dart';
 import 'package:video_news/controllers/video_controller.dart';
 import 'package:video_news/models/category.dart';
+import 'package:video_news/models/video.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -50,21 +51,20 @@ class _HomePageState extends State<HomePage>  {
     );
   History _history = History(); 
   Favorite _favorite = Favorite(); // History クラスのインスタンスを作成
-  CategoryController categoryController = CategoryController();
   HomeLayout homeLayout = HomeLayout(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0);
   DefaultValue defaultValue = DefaultValue();
   int pageIndex = 0;
   //int currentCategoryIndex = 0;
-  int _pressUnitCount = 20;
-  bool _displayLoadingScreen = true;
+  //int _pressUnitCount = 20;
   String loadText = " ↓ 引き下げて更新";
   String? _alert;
   bool isSelectMode = false;
   Future<void>? _launched;
-  late int _pressCount =  _pressUnitCount;
+  //late int _pressCount =  _pressUnitCount;
   TextEditingController _controller = TextEditingController();
   VideoController _videoController = VideoController();
   ScrollController _scrollController = ScrollController();
+  CategoryController categoryController = CategoryController();
   List<NavigationItem> menuList = NavigationListConfig.menuList;
   List<NavigationItem> pageList = NavigationListConfig.pageList;
 
@@ -77,7 +77,8 @@ class _HomePageState extends State<HomePage>  {
   void init() async {
     await defaultValue.initialize();
     String? defaultYoutubeId = defaultValue.getStoredValue('default_youtube_id');
-    List presses = await categoryController.getPressOrder();
+    await _videoController.setVideosList();
+
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: Colors.white
@@ -85,39 +86,29 @@ class _HomePageState extends State<HomePage>  {
     );
     FocusScope.of(context).unfocus();
     setState(() {
-      var _padding = MediaQuery.of(context).padding;
       _deviceWidth = MediaQuery.of(context).size.width;
       _deviceHeight = MediaQuery.of(context).size.height;
-      _videoController.videosList = presses;
       //_history.deleteTable();
       //_favorite.deleteTable();
       youtubeController =  YoutubePlayerController(
         initialVideoId: defaultYoutubeId!,
-        flags: YoutubePlayerFlags(
+        flags: const YoutubePlayerFlags(
           autoPlay: false,  // 自動再生しない
-        ),);
+        ),
+      );
       _scrollController = ScrollController(initialScrollOffset: (_deviceWidth!*homeLayout.topMenuRatio));
-      _scrollController.addListener(_onScroll);
     });
-
     _scrollController.addListener(() {
-      setOffset();
+      _onScroll();
     });
     SettingPage settingPage = SettingPage();
     await displayNews();
     resetPressCount();
   }
 
-  setOffset(){
-    setState(() {
-      double offset = _scrollController.offset;
-      homeLayout.videoCellsOffset = offset.clamp(0.0, homeLayout.getTopMenuHeight());//menuが見える時以外offsetは0にする
-    });
-  }
-
   Future<void> displayNews() async {
     setDefauldLayout();
-    await SelectCategory(categoryController.categoryIndex);
+    await selectCategory(categoryController.categoryIndex);
     resetPressCount();
     setState(() {
       _scrollController.jumpTo(homeLayout.getTopMenuHeight());
@@ -128,7 +119,7 @@ class _HomePageState extends State<HomePage>  {
     _videoController.videos = [];
     await _history.initDatabase();
     List<Map<String, dynamic>> histories = await _history.all();
-    histories = histories.reversed.toList();// あなたの非同期処理;
+    histories = histories.reversed.toList();
     setState(() {
       homeLayout.setForList();
       homeLayout.setHeightForVideoCells();
@@ -141,7 +132,7 @@ class _HomePageState extends State<HomePage>  {
   Future<void> displayFavorites() async {
     _videoController.videos = [];
     List<Map<String, dynamic>> favorites = await _favorite.all();
-    favorites = favorites.reversed.toList();// あなたの非同期処理;
+    favorites = favorites.reversed.toList();
     setState(() {
       homeLayout.setForList();
       homeLayout.setHeightForVideoCells();
@@ -197,31 +188,22 @@ class _HomePageState extends State<HomePage>  {
     return fontSize -1;
   }
 
-  Future<void> SelectCategory(int category_num) async {
-    List press = await json.decode(_videoController.videosList[category_num]['press']);
+  Future<void> selectCategory(int category_num) async {
     setState(() {
       closeYoutube();
-      _videoController.videos = press;
+      _videoController.changeVideos(category_num);
     });
   }
 
   Future<void> resetCategory(int category_num) async {
-    await SelectCategory(category_num);
+    await selectCategory(category_num);
     await resetPressCount();
   }
 
   Future<void> resetPressCount() async {
     setState(() {
-      _displayLoadingScreen = false;
-      _pressCount =  _pressUnitCount;
-      if (_pressCount > _videoController.videos.length) {
-        _pressCount = _videoController.videos.length;
-      }
+      _videoController.resetVideoCount();
     });
-  }
-
-  String listToString(List<String> list) {
-    return list.map<String>((String value) => value).join(',');
   }
 
   Future<void> _launchInWebViewOrVC(Uri url) async {
@@ -282,7 +264,7 @@ class _HomePageState extends State<HomePage>  {
     });
   }
 
-  bottmBar(){
+  Widget bottomBar(){
     if(isSelectMode){
       return BottomMenuNavigationBar(
         initialIndex: 0, 
@@ -319,17 +301,6 @@ class _HomePageState extends State<HomePage>  {
         isSelectMode: isSelectMode
       );
     }
-  }
-
-  selectVideo(Map video){
-    int index = _videoController.selection.indexWhere((map) => map["youtube_id"] == video['youtube_id']);
-    setState(() {
-      if(index != -1){
-        _videoController.selection.removeAt(index);
-      }else{
-        _videoController.selection.add(video);
-      }
-    });
   }
 
   Widget topNavigation(context){
@@ -379,7 +350,9 @@ class _HomePageState extends State<HomePage>  {
       cellHeight: cellHeight, 
       cellWidth: cellWidth, 
       onSelected: (){
-        selectVideo(video);
+        setState(() {
+          _videoController.selectVideo(video);
+        });
       },
       onPressedYoutube: (){
         openYoutube(video);
@@ -423,7 +396,7 @@ class _HomePageState extends State<HomePage>  {
 
   transitNavigation(index){
     setState(() {
-      _pressCount = 0;
+      _videoController.videoCount = 0;
       pageIndex = index;
       youtubeController.pause();
     });
@@ -457,30 +430,30 @@ class _HomePageState extends State<HomePage>  {
     AccessController access = AccessController();
     final prefs = await SharedPreferences.getInstance();
     await access.accessPress();
-      if (access.statusCode == 200) {
-        await prefs.setString('presses', access.data);
-        List press = await categoryController.getPressOrder();
-        setState(() {
-          _videoController.videosList = press;
-        });
-        SelectCategory(categoryController.categoryIndex);
-      } else {
-        throw Exception('Failed to load data');
-      }
+    if (access.statusCode == 200) {
+      await prefs.setString('presses', access.data);
+      List press = await categoryController.getPressOrder();
+      setState(() {
+        _videoController.videosList = press;
+      });
+      selectCategory(categoryController.categoryIndex);
+    } else {
+      displayAlert("ロードに失敗しました");
+      throw Exception('Failed to load data');
+    }
   }
 
   countLoad(){
-      Timer.periodic(Duration(milliseconds: 25), (timer) {
-        setState(() {
-          homeLayout.loadCount += 1;
-          if(!homeLayout.loadCounting || homeLayout.loadCount >= homeLayout.maxLoadCount){
-            loadText = " ↑ はなして更新";
-            homeLayout.isLoading = true;
-            timer.cancel();
-          }
-        });
-      }
-    );
+    Timer.periodic(Duration(milliseconds: 25), (timer) {
+      setState(() {
+        homeLayout.loadCount += 1;
+        if(!homeLayout.loadCounting || homeLayout.loadCount >= homeLayout.maxLoadCount){
+          loadText = " ↑ はなして更新";
+          homeLayout.isLoading = true;
+          timer.cancel();
+        }
+      });
+    });
   }
 
   void _onScroll() {
@@ -488,7 +461,7 @@ class _HomePageState extends State<HomePage>  {
     final end = _scrollController.position.maxScrollExtent;
     setState(() {
       if (before == end) {
-        _displayLoadingScreen = true;
+        _videoController.displayLoadingScreen = true;
       }
       if(homeLayout.isLoading){
         loadText = "更新中";
@@ -507,6 +480,8 @@ class _HomePageState extends State<HomePage>  {
         homeLayout.loadCounting = false;
         homeLayout.loadCount = 1;
       }
+      double offset = _scrollController.offset;
+      homeLayout.videoCellsOffset = offset.clamp(0.0, homeLayout.getTopMenuHeight());//menuが見える時以外offsetは0にする
       FocusScope.of(context).unfocus();
     });
   }
@@ -583,13 +558,7 @@ class _HomePageState extends State<HomePage>  {
                           if (before == max) {
                             setState(() {
                               //挿入可能な記事があれば記事を挿入
-                              _pressCount += _pressUnitCount;
-                              if (_pressCount > _videoController.videos.length) { //ロード過多
-                                _pressCount = _videoController.videos.length;
-                                if(_displayLoadingScreen){
-                                  _displayLoadingScreen = false;
-                                }
-                              }
+                              _videoController.loadVideos();
                             });
                           }
                           if(before == 0 && homeLayout.isLoading){
@@ -616,9 +585,9 @@ class _HomePageState extends State<HomePage>  {
                               child: Spacer(),
                             ),
                             if(_videoController.videos.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
-                              for(var i=0; i<_pressCount; i++)
+                              for(var i=0; i<_videoController.videoCount; i++)
                                 videoCell(context, _videoController.videos[i]),
-                            if(_displayLoadingScreen)
+                            if(_videoController.displayLoadingScreen)
                             Container(
                               alignment: Alignment.center,
                               width: _deviceWidth,
@@ -711,7 +680,7 @@ class _HomePageState extends State<HomePage>  {
                 ),
               ),
             ),
-            bottomNavigationBar: bottmBar(),
+            bottomNavigationBar: bottomBar(),
           ),
           Transform.translate(
             offset: homeLayout.youtubePlayerOffset(context),//Offset(0, 0),
