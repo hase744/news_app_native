@@ -3,8 +3,10 @@ import 'package:video_news/controllers/access_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_news/controllers/category_controller.dart';
 class VideoController{
-  late List<List<Video>> videoLists = [];
-  late List<Video> videos = [];
+  late List videosList = [];
+  late List videos = [];
+  List<Map> selection = [];
+  List selectedVideos = [];
   int videoPages = 20;
   int videoCount = 0;
   CategoryController categoryController = CategoryController();

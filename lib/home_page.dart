@@ -42,17 +42,12 @@ class _HomePageState extends State<HomePage>  {
    const Color.fromRGBO(185, 90, 255, 1),
   ];
   double? _deviceWidth, _deviceHeight;
-  List _press = [];
-  List _presses = [];
-  List<Map> selection = [];
-  List selectedVideos = [];
   YoutubePlayerController youtubeController = YoutubePlayerController(
     initialVideoId: '4b6DuHGcltI',
     flags: YoutubePlayerFlags(
         autoPlay: false,  // 自動再生しない
       ),
     );
-  ScrollController _scrollController = ScrollController();
   History _history = History(); 
   Favorite _favorite = Favorite(); // History クラスのインスタンスを作成
   CategoryController categoryController = CategoryController();
@@ -67,8 +62,9 @@ class _HomePageState extends State<HomePage>  {
   bool isSelectMode = false;
   Future<void>? _launched;
   late int _pressCount =  _pressUnitCount;
-  final _controller = TextEditingController();
+  TextEditingController _controller = TextEditingController();
   VideoController _videoController = VideoController();
+  ScrollController _scrollController = ScrollController();
   List<NavigationItem> menuList = NavigationListConfig.menuList;
   List<NavigationItem> pageList = NavigationListConfig.pageList;
 
@@ -92,7 +88,7 @@ class _HomePageState extends State<HomePage>  {
       var _padding = MediaQuery.of(context).padding;
       _deviceWidth = MediaQuery.of(context).size.width;
       _deviceHeight = MediaQuery.of(context).size.height;
-      _presses = presses;
+      _videoController.videosList = presses;
       //_history.deleteTable();
       //_favorite.deleteTable();
       youtubeController =  YoutubePlayerController(
@@ -129,27 +125,27 @@ class _HomePageState extends State<HomePage>  {
   }
 
   Future<void> displayHistory() async {
-    _press = [];
+    _videoController.videos = [];
     await _history.initDatabase();
     List<Map<String, dynamic>> histories = await _history.all();
     histories = histories.reversed.toList();// あなたの非同期処理;
     setState(() {
       homeLayout.setForList();
       homeLayout.setHeightForVideoCells();
-      _press = histories; // 取得したデータを _press 変数に代入
+      _videoController.videos = histories; // 取得したデータを _press 変数に代入
       resetPressCount();
     });
     closeYoutube();
   }
 
   Future<void> displayFavorites() async {
-    _press = [];
+    _videoController.videos = [];
     List<Map<String, dynamic>> favorites = await _favorite.all();
     favorites = favorites.reversed.toList();// あなたの非同期処理;
     setState(() {
       homeLayout.setForList();
       homeLayout.setHeightForVideoCells();
-      _press = favorites; // 取得したデータを _press 変数に代入
+      _videoController.videos = favorites; // 取得したデータを _press 変数に代入
       resetPressCount();
     });
     closeYoutube();
@@ -202,10 +198,10 @@ class _HomePageState extends State<HomePage>  {
   }
 
   Future<void> SelectCategory(int category_num) async {
-    List press = await json.decode(_presses[category_num]['press']);
+    List press = await json.decode(_videoController.videosList[category_num]['press']);
     setState(() {
       closeYoutube();
-      _press = press;
+      _videoController.videos = press;
     });
   }
 
@@ -218,8 +214,8 @@ class _HomePageState extends State<HomePage>  {
     setState(() {
       _displayLoadingScreen = false;
       _pressCount =  _pressUnitCount;
-      if (_pressCount > _press.length) {
-        _pressCount = _press.length;
+      if (_pressCount > _videoController.videos.length) {
+        _pressCount = _videoController.videos.length;
       }
     });
   }
@@ -293,12 +289,12 @@ class _HomePageState extends State<HomePage>  {
         onTap: (int index){
           switch(menuList[index].name){
             case 'favorite':
-              if(selection.isNotEmpty){
-                _favorite.createBatch(selection);
+              if(_videoController.selection.isNotEmpty){
+                _favorite.createBatch(_videoController.selection);
                 displayAlert("お気に入りに追加しました");
                 setState(() {
                   isSelectMode = false;
-                  selection = [];
+                  _videoController.selection = [];
                 });
               }else{
                 displayAlert("選択されてません");
@@ -306,7 +302,7 @@ class _HomePageState extends State<HomePage>  {
             case 'close':
                 setState(() {
                   isSelectMode = false;
-                  selection = [];
+                  _videoController.selection = [];
                 });
             default:
           }
@@ -326,12 +322,12 @@ class _HomePageState extends State<HomePage>  {
   }
 
   selectVideo(Map video){
-    int index = selection.indexWhere((map) => map["youtube_id"] == video['youtube_id']);
+    int index = _videoController.selection.indexWhere((map) => map["youtube_id"] == video['youtube_id']);
     setState(() {
       if(index != -1){
-        selection.removeAt(index);
+        _videoController.selection.removeAt(index);
       }else{
-        selection.add(video);
+        _videoController.selection.add(video);
       }
     });
   }
@@ -375,7 +371,7 @@ class _HomePageState extends State<HomePage>  {
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth!/2/16*9;
     bool isFavorite = pageList[pageIndex].name == 'favorite';
-    List youtubeIds = selection.map((map) => map["youtube_id"]).toList();
+    List youtubeIds = _videoController.selection.map((map) => map["youtube_id"]).toList();
     return VideoCellClass(
       press: video, 
       isSelectMode: isSelectMode,
@@ -465,7 +461,7 @@ class _HomePageState extends State<HomePage>  {
         await prefs.setString('presses', access.data);
         List press = await categoryController.getPressOrder();
         setState(() {
-          _presses = press;
+          _videoController.videosList = press;
         });
         SelectCategory(categoryController.categoryIndex);
       } else {
@@ -553,7 +549,7 @@ class _HomePageState extends State<HomePage>  {
 
   @override
   Widget build(BuildContext context) {
-    //_presses = json.decode(_pressesJson!);
+    //_videoController.videosList = json.decode(_videoController.videosListJson!);
     return 
       SafeArea(
       child:
@@ -588,8 +584,8 @@ class _HomePageState extends State<HomePage>  {
                             setState(() {
                               //挿入可能な記事があれば記事を挿入
                               _pressCount += _pressUnitCount;
-                              if (_pressCount > _press.length) { //ロード過多
-                                _pressCount = _press.length;
+                              if (_pressCount > _videoController.videos.length) { //ロード過多
+                                _pressCount = _videoController.videos.length;
                                 if(_displayLoadingScreen){
                                   _displayLoadingScreen = false;
                                 }
@@ -619,9 +615,9 @@ class _HomePageState extends State<HomePage>  {
                               //color: Colors.blue,
                               child: Spacer(),
                             ),
-                            if(_press.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
+                            if(_videoController.videos.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
                               for(var i=0; i<_pressCount; i++)
-                                videoCell(context, _press[i]),
+                                videoCell(context, _videoController.videos[i]),
                             if(_displayLoadingScreen)
                             Container(
                               alignment: Alignment.center,
@@ -661,7 +657,7 @@ class _HomePageState extends State<HomePage>  {
                                   ListView(
                                     scrollDirection: Axis.horizontal,
                                     children: [
-                                      for (var i = 0; i < _presses.length; i++)
+                                      for (var i = 0; i < _videoController.videosList.length; i++)
                                       Container(
                                         color: colors[i % colors.length],
                                         width: _deviceWidth! / 5,
