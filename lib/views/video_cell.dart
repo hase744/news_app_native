@@ -22,7 +22,19 @@ class VideoCellClass extends StatelessWidget {
     required this.onSelected,
     required this.isSelected,
     required this.isSelectMode,
-    });
+  });
+  
+  secondsToString(int seconds){
+    Duration duration = Duration(seconds: seconds);
+    int hours = duration.inHours;
+    int minutes = (duration.inMinutes % 60);
+    int remainingSeconds = (duration.inSeconds % 60);
+    String hoursStr = hours.toString().padLeft(2, '0');
+    String minutesStr = minutes.toString().padLeft(2, '0');
+    String secondsStr = remainingSeconds.toString().padLeft(2, '0');
+
+    return hoursStr == "00" ? '$minutesStr:$secondsStr' : '$hoursStr:$minutesStr:$secondsStr';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,11 +82,10 @@ class VideoCellClass extends StatelessWidget {
                                   )
                                 ),
                               ),
-
                               Positioned.fill(
                                 child: Center(
                                   child: Opacity(
-                                    opacity: isSelectMode ? 1 : 0.5,
+                                    opacity: isSelectMode ? 1 : 0.7,
                                     child: Icon(
                                       isSelectMode ? (isSelected ? Icons.check_circle_sharp : Icons.check_circle_outline)  : Icons.play_circle,
                                       size: 50,
@@ -83,6 +94,26 @@ class VideoCellClass extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                              //Positioned(
+                              //  right: cellHeight /20,
+                              //  bottom: cellHeight /20,
+                              //  child:
+                              //  Opacity(
+                              //    opacity: 0.7,
+                              //    child:
+                              //    Container(
+                              //      color: Colors.black,
+                              //      child: Text(
+                              //        secondsToString(press['total_seconds']),
+                              //        maxLines: 1,
+                              //        style: TextStyle(
+                              //          fontSize: cellHeight / 10,
+                              //          color: Colors.white
+                              //        ),
+                              //      )
+                              //    ),
+                              //  )
+                              //),
                             ],
                           ),
                         ),
@@ -152,7 +183,6 @@ class VideoCellClass extends StatelessWidget {
                     height: cellHeight,
                     width: cellWidth,
                   )
-                  
                 ),
               ],
             )
