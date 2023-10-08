@@ -66,4 +66,33 @@ class VideoController{
       }
     }
   }
+
+  displayFavorites() async {
+    AccessController access = AccessController();
+    videos = await json.decode(await access.getFavorites());
+  }
+
+  createFavorite(Map video) async {
+    AccessController access = AccessController();
+    Map response = await json.decode(await access.postFavorite(video['id']));
+  }
+
+  createSelectedFavorite() async {
+    AccessController access = AccessController();
+    List youtubeIds = selection.map((map) => map["id"]).toList();
+    Map response = await json.decode(await access.postMultipleFavorites(youtubeIds));
+  }
+
+  deleteFavorite(Map video) async {
+    AccessController access = AccessController();
+    Map response = await json.decode(await access.deleteFavorite(video['id']));
+  }
+
+
+  deleteAllFavorite() async {
+    AccessController access = AccessController();
+    Map response = await json.decode(await access.deleteAllFavorites());
+  }
+
+  deleteFavorites() async {}
 }

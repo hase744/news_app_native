@@ -43,28 +43,25 @@ class _HomePageState extends State<HomePage>  {
    const Color.fromRGBO(185, 90, 255, 1),
   ];
   double? _deviceWidth, _deviceHeight;
+  History _history = History(); 
+  Favorite _favorite = Favorite(); // History クラスのインスタンスを作成
+  HomeLayout homeLayout = HomeLayout(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0);
+  DefaultValue defaultValue = DefaultValue();
+  int pageIndex = 0;
+  String loadText = " ↓ 引き下げて更新";
+  String? _alert;
+  bool isSelectMode = false;
+  Future<void>? _launched;
+  TextEditingController _controller = TextEditingController();
+  VideoController _videoController = VideoController();
+  ScrollController _scrollController = ScrollController();
+  CategoryController categoryController = CategoryController();
   YoutubePlayerController youtubeController = YoutubePlayerController(
     initialVideoId: '4b6DuHGcltI',
     flags: YoutubePlayerFlags(
         autoPlay: false,  // 自動再生しない
       ),
     );
-  History _history = History(); 
-  Favorite _favorite = Favorite(); // History クラスのインスタンスを作成
-  HomeLayout homeLayout = HomeLayout(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0);
-  DefaultValue defaultValue = DefaultValue();
-  int pageIndex = 0;
-  //int currentCategoryIndex = 0;
-  //int _pressUnitCount = 20;
-  String loadText = " ↓ 引き下げて更新";
-  String? _alert;
-  bool isSelectMode = false;
-  Future<void>? _launched;
-  //late int _pressCount =  _pressUnitCount;
-  TextEditingController _controller = TextEditingController();
-  VideoController _videoController = VideoController();
-  ScrollController _scrollController = ScrollController();
-  CategoryController categoryController = CategoryController();
   List<NavigationItem> menuList = NavigationListConfig.menuList;
   List<NavigationItem> pageList = NavigationListConfig.pageList;
 
@@ -133,10 +130,11 @@ class _HomePageState extends State<HomePage>  {
     _videoController.videos = [];
     List<Map<String, dynamic>> favorites = await _favorite.all();
     favorites = favorites.reversed.toList();
+    await _videoController.displayFavorites();
     setState(() {
       homeLayout.setForList();
       homeLayout.setHeightForVideoCells();
-      _videoController.videos = favorites; // 取得したデータを _press 変数に代入
+      //_videoController.videos = favorites; // 取得したデータを _press 変数に代入
       resetPressCount();
     });
     closeYoutube();
@@ -273,6 +271,7 @@ class _HomePageState extends State<HomePage>  {
             case 'favorite':
               if(_videoController.selection.isNotEmpty){
                 _favorite.createBatch(_videoController.selection);
+                _videoController.createSelectedFavorite();
                 displayAlert("お気に入りに追加しました");
                 setState(() {
                   isSelectMode = false;
@@ -367,9 +366,10 @@ class _HomePageState extends State<HomePage>  {
                 MenuButton(
                   onPressed: () async {
                     if (isFavorite) {
-                      await _favorite.delete(video['id']);
+                      await _videoController.deleteFavorite(video);
                     } else {
-                      await _favorite.create(video);
+                      await _videoController.createFavorite(video);
+                      //await _favorite.create(video);
                     }
                     updateScreen();
                     Navigator.of(context).pop();
@@ -501,8 +501,9 @@ class _HomePageState extends State<HomePage>  {
       if(pageList[pageIndex].name == 'favorite')
       MenuButton(
         onPressed: () async {
-          _favorite.deleteTable();
-          _favorite = Favorite();
+          //_favorite.deleteTable();
+          //_favorite = Favorite();
+          _videoController.deleteAllFavorite();
           Navigator.of(context).pop();
           displayFavorites();
           displayAlert("削除しました");
