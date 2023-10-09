@@ -62,7 +62,8 @@ class _HomePageState extends State<HomePage>  {
         autoPlay: false,  // 自動再生しない
       ),
     );
-  List<NavigationItem> menuList = NavigationListConfig.menuList;
+  List<NavigationItem> homeMenuList = NavigationListConfig.homeMenuList;
+  List<NavigationItem> favoriteMenuList = NavigationListConfig.favoriteMenuList;
   List<NavigationItem> pageList = NavigationListConfig.pageList;
 
   @override
@@ -130,11 +131,17 @@ class _HomePageState extends State<HomePage>  {
     _videoController.videos = [];
     List<Map<String, dynamic>> favorites = await _favorite.all();
     favorites = favorites.reversed.toList();
-    await _videoController.displayFavorites();
     setState(() {
+      _videoController.videos = [];
+      _videoController.displayLoadingScreen = true;
       homeLayout.setForList();
       homeLayout.setHeightForVideoCells();
-      //_videoController.videos = favorites; // 取得したデータを _press 変数に代入
+    });
+    if(!await _videoController.displayFavorites()){
+      displayAlert("ロードに失敗しました");
+    }
+    setState(() {
+      _videoController.displayLoadingScreen = false;
       resetPressCount();
     });
     closeYoutube();
@@ -263,16 +270,39 @@ class _HomePageState extends State<HomePage>  {
   }
 
   Widget bottomBar(){
+    List<NavigationItem> list = homeMenuList;
+    switch(pageList[pageIndex].name) {
+      case 'favorite':
+      list = favoriteMenuList;
+        break;
+      }
     if(isSelectMode){
       return BottomMenuNavigationBar(
+        list: list,
         initialIndex: 0, 
-        onTap: (int index){
-          switch(menuList[index].name){
+        onTap: (int index) async {
+          switch(list[index].name){
+            case 'delete':
+              if(_videoController.selection.isNotEmpty){
+                if(await _videoController.deleteSelectedFavorite()){
+                  displayAlert("お気に入りから削除しました");
+                }else{
+                  displayAlert("削除に失敗しました");
+                };
+                
+                setState(() {
+                  isSelectMode = false;
+                  _videoController.selection = [];
+                });
+                updateScreen();
+              }else{
+                displayAlert("選択されてません");
+              }
             case 'favorite':
               if(_videoController.selection.isNotEmpty){
-                _favorite.createBatch(_videoController.selection);
-                _videoController.createSelectedFavorite();
-                displayAlert("お気に入りに追加しました");
+                if(await _videoController.createSelectedFavorite()){
+                  displayAlert("お気に入りに追加しました");
+                };
                 setState(() {
                   isSelectMode = false;
                   _videoController.selection = [];
@@ -308,7 +338,9 @@ class _HomePageState extends State<HomePage>  {
       loadText: loadText, 
       width: _deviceWidth!, 
       controller: _controller, 
-      onSearched: (String text){}, 
+      onSearched: (String text){
+        _videoController.search(text, pageList[pageIndex].name);
+      }, 
       onClosesd: () {
         String searchText = _controller.text;
         print(searchText);
@@ -366,14 +398,17 @@ class _HomePageState extends State<HomePage>  {
                 MenuButton(
                   onPressed: () async {
                     if (isFavorite) {
-                      await _videoController.deleteFavorite(video);
+                      if(await _videoController.deleteFavorite(video)){
+                        displayAlert('削除しました');
+                      }
                     } else {
+                      if(await _videoController.createFavorite(video)){
+                        displayAlert('追加しました');
+                      }
                       await _videoController.createFavorite(video);
-                      //await _favorite.create(video);
                     }
                     updateScreen();
                     Navigator.of(context).pop();
-                    displayAlert(isFavorite ? "削除しました" : "追加しました");
                   },
                   name:isFavorite ? "ーお気に入りから削除" : "＋お気に入りに追加"
                 ),
@@ -503,10 +538,13 @@ class _HomePageState extends State<HomePage>  {
         onPressed: () async {
           //_favorite.deleteTable();
           //_favorite = Favorite();
-          _videoController.deleteAllFavorite();
+          if(await _videoController.deleteAllFavorite()){
+            displayAlert("削除しました");
+          }else{
+            displayAlert("削除できませんでした");
+          }
           Navigator.of(context).pop();
           displayFavorites();
-          displayAlert("削除しました");
         },
         name:"お気に入りを全て削除"
       ),
@@ -559,7 +597,7 @@ class _HomePageState extends State<HomePage>  {
                           if (before == max) {
                             setState(() {
                               //挿入可能な記事があれば記事を挿入
-                              _videoController.loadVideos();
+                              _videoController.loadVideos(pageList[pageIndex].name, homeLayout.displaySearch);
                             });
                           }
                           if(before == 0 && homeLayout.isLoading){
@@ -666,17 +704,23 @@ class _HomePageState extends State<HomePage>  {
                                   width: _deviceWidth,
                                   height: homeLayout.categoryBarLineHeight,
                                 ),
-                                if(_alert != null)
-                                Alert(
-                                  text: _alert!, 
-                                  width: _deviceWidth!,
-                                  height: homeLayout.alertHeight
-                                )
                               ],
                             )
                         ),
                       ),
                     ),
+                    if(_alert != null)
+                    Positioned(
+                      right: 0,
+                      left: 0,
+                      top: homeLayout.getAlertTop(),
+                      child:
+                        Alert(
+                          text: _alert!, 
+                          width: _deviceWidth!,
+                          height: homeLayout.alertHeight
+                        )
+                    )
                   ],
                 ),
               ),

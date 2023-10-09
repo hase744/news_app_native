@@ -5,13 +5,14 @@ import 'package:video_news/consts/navigation_list_config.dart';
 
 class BottomMenuNavigationBar extends StatelessWidget {
   final int initialIndex;
-  final Function(int) onTap;
+  late final Function(int) onTap;
   final GlobalKey _bottomNavigationKey = GlobalKey();
-  List<NavigationItem> list = NavigationListConfig.menuList;
+  List<NavigationItem> list;
 
   BottomMenuNavigationBar({
     required this.initialIndex,
     required this.onTap,
+    required this.list
   });
 
   double getBottomNavigationBarHeight() {
@@ -25,12 +26,13 @@ class BottomMenuNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    List<BottomNavigationBarItem> items = list.map((navItem) => navItem.item).toList();
     return 
     BottomNavigationBar(
       selectedItemColor: Colors.grey,
       currentIndex: initialIndex,
       onTap: onTap,
-      items:list.map((navItem) => navItem.item).toList(),
+      items:items,
       type: BottomNavigationBarType.fixed,
       key: _bottomNavigationKey,
     );

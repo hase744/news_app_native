@@ -88,6 +88,9 @@ class HomeLayout  {
     }
   }
   
+  getAlertTop(){
+    return listViewTop() + searchAreaHeight - categoryBarHeight;
+  }
 
   categoryBar(){
     return categoryBarHeight;

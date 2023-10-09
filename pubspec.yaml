@@ -42,6 +42,8 @@ dependencies:
   youtube_player_flutter: ^8.1.2
   webview_flutter: ^4.2.4
   url_launcher: ^6.1.14
+  device_info_plus: ^9.0.3
+  android_id: ^0.3.5
 
 dev_dependencies:
   flutter_test:

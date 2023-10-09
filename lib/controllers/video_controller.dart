@@ -1,8 +1,9 @@
-import 'package:video_news/models/video.dart';
-import 'package:video_news/controllers/access_controller.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_news/controllers/category_controller.dart';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:video_news/controllers/uuid_controller.dart';
+import 'package:video_news/consts/config.dart';
+
 class VideoController{
   late List videosList = [];
   late List videos = [];
@@ -10,8 +11,11 @@ class VideoController{
   List selectedVideos = [];
   int videoLength = 20;
   bool displayLoadingScreen = true;
+  String searchWord = '';
   late int videoCount = videoLength;
   CategoryController categoryController = CategoryController();
+  UuidController uuidController = UuidController();
+  late final domain = Config.domain;
 
   setVideosList() async {
     videosList = await getMyVideos();
@@ -57,7 +61,23 @@ class VideoController{
     videos = videosList[index];
   }
 
-  loadVideos(){
+  loadVideos(String pageName, bool searching)async{
+    int pageCount = ((videoCount + videoLength)/videoLength).ceil();
+    switch(pageName) {
+      case 'favorite':
+        if(searching){
+          List searchingVideos = json.decode(await searchFavorites(searchWord, pageCount));
+          videos.addAll(searchingVideos);
+        }
+        break;
+      case 'home':
+        if(searching){
+          List searchingVideos = json.decode(await searchVideos(searchWord, pageCount));
+          videos.addAll(searchingVideos);
+        }
+      default:
+        break;
+    }
     videoCount += videoLength;
     if (videoCount > videos.length) { //ロード過多
       videoCount = videos.length;
@@ -67,32 +87,83 @@ class VideoController{
     }
   }
 
-  displayFavorites() async {
-    AccessController access = AccessController();
-    videos = await json.decode(await access.getFavorites());
+  search(String word, String pageName) async {
+    searchWord = word;
+    switch(pageName) {
+      case 'favorite':
+        videos = await json.decode(await searchFavorites(searchWord, 1));
+        break;
+      case 'home':
+        videos = await json.decode(await searchVideos(searchWord, 1));
+      default:
+        break;
+    }
+    videoCount = videos.length;
   }
 
-  createFavorite(Map video) async {
-    AccessController access = AccessController();
-    Map response = await json.decode(await access.postFavorite(video['id']));
+  Future<bool> displayFavorites() async {
+    String url = '$domain/user/favorites.json?uuid=${await uuidController.getUuid()}';
+    final response = await http.get(Uri.parse(url));
+    //print("status : ${response.statusCode}");
+    if(response.statusCode == 200){
+      videos = json.decode(response.body);
+      return true;
+    }else{
+      return false;
+    }
   }
 
-  createSelectedFavorite() async {
-    AccessController access = AccessController();
+  Future <bool> createFavorite(Map video) async {
+    String url = "$domain/user/favorites.json?uuid=${await uuidController.getUuid()}&video_id=${video['id']}";
+    final response = await http.post(Uri.parse(url));
+    return response.statusCode == 200;
+  }
+
+  Future <bool> createSelectedFavorite() async {
     List youtubeIds = selection.map((map) => map["id"]).toList();
-    Map response = await json.decode(await access.postMultipleFavorites(youtubeIds));
+    final queryString = youtubeIds.map((id) => 'video_ids[]=$id').join('&');
+    String url = "$domain/user/favorites/create_multiple.json?uuid=${await uuidController.getUuid()}&$queryString";
+    final response = await http.post(Uri.parse(url));
+    return response.statusCode == 200;
   }
 
-  deleteFavorite(Map video) async {
-    AccessController access = AccessController();
-    Map response = await json.decode(await access.deleteFavorite(video['id']));
+  Future <bool> deleteFavorite(Map video) async {
+    String url = "$domain/user/favorites/${video['id']}.json?uuid=${await uuidController.getUuid()}";
+    final response = await http.delete(Uri.parse(url));
+    return response.statusCode == 200;
   }
 
-
-  deleteAllFavorite() async {
-    AccessController access = AccessController();
-    Map response = await json.decode(await access.deleteAllFavorites());
+  Future <bool> deleteAllFavorite() async {
+    String url = "$domain/user/favorites/delete_all.json?uuid=${await uuidController.getUuid()}";
+    final response = await http.delete(Uri.parse(url));
+    return response.statusCode == 200;
   }
 
-  deleteFavorites() async {}
+  Future <bool> deleteSelectedFavorite() async {
+    List favoriteIds = selection.map((map) => map["id"]).toList();
+    final queryString = favoriteIds.map((id) => 'ids[]=$id').join('&');
+    String url = "$domain/user/favorites/delete_multiple.json?uuid=${await uuidController.getUuid()}&$queryString";
+    final response = await http.delete(Uri.parse(url));
+    return response.statusCode == 200;
+  }
+
+  searchVideos(String word, int page) async {
+    String url = '$domain/videos.json?word=$word&page=$page';
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      return response.body;
+    } else {
+      throw Exception('Failed to load data');
+    }
+  }
+
+  searchFavorites(String word, int page) async {
+    String url = '$domain/user/favorites/search.json?word=$word&uuid=${await uuidController.getUuid()}&page=$page';
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      return response.body;
+    } else {
+      throw Exception('Failed to load data');
+    }
+  }
 }

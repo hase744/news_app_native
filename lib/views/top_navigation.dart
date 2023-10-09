@@ -91,7 +91,7 @@ Widget build(BuildContext context){
               width: homeLayout.searchAreaHeight,
               child:
               IconButton(
-                icon: Icon(Icons.more_vert, color: Colors.blue,),
+                icon: Icon(Icons.more_vert, color: Colors.grey,),
                 onPressed: menuOpened
               )
             )

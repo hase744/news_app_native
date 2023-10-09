@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_news/models/navigation_item.dart';
 class NavigationListConfig{
-  static List<NavigationItem> menuList = [
+  static List<NavigationItem> homeMenuList = [
     NavigationItem(
       name:"close", 
       item: const BottomNavigationBarItem(icon: Icon(Icons.close), label: '戻る')
@@ -9,6 +9,17 @@ class NavigationListConfig{
     NavigationItem(
       name:"favorite", 
       item: const BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'お気に入りに追加')
+      )
+  ];
+
+  static List<NavigationItem> favoriteMenuList = [
+    NavigationItem(
+      name:"close", 
+      item: const BottomNavigationBarItem(icon: Icon(Icons.close), label: '戻る')
+      ),
+    NavigationItem(
+      name:"delete", 
+      item: const BottomNavigationBarItem(icon: Icon(Icons.delete), label: 'お気に入りから削除')
       )
   ];
 

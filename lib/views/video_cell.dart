@@ -59,7 +59,7 @@ class VideoCellClass extends StatelessWidget {
                         height: cellHeight*0.9,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
-                          color: Colors.blue,
+                          color: Colors.grey,
                         ),
                         //color: Colors.red,
                         margin: EdgeInsets.symmetric(horizontal:cellWidth/2*0.05, vertical: cellHeight*0.05),
