@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:video_news/controllers/uuid_controller.dart';
 import 'package:video_news/consts/config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class VideoController{
   late List videosList = [];
@@ -58,6 +59,8 @@ class VideoController{
   }
 
   changeVideos(int index){
+    print("変更 : $index");
+    print(videosList[index]);
     videos = videosList[index];
   }
 
@@ -84,6 +87,28 @@ class VideoController{
       if(displayLoadingScreen){
         displayLoadingScreen = false;
       }
+    }
+  }
+
+  accessVideos() async {
+    String url = '$domain/categories/index.json';
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('presses', response.body);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  updateVideos(int categoryNumber) async {
+    if(await accessVideos()) {
+      videosList = await categoryController.getPressOrder();
+      videos = videosList[categoryNumber];
+      return true;
+    }else{
+      return false;
     }
   }
 

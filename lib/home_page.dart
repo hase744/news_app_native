@@ -460,24 +460,6 @@ class _HomePageState extends State<HomePage>  {
     }
   }
 
-  updatePresses() async {
-    print("アップデート");
-    AccessController access = AccessController();
-    final prefs = await SharedPreferences.getInstance();
-    await access.accessPress();
-    if (access.statusCode == 200) {
-      await prefs.setString('presses', access.data);
-      List press = await categoryController.getPressOrder();
-      setState(() {
-        _videoController.videosList = press;
-      });
-      selectCategory(categoryController.categoryIndex);
-    } else {
-      displayAlert("ロードに失敗しました");
-      throw Exception('Failed to load data');
-    }
-  }
-
   countLoad(){
     Timer.periodic(Duration(milliseconds: 25), (timer) {
       setState(() {
@@ -601,7 +583,7 @@ class _HomePageState extends State<HomePage>  {
                             });
                           }
                           if(before == 0 && homeLayout.isLoading){
-                            updatePresses();
+                            _videoController.updateVideos(pageIndex);
                           }
                         }//
                         return false;
