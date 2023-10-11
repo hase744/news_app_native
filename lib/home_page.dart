@@ -302,6 +302,8 @@ class _HomePageState extends State<HomePage>  {
               if(_videoController.selection.isNotEmpty){
                 if(await _videoController.createSelectedFavorite()){
                   displayAlert("お気に入りに追加しました");
+                }else{
+                  displayAlert("追加に失敗しました。");
                 };
                 setState(() {
                   isSelectMode = false;
@@ -338,12 +340,13 @@ class _HomePageState extends State<HomePage>  {
       loadText: loadText, 
       width: _deviceWidth!, 
       controller: _controller, 
-      onSearched: (String text){
-        _videoController.search(text, pageList[pageIndex].name);
+      onSearched: (String text) async {
+        if(!await _videoController.search(text, pageList[pageIndex].name)){
+          displayAlert("システムエラー");
+        };
       }, 
       onClosesd: () {
         String searchText = _controller.text;
-        print(searchText);
         setState(() {
           homeLayout.displaySearch = false;
         });
@@ -369,15 +372,15 @@ class _HomePageState extends State<HomePage>  {
   }
 
   Widget videoCell(BuildContext context, Map video){
-    String youtube_id = video['youtube_id'];
+    int cellId = video['id'];
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth!/2/16*9;
     bool isFavorite = pageList[pageIndex].name == 'favorite';
-    List youtubeIds = _videoController.selection.map((map) => map["youtube_id"]).toList();
+    List cellIds = _videoController.selection.map((map) => map["id"]).toList();
     return VideoCellClass(
       press: video, 
       isSelectMode: isSelectMode,
-      isSelected: youtubeIds.contains(youtube_id),
+      isSelected: cellIds.contains(cellId),
       cellHeight: cellHeight, 
       cellWidth: cellWidth, 
       onSelected: (){
@@ -400,14 +403,17 @@ class _HomePageState extends State<HomePage>  {
                     if (isFavorite) {
                       if(await _videoController.deleteFavorite(video)){
                         displayAlert('削除しました');
+                      }else{
+                        displayAlert('削除に失敗しました');
                       }
                     } else {
                       if(await _videoController.createFavorite(video)){
                         displayAlert('追加しました');
+                      }else{
+                        displayAlert('追加に失敗しました');
                       }
                       await _videoController.createFavorite(video);
                     }
-                    updateScreen();
                     Navigator.of(context).pop();
                   },
                   name:isFavorite ? "ーお気に入りから削除" : "＋お気に入りに追加"
@@ -510,7 +516,7 @@ class _HomePageState extends State<HomePage>  {
           Navigator.of(context).pop();
           setState(() {
             isSelectMode = true;
-            updateScreen();
+            //updateScreen();
           });
         },
         name:"複数選択"
@@ -518,14 +524,14 @@ class _HomePageState extends State<HomePage>  {
       if(pageList[pageIndex].name == 'favorite')
       MenuButton(
         onPressed: () async {
+          Navigator.of(context).pop();
           //_favorite.deleteTable();
           //_favorite = Favorite();
           if(await _videoController.deleteAllFavorite()){
             displayAlert("削除しました");
           }else{
-            displayAlert("削除できませんでした");
+            displayAlert("削除に失敗しました");
           }
-          Navigator.of(context).pop();
           displayFavorites();
         },
         name:"お気に入りを全て削除"
@@ -583,7 +589,9 @@ class _HomePageState extends State<HomePage>  {
                             });
                           }
                           if(before == 0 && homeLayout.isLoading){
-                            _videoController.updateVideos(pageIndex);
+                            if(!_videoController.updateVideos(pageIndex)){
+                              displayAlert("ロードできません");
+                            }
                           }
                         }//
                         return false;

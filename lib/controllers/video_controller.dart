@@ -59,8 +59,6 @@ class VideoController{
   }
 
   changeVideos(int index){
-    print("変更 : $index");
-    print(videosList[index]);
     videos = videosList[index];
   }
 
@@ -113,17 +111,25 @@ class VideoController{
   }
 
   search(String word, String pageName) async {
-    searchWord = word;
-    switch(pageName) {
-      case 'favorite':
-        videos = await json.decode(await searchFavorites(searchWord, 1));
-        break;
-      case 'home':
-        videos = await json.decode(await searchVideos(searchWord, 1));
-      default:
-        break;
+    videos = [];
+    displayLoadingScreen = true;
+    try {
+      searchWord = word;
+      switch(pageName) {
+        case 'favorite':
+          videos = await json.decode(await searchFavorites(searchWord, 1));
+          break;
+        case 'home':
+          videos = await json.decode(await searchVideos(searchWord, 1));
+        default:
+          break;
+      }
+    displayLoadingScreen = false;
+      videoCount = videos.length;
+      return true;
+    } catch (e) {
+      return false;
     }
-    videoCount = videos.length;
   }
 
   Future<bool> displayFavorites() async {
@@ -155,7 +161,14 @@ class VideoController{
   Future <bool> deleteFavorite(Map video) async {
     String url = "$domain/user/favorites/${video['id']}.json?uuid=${await uuidController.getUuid()}";
     final response = await http.delete(Uri.parse(url));
-    return response.statusCode == 200;
+    if(response.statusCode == 200){
+      int videoIndex = videos.map((map) => map["id"]).toList().indexOf(video['id']);
+      videoCount -= 1;
+      videos.removeAt(videoIndex);
+      return true;
+    }else{
+      return false;
+    }
   }
 
   Future <bool> deleteAllFavorite() async {
