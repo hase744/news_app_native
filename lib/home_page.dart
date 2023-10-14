@@ -507,9 +507,9 @@ class _HomePageState extends State<HomePage>  {
         homeLayout.loadCounting = false;
         homeLayout.loadCount = 1;
       }
-      homeLayout.updateCellsTop(_scrollController.offset);
-      FocusScope.of(context).unfocus();
     });
+    homeLayout.updateCellsTop(_scrollController.offset);
+    FocusScope.of(context).unfocus();
   }
   
   List<MenuButton> menuButtons(context){
@@ -755,6 +755,18 @@ class _HomePageState extends State<HomePage>  {
               ),
             ),
           ),
+          Positioned(//safeareaのroadAreaが見えないようにする
+            right: 0,
+            left: 0,
+            top: -_deviceHeight!,
+            child:
+              Container(
+                color: Colors.white,
+                width: _deviceWidth!,
+                height: _deviceHeight!,
+                child: Spacer()
+              )
+          )
         ]
       )
     );
