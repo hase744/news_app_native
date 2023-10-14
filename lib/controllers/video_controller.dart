@@ -101,9 +101,14 @@ class VideoController{
   }
 
   updateVideos(int categoryNumber) async {
+    videos = [];
+    videoCount = 0;
+    displayLoadingScreen = true;
     if(await accessVideos()) {
       videosList = await categoryController.getPressOrder();
       videos = videosList[categoryNumber];
+      videoCount = videos.length;
+    displayLoadingScreen = false;
       return true;
     }else{
       return false;

@@ -86,7 +86,7 @@ class HomeLayout  {
     }
   }
 
-  adjustCellsTop(double scrollTop){//menuが見える時以外offsetは0にする
+  updateCellsTop(double scrollTop){//menuが見える時以外offsetは0にする
     videoCellsTop = scrollTop.clamp(0.0, getTopMenuHeight());
   }
 
@@ -161,7 +161,7 @@ class HomeLayout  {
 
   getInnerScrollHeight(){
     double height = appBarHeight + categoryBarHeight + categoryBarLineHeight + youtubeDisplayHeight + pressHeight;
-    if(ishome){
+    if(true){
       return height;
     }else{
       return height - getTopMenuHeight();

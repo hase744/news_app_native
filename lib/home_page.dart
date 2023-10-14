@@ -124,6 +124,7 @@ class _HomePageState extends State<HomePage>  {
       _videoController.videos = histories; // 取得したデータを _press 変数に代入
       resetPressCount();
     });
+    homeLayout.updateCellsTop(0);
     closeYoutube();
   }
 
@@ -137,6 +138,7 @@ class _HomePageState extends State<HomePage>  {
       homeLayout.setForList();
       homeLayout.setHeightForVideoCells();
     });
+    homeLayout.updateCellsTop(0);
     if(!await _videoController.displayFavorites()){
       displayAlert("ロードに失敗しました");
     }
@@ -344,6 +346,7 @@ class _HomePageState extends State<HomePage>  {
         if(!await _videoController.search(text, pageList[pageIndex].name)){
           displayAlert("システムエラー");
         };
+        _scrollController.jumpTo(homeLayout.loadAreaHeight);
       }, 
       onClosesd: () {
         String searchText = _controller.text;
@@ -503,7 +506,7 @@ class _HomePageState extends State<HomePage>  {
         homeLayout.loadCounting = false;
         homeLayout.loadCount = 1;
       }
-      homeLayout.adjustCellsTop(_scrollController.offset);
+      homeLayout.updateCellsTop(_scrollController.offset);
       FocusScope.of(context).unfocus();
     });
   }
@@ -630,7 +633,13 @@ class _HomePageState extends State<HomePage>  {
                                   valueColor: AlwaysStoppedAnimation<Color>(Colors.blue)
                                 ),
                               ),
-                            )
+                            ),
+                            Container(
+                              width: _deviceWidth!,
+                              height: homeLayout.getbottomSpaceHeight(_videoController.videoCount),
+                              //color: Colors.blue,
+                              child: Spacer(),
+                            ),
                           ],
                         )
                       )
