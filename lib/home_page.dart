@@ -475,7 +475,8 @@ class _HomePageState extends State<HomePage>  {
         homeLayout.loadCount += 1;
         if(!homeLayout.loadCounting || homeLayout.loadCount >= homeLayout.maxLoadCount){
           loadText = " ↑ はなして更新";
-          homeLayout.isLoading = true;
+          homeLayout.canLoad = true;
+          //homeLayout.isLoading = true;
           timer.cancel();
         }
       });
@@ -550,6 +551,11 @@ class _HomePageState extends State<HomePage>  {
       ),
     ];
   }
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -590,13 +596,15 @@ class _HomePageState extends State<HomePage>  {
                               _videoController.loadVideos(pageList[pageIndex].name, homeLayout.displaySearch);
                             });
                           }
-                          if(before == 0 && homeLayout.isLoading){
+                          if(homeLayout.canLoad){
+                            homeLayout.isLoading = true;
+                            homeLayout.canLoad = false;
                             if(!_videoController.updateVideos(pageIndex)){
-                              displayAlert("ロードできません");
+                              displayAlert("ロードに失敗しました");
                             }
                           }
                         }//
-                        return false;
+                        return true;
                       },
                       child: 
                       Positioned(
