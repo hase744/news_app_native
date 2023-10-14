@@ -503,8 +503,7 @@ class _HomePageState extends State<HomePage>  {
         homeLayout.loadCounting = false;
         homeLayout.loadCount = 1;
       }
-      double offset = _scrollController.offset;
-      homeLayout.videoCellsOffset = offset.clamp(0.0, homeLayout.getTopMenuHeight());//menuが見える時以外offsetは0にする
+      homeLayout.adjustCellsTop(_scrollController.offset);
       FocusScope.of(context).unfocus();
     });
   }

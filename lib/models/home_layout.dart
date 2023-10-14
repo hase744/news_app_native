@@ -34,7 +34,8 @@ class HomeLayout  {
   late double bottomNavigationBarHeight = barHeight;
   late double alertHeight = 0;
   late double pressHeight = 0;
-  late double videoCellsOffset = deviceWidth*topMenuRatio; //menu_areaと同じ値
+  late double cellsHeight = 0;
+  late double videoCellsTop = deviceWidth*topMenuRatio; //menu_areaと同じ値
   late bool ishome = false;
   double get number => _number;
   
@@ -62,6 +63,16 @@ class HomeLayout  {
     return searchAreaHeight + loadAreaHeight;
   }
   
+  double getbottomSpaceHeight(int i){
+    cellsHeight = deviceHeight 
+    - appBarHeight 
+    - searchAreaHeight
+    - youtubeDisplayHeight
+    - bottomNavigationBarHeight;
+    double cellsReplaceSpace = (cellsHeight - i*deviceWidth/32*9).clamp(0.0, cellsHeight);
+    return cellsReplaceSpace;
+  }
+  
   getYoutubeDisplayWidth(context){
     //画面が縦向きである
     if(MediaQuery.of(context).orientation == Orientation.portrait){
@@ -73,6 +84,10 @@ class HomeLayout  {
     }{//画面が横向きである
       return (deviceWidth *(1 - youtubePadding*2))/youtubeDisplayRatio;
     }
+  }
+
+  adjustCellsTop(double scrollTop){//menuが見える時以外offsetは0にする
+    videoCellsTop = scrollTop.clamp(0.0, getTopMenuHeight());
   }
 
   getYoutubeDisplayHeight(context){
@@ -98,7 +113,7 @@ class HomeLayout  {
 
   Offset youtubePlayerOffset(context){
     if(MediaQuery.of(context).orientation == Orientation.portrait){//縦向き
-      youtubeDisplayTop = appBarHeight + getTopMenuHeight() + categoryBarHeight + categoryBarLineHeight - videoCellsOffset;
+      youtubeDisplayTop = appBarHeight + getTopMenuHeight() + categoryBarHeight + categoryBarLineHeight - videoCellsTop;
       if(youtubeDisplayLeft != deviceWidth){//youtubeが開いている
         youtubeDisplayLeft = 0;
       }
@@ -111,10 +126,10 @@ class HomeLayout  {
   }
 
   Offset categorybarOffset(){
-    return Offset(0, getTopMenuHeight() - videoCellsOffset) ;
+    return Offset(0, getTopMenuHeight() - videoCellsTop) ;
   }
    Offset getTopMenuOffset(){
-    return Offset(0, - videoCellsOffset.clamp(0.0, loadAreaHeight));
+    return Offset(0, - videoCellsTop.clamp(0.0, loadAreaHeight));
    }
 
   setHeightForVideoCells(){
