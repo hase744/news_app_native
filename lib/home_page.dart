@@ -531,7 +531,7 @@ class _HomePageState extends State<HomePage>  {
     final end = _scrollController.position.maxScrollExtent;
     setState(() {
       if (before == end) {
-        //_videoController.displayLoadingScreen = true;
+        _videoController.displayLoadingScreen = true;
       }
       if(homeLayout.isLoading){
         loadText = "更新中";
@@ -638,8 +638,7 @@ class _HomePageState extends State<HomePage>  {
                           final max = scrollNotification.metrics.maxScrollExtent;
                           scrollForMenu(before);
                           if (before == max) {
-                            print("ロード");
-                            _videoController.loadVideos(pageList[pageIndex].name, homeLayout.displaySearch);
+                            print("ロード");_videoController.loadVideos(pageList[pageIndex].name, homeLayout.displaySearch);
                           }
                           if(homeLayout.canLoad){
                             homeLayout.isLoading = true;
