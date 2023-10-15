@@ -446,7 +446,6 @@ class _HomePageState extends State<HomePage>  {
                       }else{
                         displayAlert('追加に失敗しました');
                       }
-                      await _videoController.createFavorite(video);
                     }
                     Navigator.of(context).pop();
                   },
