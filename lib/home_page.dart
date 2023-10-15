@@ -434,6 +434,7 @@ class _HomePageState extends State<HomePage>  {
               buttons: [
                 MenuButton(
                   onPressed: () async {
+                    Navigator.of(context).pop();
                     if (isFavorite) {
                       if(await _videoController.deleteFavorite(video)){
                         displayAlert('削除しました');
@@ -447,7 +448,6 @@ class _HomePageState extends State<HomePage>  {
                         displayAlert('追加に失敗しました');
                       }
                     }
-                    Navigator.of(context).pop();
                   },
                   name:isFavorite ? "ーお気に入りから削除" : "＋お気に入りに追加"
                 ),
@@ -515,7 +515,7 @@ class _HomePageState extends State<HomePage>  {
     Timer.periodic(Duration(milliseconds: 25), (timer) {
       setState(() {
         homeLayout.loadCount += 1;
-        if(!homeLayout.loadCounting || homeLayout.loadCount >= homeLayout.maxLoadCount){
+        if(homeLayout.loadCount >= homeLayout.maxLoadCount){
           loadText = " ↑ はなして更新";
           homeLayout.canLoad = true;
           //homeLayout.isLoading = true;
@@ -531,6 +531,9 @@ class _HomePageState extends State<HomePage>  {
     setState(() {
       if (before == end) {
         _videoController.displayLoadingScreen = true;
+      }
+      if (before > 0) {
+        homeLayout.loadCount = 0;
       }
       if(homeLayout.isLoading){
         loadText = "更新中";
