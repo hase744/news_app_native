@@ -66,9 +66,28 @@ class VideoController{
     int pageCount = ((videoCount + videoLength)/videoLength).ceil();
     switch(pageName) {
       case 'favorite':
+      print("お気に入り");
         if(searching){
           List searchingVideos = json.decode(await searchFavorites(searchWord, pageCount));
           videos.addAll(searchingVideos);
+        }else{
+          final response = await getFavorites(pageCount);
+          if(response.statusCode == 200){
+            videos.addAll(await json.decode(response.body));
+          }
+          //List videos = json.decode(await getFavorites(pageCount).body);
+          //videos.addAll(videos);
+        }
+        break;
+      case 'history':
+        if(searching){
+          List searchingVideos = json.decode(await searchHistories(searchWord, pageCount));
+          videos.addAll(searchingVideos);
+        }else{
+          final response = await getHistories(pageCount);
+          if(response.statusCode == 200){
+            videos.addAll(await json.decode(response.body));
+          }
         }
         break;
       case 'home':
@@ -124,6 +143,9 @@ class VideoController{
         case 'favorite':
           videos = await json.decode(await searchFavorites(searchWord, 1));
           break;
+        case 'history':
+          videos = await json.decode(await searchHistories(searchWord, 1));
+          break;
         case 'home':
           videos = await json.decode(await searchVideos(searchWord, 1));
         default:
@@ -137,12 +159,16 @@ class VideoController{
     }
   }
 
-  Future<bool> displayFavorites() async {
-    String url = '$domain/user/favorites.json?uuid=${await uuidController.getUuid()}';
+  getFavorites(int page) async {
+    String url = '$domain/user/favorites.json?uuid=${await uuidController.getUuid()}&page=$page';
     final response = await http.get(Uri.parse(url));
-    //print("status : ${response.statusCode}");
+    return response;
+  }
+
+  Future<bool> displayFavorites() async {
+    final response = await getFavorites(1);
     if(response.statusCode == 200){
-      videos = json.decode(response.body);
+      videos = await json.decode(response.body);
       return true;
     }else{
       return false;
@@ -207,6 +233,84 @@ class VideoController{
       return response.body;
     } else {
       throw Exception('Failed to load data');
+    }
+  }
+
+  getHistories(int page) async {
+    String url = '$domain/user/histories.json?uuid=${await uuidController.getUuid()}&page=$page';
+    final response = await http.get(Uri.parse(url));
+    return response;
+  }
+
+  Future<bool> displayHistories() async {
+    final response = await getHistories(1);
+    //print("status : ${response.statusCode}");
+    if(response.statusCode == 200){
+      videos = json.decode(response.body);
+      return true;
+    }else{
+      return false;
+    }
+  }
+  Future <bool> createHistory(Map video) async {
+    String url = "$domain/user/histories.json?uuid=${await uuidController.getUuid()}&video_id=${video['id']}";
+    final response = await http.post(Uri.parse(url));
+    return response.statusCode == 200;
+  }
+
+  searchHistories(String word, int page) async {
+    String url = '$domain/user/histories/search.json?word=$word&uuid=${await uuidController.getUuid()}&page=$page';
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      return response.body;
+    } else {
+      throw Exception('Failed to load data');
+    }
+  }
+  
+  Future <bool> deleteHistory(Map video) async {
+    String url = "$domain/user/histories/${video['id']}.json?uuid=${await uuidController.getUuid()}";
+    final response = await http.delete(Uri.parse(url));
+    if(response.statusCode == 200){
+      int videoIndex = videos.map((map) => map["id"]).toList().indexOf(video['id']);
+      videoCount -= 1;
+      videos.removeAt(videoIndex);
+      return true;
+    }else{
+      return false;
+    }
+  }
+
+  Future <bool> deleteSelectedHistory() async {
+    List historyIds = selection.map((map) => map["id"]).toList();
+    final queryString = historyIds.map((id) => 'ids[]=$id').join('&');
+    String url = "$domain/user/histories/delete_multiple.json?uuid=${await uuidController.getUuid()}&$queryString";
+    final response = await http.delete(Uri.parse(url));
+    return response.statusCode == 200;
+  }
+
+  Future <bool> deleteAllHistory() async {
+    String url = "$domain/user/histories/delete_all.json?uuid=${await uuidController.getUuid()}";
+    final response = await http.delete(Uri.parse(url));
+    return response.statusCode == 200;
+  }
+
+  Future <bool> createSelectedHistory() async {
+    List youtubeIds = selection.map((map) => map["id"]).toList();
+    final queryString = youtubeIds.map((id) => 'video_ids[]=$id').join('&');
+    String url = "$domain/user/histories/create_multiple.json?uuid=${await uuidController.getUuid()}&$queryString";
+    final response = await http.post(Uri.parse(url));
+    return response.statusCode == 200;
+  }
+
+  Future <bool> deleteSelectionOf(String model) async {
+    switch(model){
+      case 'favorite':
+        return deleteSelectedFavorite();
+      case 'history':
+        return deleteSelectedHistory();
+      default:
+        return false;
     }
   }
 }

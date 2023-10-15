@@ -23,6 +23,17 @@ class NavigationListConfig{
       )
   ];
 
+  static List<NavigationItem> historyMenuList = [
+    NavigationItem(
+      name:"close", 
+      item: const BottomNavigationBarItem(icon: Icon(Icons.close), label: '戻る')
+      ),
+    NavigationItem(
+      name:"delete", 
+      item: const BottomNavigationBarItem(icon: Icon(Icons.delete), label: '履歴から削除')
+      )
+  ];
+
   static List<NavigationItem> pageList = [
     NavigationItem(
       name: 'home',

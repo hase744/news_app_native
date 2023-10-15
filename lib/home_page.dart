@@ -64,6 +64,7 @@ class _HomePageState extends State<HomePage>  {
     );
   List<NavigationItem> homeMenuList = NavigationListConfig.homeMenuList;
   List<NavigationItem> favoriteMenuList = NavigationListConfig.favoriteMenuList;
+  List<NavigationItem> historyMenuList = NavigationListConfig.historyMenuList;
   List<NavigationItem> pageList = NavigationListConfig.pageList;
 
   @override
@@ -115,23 +116,47 @@ class _HomePageState extends State<HomePage>  {
 
   Future<void> displayHistory() async {
     _videoController.videos = [];
-    await _history.initDatabase();
-    List<Map<String, dynamic>> histories = await _history.all();
-    histories = histories.reversed.toList();
+    //await _history.initDatabase();
+    //List<Map<String, dynamic>> histories = await _history.all();
+    //histories = histories.reversed.toList();
     setState(() {
+      _videoController.videos = [];
+      _videoController.displayLoadingScreen = true;
       homeLayout.setForList();
       homeLayout.setHeightForVideoCells();
-      _videoController.videos = histories; // 取得したデータを _press 変数に代入
-      resetPressCount();
+      //_videoController.videos = histories; // 取得したデータを _press 変数に代入
+      //resetPressCount();
     });
     homeLayout.updateCellsTop(0);
+    if(!await _videoController.displayHistories()){
+      displayAlert("ロードに失敗しました");
+    }
+    setState(() {
+      _videoController.displayLoadingScreen = false;
+      resetPressCount();
+    });
     closeYoutube();
   }
 
+  //Future<void> displayHistory() async {
+  //  _videoController.videos = [];
+  //  await _history.initDatabase();
+  //  List<Map<String, dynamic>> histories = await _history.all();
+  //  histories = histories.reversed.toList();
+  //  setState(() {
+  //    homeLayout.setForList();
+  //    homeLayout.setHeightForVideoCells();
+  //    _videoController.videos = histories; // 取得したデータを _press 変数に代入
+  //    resetPressCount();
+  //  });
+  //  homeLayout.updateCellsTop(0);
+  //  closeYoutube();
+  //}
+
   Future<void> displayFavorites() async {
     _videoController.videos = [];
-    List<Map<String, dynamic>> favorites = await _favorite.all();
-    favorites = favorites.reversed.toList();
+    //List<Map<String, dynamic>> favorites = await _favorite.all();
+    //favorites = favorites.reversed.toList();
     setState(() {
       _videoController.videos = [];
       _videoController.displayLoadingScreen = true;
@@ -174,9 +199,10 @@ class _HomePageState extends State<HomePage>  {
       youtubeController.load( youtube_id,startAt:0);
     });
     await prefs.setString('default_youtube_id', youtube_id);
-    await _history.initDatabase(); 
-    List<Map<String, dynamic>> histories = await _history.all();
-    await _history.create(press);
+    _videoController.createHistory(press);
+    //await _history.initDatabase(); 
+    //List<Map<String, dynamic>> histories = await _history.all();
+    //await _history.create(press);
   }
 
   void closeYoutube(){
@@ -276,6 +302,8 @@ class _HomePageState extends State<HomePage>  {
     switch(pageList[pageIndex].name) {
       case 'favorite':
       list = favoriteMenuList;
+      case 'history':
+      list = historyMenuList;
         break;
       }
     if(isSelectMode){
@@ -286,8 +314,10 @@ class _HomePageState extends State<HomePage>  {
           switch(list[index].name){
             case 'delete':
               if(_videoController.selection.isNotEmpty){
-                if(await _videoController.deleteSelectedFavorite()){
+                if(pageList[pageIndex].name == 'favorite' && await _videoController.deleteSelectedFavorite()){
                   displayAlert("お気に入りから削除しました");
+                }else if(pageList[pageIndex].name == 'history' && await _videoController.deleteSelectedHistory()){
+                  displayAlert("履歴から削除しました");
                 }else{
                   displayAlert("削除に失敗しました");
                 };
@@ -344,7 +374,7 @@ class _HomePageState extends State<HomePage>  {
       controller: _controller, 
       onSearched: (String text) async {
         if(!await _videoController.search(text, pageList[pageIndex].name)){
-          displayAlert("システムエラー");
+          displayAlert("検索に失敗しました");
         };
         _scrollController.jumpTo(homeLayout.loadAreaHeight);
       }, 
@@ -379,6 +409,7 @@ class _HomePageState extends State<HomePage>  {
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth!/2/16*9;
     bool isFavorite = pageList[pageIndex].name == 'favorite';
+    bool isHistory = pageList[pageIndex].name == 'history';
     List cellIds = _videoController.selection.map((map) => map["id"]).toList();
     return VideoCellClass(
       press: video, 
@@ -420,6 +451,18 @@ class _HomePageState extends State<HomePage>  {
                     Navigator.of(context).pop();
                   },
                   name:isFavorite ? "ーお気に入りから削除" : "＋お気に入りに追加"
+                ),
+                if(isHistory)
+                MenuButton(
+                  onPressed: () async {
+                    if(await _videoController.deleteHistory(video)){
+                      displayAlert('削除しました');
+                    }else{
+                      displayAlert('削除に失敗しました');
+                    }
+                    Navigator.of(context).pop();
+                  },
+                  name: "ー履歴から削除"
                 ),
               ],
             );
@@ -488,7 +531,7 @@ class _HomePageState extends State<HomePage>  {
     final end = _scrollController.position.maxScrollExtent;
     setState(() {
       if (before == end) {
-        _videoController.displayLoadingScreen = true;
+        //_videoController.displayLoadingScreen = true;
       }
       if(homeLayout.isLoading){
         loadText = "更新中";
@@ -542,10 +585,14 @@ class _HomePageState extends State<HomePage>  {
       if(pageList[pageIndex].name == 'history')
       MenuButton(
         onPressed: () async {
-          _history.deleteTable();
+          //_history.deleteTable();
+          if(await _videoController.deleteAllHistory()){
+            displayAlert("削除しました");
+          }else{
+            displayAlert("削除に失敗しました");
+          }
           Navigator.of(context).pop();
           displayHistory();
-          displayAlert("削除しました");
         },
         name:"履歴を全て削除"
       ),
@@ -591,10 +638,8 @@ class _HomePageState extends State<HomePage>  {
                           final max = scrollNotification.metrics.maxScrollExtent;
                           scrollForMenu(before);
                           if (before == max) {
-                            setState(() {
-                              //挿入可能な記事があれば記事を挿入
-                              _videoController.loadVideos(pageList[pageIndex].name, homeLayout.displaySearch);
-                            });
+                            print("ロード");
+                            _videoController.loadVideos(pageList[pageIndex].name, homeLayout.displaySearch);
                           }
                           if(homeLayout.canLoad){
                             homeLayout.isLoading = true;
