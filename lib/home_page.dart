@@ -28,6 +28,7 @@ import 'package:video_news/views/top_navigation.dart';
 import 'package:video_news/controllers/video_controller.dart';
 import 'package:video_news/models/category.dart';
 import 'package:video_news/models/video.dart';
+import 'package:video_news/controllers/load_controller.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -56,6 +57,7 @@ class _HomePageState extends State<HomePage>  {
   VideoController _videoController = VideoController();
   ScrollController _scrollController = ScrollController();
   CategoryController categoryController = CategoryController();
+  LoadController loadController = LoadController();
   YoutubePlayerController youtubeController = YoutubePlayerController(
     initialVideoId: '4b6DuHGcltI',
     flags: YoutubePlayerFlags(
@@ -368,6 +370,7 @@ class _HomePageState extends State<HomePage>  {
 
   Widget topNavigation(context){
     return TopNavigation(
+      loadController: loadController,
       homeLayout: homeLayout, 
       loadText: loadText, 
       width: _deviceWidth!, 
@@ -514,11 +517,11 @@ class _HomePageState extends State<HomePage>  {
   countLoad(){
     Timer.periodic(Duration(milliseconds: 25), (timer) {
       setState(() {
-        homeLayout.loadCount += 1;
-        if(homeLayout.loadCount >= homeLayout.maxLoadCount){
+        loadController.loadCount += 1;
+        if(loadController.loadCount >= loadController.maxLoadCount){
           loadText = " ↑ はなして更新";
-          homeLayout.canLoad = true;
-          //homeLayout.isLoading = true;
+          loadController.canLoad = true;
+          //loadController.isLoading = true;
           timer.cancel();
         }
       });
@@ -533,24 +536,24 @@ class _HomePageState extends State<HomePage>  {
         _videoController.displayLoadingScreen = true;
       }
       if (before > 0) {
-        homeLayout.loadCount = 0;
+        loadController.loadCount = 0;
       }
-      if(homeLayout.isLoading){
+      if(loadController.isLoading){
         loadText = "更新中";
       }
       if(before >= homeLayout.loadAreaHeight){
-        homeLayout.isLoading = false;
+        loadController.isLoading = false;
       }
-      if(!homeLayout.isLoading){
+      if(!loadController.isLoading){
         loadText = " ↓ 引き下げて更新 ";
       }
-      if(before <= 0 && !homeLayout.loadCounting){
-        homeLayout.loadCounting = true;
+      if(before <= 0 && !loadController.loadCounting){
+        loadController.loadCounting = true;
         countLoad();
       }
-      if(before > 0 || homeLayout.loadCount >= homeLayout.maxLoadCount){
-        homeLayout.loadCounting = false;
-        homeLayout.loadCount = 1;
+      if(before > 0 || loadController.loadCount >= loadController.maxLoadCount){
+        loadController.loadCounting = false;
+        loadController.loadCount = 1;
       }
     });
     homeLayout.updateCellsTop(_scrollController.offset);
@@ -600,6 +603,15 @@ class _HomePageState extends State<HomePage>  {
       ),
     ];
   }
+
+  updateVideos() async {
+    if(await !_videoController.updateVideos(pageIndex)){
+      displayAlert("ロードに失敗しました");
+    }else{
+      print("成功 ${_videoController.videoCount}");
+    }
+    print("終了");
+  }
   @override
   void dispose() {
     _scrollController.dispose();
@@ -642,12 +654,10 @@ class _HomePageState extends State<HomePage>  {
                           if (before == max) {
                             print("ロード");_videoController.loadVideos(pageList[pageIndex].name, homeLayout.displaySearch);
                           }
-                          if(homeLayout.canLoad){
-                            homeLayout.isLoading = true;
-                            homeLayout.canLoad = false;
-                            if(!_videoController.updateVideos(pageIndex)){
-                              displayAlert("ロードに失敗しました");
-                            }
+                          if(loadController.canLoad){
+                            loadController.isLoading = true;
+                            loadController.canLoad = false;
+                            updateVideos();
                           }
                         }//
                         return true;
@@ -691,7 +701,7 @@ class _HomePageState extends State<HomePage>  {
                             Container(
                               width: _deviceWidth!,
                               height: homeLayout.getbottomSpaceHeight(_videoController.videoCount),
-                              //color: Colors.blue,
+                              color: Colors.white,
                               child: Spacer(),
                             ),
                           ],

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:video_news/models/home_layout.dart';
+import 'package:video_news/controllers/load_controller.dart';
 class TopNavigation extends StatelessWidget{
   HomeLayout homeLayout;
+  LoadController loadController;
   String loadText;
   double width;
   TextEditingController controller;
@@ -13,6 +15,7 @@ class TopNavigation extends StatelessWidget{
 
   TopNavigation({
     required this.homeLayout,
+    required this.loadController,
     required this.loadText,
     required this.width,
     required this.controller,
@@ -37,13 +40,13 @@ Widget build(BuildContext context){
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Text(loadText),
-              if(homeLayout.loadCounting && homeLayout.loadCount < homeLayout.maxLoadCount)
+              if(loadController.loadCounting && loadController.loadCount < loadController.maxLoadCount)
               Container(
                 height: homeLayout.loadAreaHeight/4,
                 width: homeLayout.loadAreaHeight/4,
                 child: 
                 CircularProgressIndicator(
-                  value: homeLayout.loadCount/homeLayout.maxLoadCount,
+                  value: loadController.loadCount/loadController.maxLoadCount,
                   color: Colors.grey,
                 ),
               )

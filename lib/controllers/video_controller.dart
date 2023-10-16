@@ -125,8 +125,11 @@ class VideoController{
     displayLoadingScreen = true;
     if(await accessVideos()) {
       videosList = await categoryController.getPressOrder();
-      videos = videosList[categoryNumber];
-      videoCount = videos.length;
+      print("動画ロード");
+      videos = await videosList[categoryNumber];
+      print("更新");
+      videoCount = await videos.length;
+      print("更新数 : $videoCount");
     displayLoadingScreen = false;
       return true;
     }else{
