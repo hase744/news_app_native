@@ -19,10 +19,7 @@ import 'models/menu_button.dart';
 import 'models/favorite.dart';
 import 'package:video_news/views/bottom_menu_bar.dart';
 import 'package:video_news/views/alert.dart';
-import 'package:video_news/consts/navigation_list_config.dart';
-import 'package:video_news/models/navigation_item.dart';
 import 'package:flutter/services.dart';
-import 'package:video_news/controllers/access_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:video_news/views/top_navigation.dart';
 import 'package:video_news/controllers/video_controller.dart';
@@ -50,20 +47,19 @@ class _HomePageState extends State<HomePage>  {
   HomeLayout homeLayout = HomeLayout(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0);
   DefaultValue defaultValue = DefaultValue();
   String? _alert;
-  bool isSelectMode = false;
   Future<void>? _launched;
   TextEditingController _controller = TextEditingController();
   VideoController _videoController = VideoController();
   ScrollController _scrollController = ScrollController();
   CategoryController categoryController = CategoryController();
   LoadController loadController = LoadController();
+  PageControllerClass _pageController = PageControllerClass();
   YoutubePlayerController youtubeController = YoutubePlayerController(
     initialVideoId: '4b6DuHGcltI',
     flags: YoutubePlayerFlags(
         autoPlay: false,  // 自動再生しない
       ),
     );
-  PageControllerClass _pageController = PageControllerClass();
 
   @override
   void initState() {
@@ -296,7 +292,7 @@ class _HomePageState extends State<HomePage>  {
   }
 
   Widget bottomBar(){
-    if(isSelectMode){
+    if(_videoController.isSelectMode){
       return BottomMenuNavigationBar(
         list: _pageController.getCurrentList(),
         initialIndex: 0, 
@@ -311,10 +307,8 @@ class _HomePageState extends State<HomePage>  {
                 }else{
                   displayAlert("削除に失敗しました");
                 };
-                
                 setState(() {
-                  isSelectMode = false;
-                  _videoController.selection = [];
+                  _videoController.disableSelectMode();
                 });
                 updateScreen();
               }else{
@@ -328,17 +322,15 @@ class _HomePageState extends State<HomePage>  {
                   displayAlert("追加に失敗しました。");
                 };
                 setState(() {
-                  isSelectMode = false;
-                  _videoController.selection = [];
+                  _videoController.disableSelectMode();
                 });
               }else{
                 displayAlert("選択されてません");
               }
             case 'close':
-                setState(() {
-                  isSelectMode = false;
-                  _videoController.selection = [];
-                });
+              setState(() {
+                _videoController.disableSelectMode();
+              });
             default:
               displayAlert("エラー");
           }
@@ -352,7 +344,7 @@ class _HomePageState extends State<HomePage>  {
           updateScreen();
           print(index);
         }, 
-        isSelectMode: isSelectMode
+        isSelectMode: _videoController.isSelectMode
       );
     }
   }
@@ -370,7 +362,6 @@ class _HomePageState extends State<HomePage>  {
         _scrollController.jumpTo(homeLayout.loadAreaHeight);
       }, 
       onClosesd: () {
-        String searchText = _controller.text;
         setState(() {
           homeLayout.displaySearch = false;
         });
@@ -405,7 +396,7 @@ class _HomePageState extends State<HomePage>  {
     
     return VideoCellClass(
       video: video, 
-      isSelectMode: isSelectMode,
+      isSelectMode: _videoController.isSelectMode,
       isSelected: cellIds.contains(cellId),
       cellHeight: cellHeight, 
       cellWidth: cellWidth, 
@@ -507,7 +498,7 @@ class _HomePageState extends State<HomePage>  {
     Timer.periodic(Duration(milliseconds: 25), (timer) {
       setState(() {
         loadController.loadCount += 1;
-        if(loadController.loadCount >= loadController.maxLoadCount){
+        if(loadController.loadCount >= loadController.maxLoadCount && _pageController.isHomePage()){
           loadController.canLoad = true;
           //loadController.isLoading = true;
           timer.cancel();
@@ -548,8 +539,7 @@ class _HomePageState extends State<HomePage>  {
         onPressed: () async {
           Navigator.of(context).pop();
           setState(() {
-            isSelectMode = true;
-            //updateScreen();
+            _videoController.ableSelectMode();
           });
         },
         name:"複数選択"
@@ -591,6 +581,7 @@ class _HomePageState extends State<HomePage>  {
       displayAlert("ロードに失敗しました");
     };
   }
+  
   @override
   void dispose() {
     _scrollController.dispose();

@@ -12,6 +12,7 @@ class VideoController{
   List selectedVideos = [];
   int videoLength = 20;
   bool displayLoadingScreen = true;
+  bool isSelectMode = false;
   String searchWord = '';
   late int videoCount = videoLength;
   CategoryController categoryController = CategoryController();
@@ -56,6 +57,15 @@ class VideoController{
     }else{
       selection.add(video);
     }
+  }
+  
+  disableSelectMode(){
+    isSelectMode = false;
+    selection = [];
+  }
+
+  ableSelectMode(){
+    isSelectMode = true;
   }
 
   changeVideos(int index){

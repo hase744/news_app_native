@@ -30,6 +30,10 @@ class PageControllerClass{
     pageIndex = index;
   }
   
+  isHomePage(){
+    return pageList[pageIndex].name == 'home';
+  }
+  
   isHistoryPage(){
     return pageList[pageIndex].name == 'history';
   }
