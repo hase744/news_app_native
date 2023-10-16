@@ -498,7 +498,7 @@ class _HomePageState extends State<HomePage>  {
     Timer.periodic(Duration(milliseconds: 25), (timer) {
       setState(() {
         loadController.loadCount += 1;
-        if(loadController.loadCount >= loadController.maxLoadCount && _pageController.isHomePage()){
+        if(loadController.loadCount >= loadController.maxLoadCount){
           loadController.canLoad = true;
           //loadController.isLoading = true;
           timer.cancel();
@@ -521,8 +521,10 @@ class _HomePageState extends State<HomePage>  {
         loadController.isLoading = false;
       }
       if(before <= 0 && !loadController.loadCounting){
-        loadController.loadCounting = true;
-        countLoad();
+        if(_pageController.isHomePage()){
+          loadController.loadCounting = true;
+          countLoad();
+        }
       }
       if(before > 0 || loadController.loadCount >= loadController.maxLoadCount){
         loadController.loadCounting = false;
