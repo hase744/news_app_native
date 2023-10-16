@@ -37,14 +37,22 @@ class VideoCellClass extends StatelessWidget {
     return hoursStr == "00" ? '$minutesStr:$secondsStr' : '$hoursStr:$minutesStr:$secondsStr';
   }
 
+  getFromNow(Duration difference){
+    if(difference.inDays < 1){
+      return "${difference.inHours}時間前";
+    }else{
+      return "${difference.inDays}日前";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     String youtube_id = video['youtube_id'];
-    String dateString = "2023-10-16 14:30:00";
+    //String dateString = "2023-10-16 14:30:00";
     DateTime publishedAt = DateTime.parse(video['published_at']);
     Duration difference = DateTime.now().difference(publishedAt);
+    String differenceStr = getFromNow(difference);
     //String differenceStr = "${difference.inDays}日 ${difference.inHours} 時間 ${difference.inMinutes.remainder(60)} 分";
-    String differenceHour = "${difference.inHours} 時間前";
     //double cellWidth = _deviceWidth!;
     //double cellHeight = _deviceWidth! / 2 / 16 * 9;
     return Container(
@@ -151,7 +159,7 @@ class VideoCellClass extends StatelessWidget {
                                     width: cellWidth / 2,
                                     height: cellHeight / 5,
                                     child: Text(
-                                      differenceHour,
+                                      differenceStr,
                                       style: TextStyle(
                                         fontSize: cellHeight /10,
                                         fontWeight: FontWeight.bold,

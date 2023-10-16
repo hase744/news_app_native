@@ -29,6 +29,7 @@ import 'package:video_news/controllers/video_controller.dart';
 import 'package:video_news/models/category.dart';
 import 'package:video_news/models/video.dart';
 import 'package:video_news/controllers/load_controller.dart';
+import 'package:video_news/controllers/page_controller.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -48,7 +49,6 @@ class _HomePageState extends State<HomePage>  {
   Favorite _favorite = Favorite(); // History クラスのインスタンスを作成
   HomeLayout homeLayout = HomeLayout(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0);
   DefaultValue defaultValue = DefaultValue();
-  int pageIndex = 0;
   String? _alert;
   bool isSelectMode = false;
   Future<void>? _launched;
@@ -63,10 +63,7 @@ class _HomePageState extends State<HomePage>  {
         autoPlay: false,  // 自動再生しない
       ),
     );
-  List<NavigationItem> homeMenuList = NavigationListConfig.homeMenuList;
-  List<NavigationItem> favoriteMenuList = NavigationListConfig.favoriteMenuList;
-  List<NavigationItem> historyMenuList = NavigationListConfig.historyMenuList;
-  List<NavigationItem> pageList = NavigationListConfig.pageList;
+  PageControllerClass _pageController = PageControllerClass();
 
   @override
   void initState() {
@@ -263,7 +260,7 @@ class _HomePageState extends State<HomePage>  {
   }
   
   void updateScreen(){
-    switch(pageList[pageIndex].name) {
+    switch(_pageController.getCurrentPageName()) {
       case 'home':
         displayNews();
         break;
@@ -299,25 +296,17 @@ class _HomePageState extends State<HomePage>  {
   }
 
   Widget bottomBar(){
-    List<NavigationItem> list = homeMenuList;
-    switch(pageList[pageIndex].name) {
-      case 'favorite':
-      list = favoriteMenuList;
-      case 'history':
-      list = historyMenuList;
-        break;
-      }
     if(isSelectMode){
       return BottomMenuNavigationBar(
-        list: list,
+        list: _pageController.getCurrentList(),
         initialIndex: 0, 
         onTap: (int index) async {
-          switch(list[index].name){
+          switch(_pageController.getNameFromIndex(index)){
             case 'delete':
               if(_videoController.selection.isNotEmpty){
-                if(pageList[pageIndex].name == 'favorite' && await _videoController.deleteSelectedFavorite()){
+                if(_pageController.isFavoritePage() && await _videoController.deleteSelectedFavorite()){
                   displayAlert("お気に入りから削除しました");
-                }else if(pageList[pageIndex].name == 'history' && await _videoController.deleteSelectedHistory()){
+                }else if(_pageController.isHistoryPage() && await _videoController.deleteSelectedHistory()){
                   displayAlert("履歴から削除しました");
                 }else{
                   displayAlert("削除に失敗しました");
@@ -351,14 +340,15 @@ class _HomePageState extends State<HomePage>  {
                   _videoController.selection = [];
                 });
             default:
+              displayAlert("エラー");
           }
         }, 
       );
     }else{
       return HomeBottomNavigationBar(
-        initialIndex: pageIndex, 
+        initialIndex: _pageController.pageIndex, 
         onTap: (int index){
-          pageIndex = index;
+          _pageController.updatePage(index);
           updateScreen();
           print(index);
         }, 
@@ -374,7 +364,7 @@ class _HomePageState extends State<HomePage>  {
       width: _deviceWidth!, 
       controller: _controller, 
       onSearched: (String text) async {
-        if(!await _videoController.search(text, pageList[pageIndex].name)){
+        if(!await _videoController.search(text, _pageController.getCurrentPageName())){
           displayAlert("検索に失敗しました");
         };
         _scrollController.jumpTo(homeLayout.loadAreaHeight);
@@ -409,8 +399,8 @@ class _HomePageState extends State<HomePage>  {
     int cellId = video['id'];
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth!/2/16*9;
-    bool isFavorite = pageList[pageIndex].name == 'favorite';
-    bool isHistory = pageList[pageIndex].name == 'history';
+    bool isFavorite = _pageController.isFavoritePage();
+    bool isHistory = _pageController.isHistoryPage();
     List cellIds = _videoController.selection.map((map) => map["id"]).toList();
     
     return VideoCellClass(
@@ -485,7 +475,7 @@ class _HomePageState extends State<HomePage>  {
   transitNavigation(index){
     setState(() {
       _videoController.videoCount = 0;
-      pageIndex = index;
+      _pageController.pageIndex = index;
       youtubeController.pause();
     });
     updateScreen();
@@ -564,7 +554,7 @@ class _HomePageState extends State<HomePage>  {
         },
         name:"複数選択"
       ),
-      if(pageList[pageIndex].name == 'favorite')
+      if(_pageController.isFavoritePage())
       MenuButton(
         onPressed: () async {
           Navigator.of(context).pop();
@@ -579,7 +569,7 @@ class _HomePageState extends State<HomePage>  {
         },
         name:"お気に入りを全て削除"
       ),
-      if(pageList[pageIndex].name == 'history')
+      if(_pageController.isHistoryPage())
       MenuButton(
         onPressed: () async {
           //_history.deleteTable();
@@ -597,12 +587,9 @@ class _HomePageState extends State<HomePage>  {
   }
 
   updateVideos() async {
-    if(await !_videoController.updateVideos(pageIndex)){
+    if(!await _videoController.updateVideos(_pageController.pageIndex)){
       displayAlert("ロードに失敗しました");
-    }else{
-      print("成功 ${_videoController.videoCount}");
-    }
-    print("終了");
+    };
   }
   @override
   void dispose() {
@@ -645,7 +632,7 @@ class _HomePageState extends State<HomePage>  {
                           scrollForMenu(before);
                           if (before == max) {
                             print("ロード");
-                            _videoController.loadVideos(pageList[pageIndex].name, homeLayout.displaySearch);
+                            _videoController.loadVideos(_pageController.getCurrentPageName(), homeLayout.displaySearch);
                           }
                           if(loadController.canLoad){
                             loadController.isLoading = true;

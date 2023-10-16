@@ -119,7 +119,7 @@ class VideoController{
     }
   }
 
-  updateVideos(int categoryNumber) async {
+  Future<bool> updateVideos(int categoryNumber) async {
     videos = [];
     videoCount = 0;
     displayLoadingScreen = true;
