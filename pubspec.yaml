@@ -44,6 +44,7 @@ dependencies:
   url_launcher: ^6.1.14
   device_info_plus: ^9.0.3
   android_id: ^0.3.5
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:

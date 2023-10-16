@@ -412,8 +412,9 @@ class _HomePageState extends State<HomePage>  {
     bool isFavorite = pageList[pageIndex].name == 'favorite';
     bool isHistory = pageList[pageIndex].name == 'history';
     List cellIds = _videoController.selection.map((map) => map["id"]).toList();
+    
     return VideoCellClass(
-      press: video, 
+      video: video, 
       isSelectMode: isSelectMode,
       isSelected: cellIds.contains(cellId),
       cellHeight: cellHeight, 

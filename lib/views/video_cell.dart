@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 class VideoCellClass extends StatelessWidget {
-  final Map press;
+  final Map video;
   final double cellWidth;
   final double cellHeight;
   final bool isSelected;
@@ -13,7 +14,7 @@ class VideoCellClass extends StatelessWidget {
   final VoidCallback onSelected;
 
   VideoCellClass({
-    required this.press,
+    required this.video,
     required this.cellHeight,
     required this.cellWidth,
     required this.onPressedYoutube,
@@ -38,7 +39,12 @@ class VideoCellClass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String youtube_id = press['youtube_id'];
+    String youtube_id = video['youtube_id'];
+    String dateString = "2023-10-16 14:30:00";
+    DateTime publishedAt = DateTime.parse(video['published_at']);
+    Duration difference = DateTime.now().difference(publishedAt);
+    //String differenceStr = "${difference.inDays}日 ${difference.inHours} 時間 ${difference.inMinutes.remainder(60)} 分";
+    String differenceHour = "${difference.inHours} 時間前";
     //double cellWidth = _deviceWidth!;
     //double cellHeight = _deviceWidth! / 2 / 16 * 9;
     return Container(
@@ -104,7 +110,7 @@ class VideoCellClass extends StatelessWidget {
                                   Container(
                                     color: Colors.black,
                                     child: Text(
-                                      secondsToString(press['total_seconds']),
+                                      secondsToString(video['total_seconds']),
                                       maxLines: 1,
                                       style: TextStyle(
                                         fontSize: cellHeight / 10,
@@ -126,27 +132,47 @@ class VideoCellClass extends StatelessWidget {
                           children: [
                             InkWell(
                               onTap: onPressedTitle,
-                              child: Container(
-                                width: cellWidth / 2,
-                                height: cellHeight / 4 * 3,
-                                child: Text(
-                                  press['title'],
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
+                              child: 
+                              Column(
+                                children: [
+                                  Container(
+                                    width: cellWidth / 2,
+                                    height: cellHeight / 5 * 3,
+                                    child: Text(
+                                      video['title'],
+                                      style: TextStyle(
+                                          fontSize: cellHeight /8,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 3,
+                                    )
                                   ),
-                                  maxLines: 3,
-                                )
+                                  Container(
+                                    width: cellWidth / 2,
+                                    height: cellHeight / 5,
+                                    child: Text(
+                                      differenceHour,
+                                      style: TextStyle(
+                                        fontSize: cellHeight /10,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.grey,
+                                      ),
+                                      maxLines: 3,
+                                    )
+                                  )
+                                ],
                               )
+                              
                             ),
                             Container(
                               width: cellWidth / 2,
-                              height: cellHeight / 4,
+                              height: cellHeight / 5,
                               child: Row(
                                 children: [
                                   Container(
                                     width: cellWidth / 2 - 35,
                                     child: Text(
-                                      press['channel_name'],
+                                      video['channel_name'],
                                       maxLines: 1,
                                       style: TextStyle(
                                           fontSize: cellHeight / 4 / 2,

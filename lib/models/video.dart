@@ -1,33 +1,35 @@
 class Video{
+  String id;
   String youtubeId;
   String title;
   String channelName;
   String channelId;
-  String createdAt;
   int totalSeconds;
+  DateTime publishedAt;
   //int second = 0;
   
   Video({
+    required this.id,
     required this.youtubeId,
     required this.title,
     required this.channelName,
     required this.channelId,
-    required this.createdAt,
     required this.totalSeconds,
+    required this.publishedAt,
   });
   
   Map<String, dynamic> toMap() {
     return {
-      'youtube_id': youtubeId,
+      'id': id,
       'title': title,
       'channel_name': channelName,
       'channel_id': channelId,
-      'created_at': createdAt,
+      'published_at': publishedAt,
     };
   }
 
   setValue(Map<String, dynamic> press){
-      youtubeId = press['youtube_id'];
+      id = press['id'];
       title = press['title'];
       channelId = press['channel_id'];
     }
