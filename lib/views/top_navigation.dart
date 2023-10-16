@@ -5,7 +5,6 @@ import 'package:video_news/controllers/load_controller.dart';
 class TopNavigation extends StatelessWidget{
   HomeLayout homeLayout;
   LoadController loadController;
-  String loadText;
   double width;
   TextEditingController controller;
   Function(String) onSearched;
@@ -16,7 +15,6 @@ class TopNavigation extends StatelessWidget{
   TopNavigation({
     required this.homeLayout,
     required this.loadController,
-    required this.loadText,
     required this.width,
     required this.controller,
     required this.onSearched,
@@ -39,7 +37,7 @@ Widget build(BuildContext context){
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Text(loadText),
+              Text(loadController.getLoadText()),
               if(loadController.loadCounting && loadController.loadCount < loadController.maxLoadCount)
               Container(
                 height: homeLayout.loadAreaHeight/4,

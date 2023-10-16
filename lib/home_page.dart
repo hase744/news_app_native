@@ -49,7 +49,6 @@ class _HomePageState extends State<HomePage>  {
   HomeLayout homeLayout = HomeLayout(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0);
   DefaultValue defaultValue = DefaultValue();
   int pageIndex = 0;
-  String loadText = " ↓ 引き下げて更新";
   String? _alert;
   bool isSelectMode = false;
   Future<void>? _launched;
@@ -371,8 +370,7 @@ class _HomePageState extends State<HomePage>  {
   Widget topNavigation(context){
     return TopNavigation(
       loadController: loadController,
-      homeLayout: homeLayout, 
-      loadText: loadText, 
+      homeLayout: homeLayout,
       width: _deviceWidth!, 
       controller: _controller, 
       onSearched: (String text) async {
@@ -519,7 +517,6 @@ class _HomePageState extends State<HomePage>  {
       setState(() {
         loadController.loadCount += 1;
         if(loadController.loadCount >= loadController.maxLoadCount){
-          loadText = " ↑ はなして更新";
           loadController.canLoad = true;
           //loadController.isLoading = true;
           timer.cancel();
@@ -538,14 +535,8 @@ class _HomePageState extends State<HomePage>  {
       if (before > 0) {
         loadController.loadCount = 0;
       }
-      if(loadController.isLoading){
-        loadText = "更新中";
-      }
       if(before >= homeLayout.loadAreaHeight){
         loadController.isLoading = false;
-      }
-      if(!loadController.isLoading){
-        loadText = " ↓ 引き下げて更新 ";
       }
       if(before <= 0 && !loadController.loadCounting){
         loadController.loadCounting = true;
@@ -652,7 +643,8 @@ class _HomePageState extends State<HomePage>  {
                           final max = scrollNotification.metrics.maxScrollExtent;
                           scrollForMenu(before);
                           if (before == max) {
-                            print("ロード");_videoController.loadVideos(pageList[pageIndex].name, homeLayout.displaySearch);
+                            print("ロード");
+                            _videoController.loadVideos(pageList[pageIndex].name, homeLayout.displaySearch);
                           }
                           if(loadController.canLoad){
                             loadController.isLoading = true;

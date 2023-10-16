@@ -181,7 +181,7 @@ class VideoController{
   Future <bool> createFavorite(Map video) async {
     String url = "$domain/user/favorites.json?uuid=${await uuidController.getUuid()}&video_id=${video['id']}";
     final response = await http.post(Uri.parse(url));
-    return response.statusCode == 200;
+    return response.statusCode == 204;
   }
 
   Future <bool> createSelectedFavorite() async {
