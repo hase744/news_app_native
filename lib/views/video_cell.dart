@@ -94,26 +94,26 @@ class VideoCellClass extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              //Positioned(
-                              //  right: cellHeight /20,
-                              //  bottom: cellHeight /20,
-                              //  child:
-                              //  Opacity(
-                              //    opacity: 0.7,
-                              //    child:
-                              //    Container(
-                              //      color: Colors.black,
-                              //      child: Text(
-                              //        secondsToString(press['total_seconds']),
-                              //        maxLines: 1,
-                              //        style: TextStyle(
-                              //          fontSize: cellHeight / 10,
-                              //          color: Colors.white
-                              //        ),
-                              //      )
-                              //    ),
-                              //  )
-                              //),
+                              Positioned(
+                                right: cellHeight /20,
+                                bottom: cellHeight /20,
+                                child:
+                                Opacity(
+                                  opacity: 0.7,
+                                  child:
+                                  Container(
+                                    color: Colors.black,
+                                    child: Text(
+                                      secondsToString(press['total_seconds']),
+                                      maxLines: 1,
+                                      style: TextStyle(
+                                        fontSize: cellHeight / 10,
+                                        color: Colors.white
+                                      ),
+                                    )
+                                  ),
+                                )
+                              ),
                             ],
                           ),
                         ),
