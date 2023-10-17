@@ -12,6 +12,10 @@ class CategoryController{
     setUnusedCategory();
   }
 
+  update(i){
+    categoryIndex = i;
+  }
+
   Future<List> getCurrentPress() async {
     final prefs = await SharedPreferences.getInstance();
     //await prefs.remove('categoryOrder');

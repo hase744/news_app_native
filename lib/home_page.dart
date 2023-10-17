@@ -27,6 +27,7 @@ import 'package:video_news/models/category.dart';
 import 'package:video_news/models/video.dart';
 import 'package:video_news/controllers/load_controller.dart';
 import 'package:video_news/controllers/page_controller.dart';
+import 'package:video_news/views/category_bar.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -34,13 +35,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage>  {
-  List<Color> colors = [
-   const Color.fromRGBO(250, 100, 100, 1),
-   const Color.fromRGBO(250, 140, 60, 1),
-   const Color.fromRGBO(90, 255, 110, 1),
-   const Color.fromRGBO(90, 145, 255, 1),
-   const Color.fromRGBO(185, 90, 255, 1),
-  ];
   double? _deviceWidth, _deviceHeight;
   History _history = History(); 
   Favorite _favorite = Favorite(); // History クラスのインスタンスを作成
@@ -51,6 +45,7 @@ class _HomePageState extends State<HomePage>  {
   TextEditingController _controller = TextEditingController();
   VideoController _videoController = VideoController();
   ScrollController _scrollController = ScrollController();
+  ScrollController _categoryScrollController = ScrollController();
   CategoryController categoryController = CategoryController();
   LoadController loadController = LoadController();
   PageControllerClass _pageController = PageControllerClass();
@@ -583,7 +578,7 @@ class _HomePageState extends State<HomePage>  {
       displayAlert("ロードに失敗しました");
     };
   }
-  
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -688,60 +683,28 @@ class _HomePageState extends State<HomePage>  {
                     Container(
                       child: Transform.translate(
                         offset: homeLayout.categorybarOffset(),
-                        child: Container(
-                          alignment: Alignment.center,
-                          child: 
-                            Column(
-                              children: [
-                                Container(
-                                  width: _deviceWidth,
-                                  height: homeLayout.categoryBarHeight,
-                                  child: 
-                                  ListView(
-                                    scrollDirection: Axis.horizontal,
-                                    children: [
-                                      for (var i = 0; i < _videoController.videosList.length; i++)
-                                      Container(
-                                        color: colors[i % colors.length],
-                                        width: _deviceWidth! / 5,
-                                        height: homeLayout.categoryBarHeight,
-                                        padding: EdgeInsets.all(0),
-                                        margin: EdgeInsets.all(0),
-                                        child: TextButton(
-                                          child: 
-                                          Text(
-                                            categoryController.categories[i].japaneseName,
-                                            style: TextStyle(
-                                              fontSize: fontSize(categoryController.categories[i].japaneseName.length),
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                          onPressed: () {
-                                            setState(() {
-                                              categoryController.categoryIndex = i;
-                                            });
-                                            resetCategory(categoryController.categoryIndex);
-                                          },
-                                          style: TextButton.styleFrom(
-                                            padding: EdgeInsets.all(0), // ボタンの内側の余白
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(0), // 角丸の半径
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                ),
-                                Container(
-                                  color: colors[categoryController.categoryIndex%5],
-                                  width: _deviceWidth,
-                                  height: homeLayout.categoryBarLineHeight,
-                                ),
-                              ],
-                            )
-                        ),
+                        child: 
+                        CategoryBar(
+                          controller: _categoryScrollController,
+                          barHeight: homeLayout.categoryBarHeight,
+                          lineHeight: homeLayout.categoryBarLineHeight,
+                          width: _deviceWidth!,
+                          categoryController: categoryController,
+                          onSelected: (int i){
+                            setState(() {
+                              Future.delayed(const Duration(seconds: 0), () {
+                                _categoryScrollController.animateTo(
+                                  _deviceWidth!/5*(i-2),
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.ease,
+                                );
+                              });
+                              categoryController.update(i);
+                              resetCategory(categoryController.categoryIndex);
+                              _scrollController.jumpTo(homeLayout.getTopMenuHeight());
+                            });
+                          },
+                        )
                       ),
                     ),
                     if(_alert != null)
