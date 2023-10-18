@@ -51,6 +51,7 @@ class CategoryBar extends StatelessWidget {
                 ListView(
                   controller: controller,
                   scrollDirection: Axis.horizontal,
+                  physics: ClampingScrollPhysics(),
                   children: [
                     for (var i = 0; i < categoryController.categories.length; i++)
                     Container(
