@@ -26,15 +26,14 @@ class VideoCellClass extends StatelessWidget {
   });
   
   secondsToString(int seconds){
-    Duration duration = Duration(seconds: seconds);
-    int hours = duration.inHours;
-    int minutes = (duration.inMinutes % 60);
-    int remainingSeconds = (duration.inSeconds % 60);
-    String hoursStr = hours.toString().padLeft(2, '0');
-    String minutesStr = minutes.toString().padLeft(2, '0');
-    String secondsStr = remainingSeconds.toString().padLeft(2, '0');
-
-    return hoursStr == "00" ? '$minutesStr:$secondsStr' : '$hoursStr:$minutesStr:$secondsStr';
+    final Duration duration = Duration(seconds: seconds);
+    String formattedDuration = '';
+    if (duration.inHours > 0) {
+      formattedDuration += '${duration.inHours.toString().padLeft(2, '0')}:';
+    }
+    formattedDuration += '${(duration.inMinutes % 60).toString().padLeft(2, '0')}:';
+    formattedDuration += '${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
+    return formattedDuration;
   }
 
   getFromNow(Duration difference){
@@ -52,6 +51,13 @@ class VideoCellClass extends StatelessWidget {
     DateTime publishedAt = DateTime.parse(video['published_at']);
     Duration difference = DateTime.now().difference(publishedAt);
     String differenceStr = getFromNow(difference);
+    double horizontalPadding = cellHeight*0.1;
+    double verticalPadding = cellWidth*0.015;
+    double innerWidth = cellWidth - verticalPadding*2;
+    double centerThreadWidth = innerWidth/2*0.05;
+    double leftSideWidth = (innerWidth / 2) - centerThreadWidth;
+    double rightSideWidth = innerWidth - leftSideWidth - centerThreadWidth;
+    double innerHeight = leftSideWidth /16 *9;
     //String differenceStr = "${difference.inDays}日 ${difference.inHours} 時間 ${difference.inMinutes.remainder(60)} 分";
     //double cellWidth = _deviceWidth!;
     //double cellHeight = _deviceWidth! / 2 / 16 * 9;
@@ -65,18 +71,20 @@ class VideoCellClass extends StatelessWidget {
               children: [
                 Container(
                   color: isSelected ?Colors.grey.shade300 :Colors.white,
+                  margin: EdgeInsets.symmetric(horizontal:horizontalPadding, vertical: verticalPadding),
                   child:
                   Row(
                     children: [
                       Container(
-                        width: (cellWidth / 2)*0.9,
-                        height: cellHeight*0.9,
+                        width: leftSideWidth,
+                        height: innerHeight,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
                           color: Colors.grey,
                         ),
                         //color: Colors.red,
-                        margin: EdgeInsets.symmetric(horizontal:cellWidth/2*0.05, vertical: cellHeight*0.05),
+                        margin: EdgeInsets.only(right: centerThreadWidth),
+                        //margin: EdgeInsets.symmetric(horizontal:cellWidth/2*0.05, vertical: cellHeight*0.05),
                         child: InkWell(
                           onTap: onPressedYoutube,
                           child: Stack(
@@ -109,8 +117,8 @@ class VideoCellClass extends StatelessWidget {
                                 ),
                               ),
                               Positioned(
-                                right: cellHeight /20,
-                                bottom: cellHeight /20,
+                                right: innerHeight /20,
+                                bottom: innerHeight /20,
                                 child:
                                 Opacity(
                                   opacity: 0.7,
@@ -121,7 +129,7 @@ class VideoCellClass extends StatelessWidget {
                                       secondsToString(video['total_seconds']),
                                       maxLines: 1,
                                       style: TextStyle(
-                                        fontSize: cellHeight / 10,
+                                        fontSize: innerHeight / 10,
                                         color: Colors.white
                                       ),
                                     )
@@ -133,8 +141,10 @@ class VideoCellClass extends StatelessWidget {
                         ),
                       ),
                       Container(
-                        width: cellWidth / 2,
-                        height: cellHeight,
+                        width: rightSideWidth,
+                        height: innerHeight,
+                        //color: Colors.red,
+                        //margin: EdgeInsets.symmetric(horizontal:innerWidth/2*0.05),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -144,28 +154,28 @@ class VideoCellClass extends StatelessWidget {
                               Column(
                                 children: [
                                   Container(
-                                    width: cellWidth / 2,
-                                    height: cellHeight / 5 * 3,
+                                    width: rightSideWidth,
+                                    height: innerHeight / 5 * 3,
                                     child: Text(
                                       video['title'],
                                       style: TextStyle(
-                                          fontSize: cellHeight /8,
+                                          fontSize: innerHeight /14 *2,
                                         fontWeight: FontWeight.bold,
                                       ),
                                       maxLines: 3,
                                     )
                                   ),
                                   Container(
-                                    width: cellWidth / 2,
-                                    height: cellHeight / 5,
+                                    width: rightSideWidth,
+                                    height: innerHeight / 5,
                                     child: Text(
                                       differenceStr,
                                       style: TextStyle(
-                                        fontSize: cellHeight /10,
+                                        fontSize: innerHeight /10,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.grey,
                                       ),
-                                      maxLines: 3,
+                                      maxLines: 1,
                                     )
                                   )
                                 ],
@@ -173,29 +183,29 @@ class VideoCellClass extends StatelessWidget {
                               
                             ),
                             Container(
-                              width: cellWidth / 2,
-                              height: cellHeight / 5,
+                              width: rightSideWidth,
+                              height: innerHeight / 5,
                               child: Row(
                                 children: [
                                   Container(
-                                    width: cellWidth / 2 - 35,
+                                    width: rightSideWidth - innerHeight/3,
                                     child: Text(
                                       video['channel_name'],
                                       maxLines: 1,
                                       style: TextStyle(
-                                          fontSize: cellHeight / 4 / 2,
+                                          fontSize: innerHeight / 4 / 2,
                                           color: Colors.grey),
                                     )
                                   ),
                                   InkWell(
                                     onTap: onPressedOptions,
                                     child: Container(
-                                      height: 35,
-                                      width: 35,
-                                      alignment: Alignment.bottomRight,
+                                      height: innerHeight/2,
+                                      width: innerHeight/3,
+                                      alignment: Alignment.centerRight,
                                       child: Container(
-                                        height: 25,
-                                        width: 25,
+                                        height: innerHeight/5,
+                                        width: innerHeight/5,
                                         child: Icon(Icons.more_horiz),
                                       )
                                     )
@@ -214,8 +224,8 @@ class VideoCellClass extends StatelessWidget {
                   onTap: onSelected,
                   child: 
                   SizedBox(
-                    height: cellHeight,
-                    width: cellWidth,
+                    height: innerHeight,
+                    width: innerWidth,
                   )
                 ),
               ],
