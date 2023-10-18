@@ -53,8 +53,8 @@ class VideoCellClass extends StatelessWidget {
     String differenceStr = getFromNow(difference);
     double horizontalPadding = cellHeight*0.1;
     double verticalPadding = cellWidth*0.015;
-    double innerWidth = cellWidth - verticalPadding*2;
-    double centerThreadWidth = innerWidth/2*0.05;
+    double innerWidth = cellWidth - horizontalPadding*2;
+    double centerThreadWidth = innerWidth /30;
     double leftSideWidth = (innerWidth / 2) - centerThreadWidth;
     double rightSideWidth = innerWidth - leftSideWidth - centerThreadWidth;
     double innerHeight = leftSideWidth /16 *9;
@@ -107,9 +107,9 @@ class VideoCellClass extends StatelessWidget {
                               Positioned.fill(
                                 child: Center(
                                   child: Opacity(
-                                    opacity: isSelectMode ? 1 : 0.7,
+                                    opacity: isSelectMode ? 1 : 0.3,
                                     child: Icon(
-                                      isSelectMode ? (isSelected ? Icons.check_circle_sharp : Icons.check_circle_outline)  : Icons.play_circle,
+                                      isSelectMode ? (isSelected ? Icons.check_circle_sharp : Icons.check_circle_outline)  : Icons.play_arrow,
                                       size: 50,
                                       color: isSelected ?Colors.blue :Colors.white,
                                     ),
