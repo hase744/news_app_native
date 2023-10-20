@@ -21,6 +21,7 @@ class Video{
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'youtube_id': youtubeId,
       'title': title,
       'channel_name': channelName,
       'channel_id': channelId,

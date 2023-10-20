@@ -131,27 +131,32 @@ class VideoController{
   }
 
   listsToModels() async {
-    List videoModelsList = [];
+    List<List<Video>> videoModelsList = [];
     for(var videos in await categoryController.getPressOrder()){
-      List videoModels = [];
-      for(var video in videos){
-        videoModels.add(listToModel(video));
-      }
-      videoModelsList.add(videoModels);
+      videoModelsList.add(await listToModels(videos));
     }
     return videoModelsList;
   }
 
-  listToModel(Map video){
-     return Video(
-            id: video['id'], 
-            youtubeId: video['youtube_id'], 
-            title: video['title'], 
-            channelName: video['channel_name'], 
-            channelId: video['channel_id'], 
-            totalSeconds: video['total_seconds'], 
-            publishedAt: video['published_at']
-          );
+  listToModels(List videos) async {
+    List<Video> videoModels = [];
+    for(var video in videos){
+      videoModels.add(mapToModel(video));
+    }
+    return videoModels;
+  }
+
+  Video mapToModel(Map video){
+    return 
+      Video(
+        id: video['id'], 
+        youtubeId: video['youtube_id'], 
+        title: video['title'], 
+        channelName: video['channel_name'], 
+        channelId: video['channel_id'], 
+        totalSeconds: video['total_seconds'], 
+        publishedAt: video['published_at']
+      );
   }
 
   Future<bool> updateVideos(int categoryNumber) async {
@@ -167,7 +172,7 @@ class VideoController{
       print("更新");
       videoCount = await videos.length;
       print("更新数 : $videoCount");
-    displayLoadingScreen = false;
+      displayLoadingScreen = false;
       return true;
     }else{
       return false;
