@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:video_news/controllers/uuid_controller.dart';
 import 'package:video_news/consts/config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_news/models/video.dart';
 
 class VideoController{
   late List videosList = [];
@@ -129,12 +130,36 @@ class VideoController{
     }
   }
 
+  listToModel() async {
+    List videoModelsList = [];
+    for(var videos in await categoryController.getPressOrder()){
+      List videoModels = [];
+      for(var video in videos){
+        videoModels.add(
+          Video(
+            id: video['id'], 
+            youtubeId: video['youtube_id'], 
+            title: video['title'], 
+            channelName: video['channel_name'], 
+            channelId: video['channel_id'], 
+            totalSeconds: video['total_seconds'], 
+            publishedAt: video['published_at']
+          )
+        );
+      }
+      videoModelsList.add(videoModels);
+    }
+    return videoModelsList;
+  }
+
   Future<bool> updateVideos(int categoryNumber) async {
     videos = [];
     videoCount = 0;
     displayLoadingScreen = true;
     if(await accessVideos()) {
       videosList = await categoryController.getPressOrder();
+      print("モデル");
+      print((await listToModel()).length);
       print("動画ロード");
       videos = await videosList[categoryNumber];
       print("更新");

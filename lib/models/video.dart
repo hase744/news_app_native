@@ -1,11 +1,11 @@
 class Video{
-  String id;
+  int id;
   String youtubeId;
   String title;
   String channelName;
   String channelId;
   int totalSeconds;
-  DateTime publishedAt;
+  String publishedAt;
   //int second = 0;
   
   Video({
