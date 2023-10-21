@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:video_news/models/video.dart';
-class VideoCellClass extends StatelessWidget {
+class VideoCell extends StatelessWidget {
   final Video video;
   final double cellWidth;
   final double cellHeight;
@@ -14,7 +14,7 @@ class VideoCellClass extends StatelessWidget {
   final VoidCallback onPressedTitle;
   final VoidCallback onSelected;
 
-  VideoCellClass({
+  VideoCell({
     required this.video,
     required this.cellHeight,
     required this.cellWidth,
@@ -25,33 +25,11 @@ class VideoCellClass extends StatelessWidget {
     required this.isSelected,
     required this.isSelectMode,
   });
-  
-  secondsToString(int seconds){
-    final Duration duration = Duration(seconds: seconds);
-    String formattedDuration = '';
-    if (duration.inHours > 0) {
-      formattedDuration += '${duration.inHours.toString().padLeft(2, '0')}:';
-    }
-    formattedDuration += '${(duration.inMinutes % 60).toString().padLeft(2, '0')}:';
-    formattedDuration += '${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
-    return formattedDuration;
-  }
-
-  getFromNow(Duration difference){
-    if(difference.inDays < 1){
-      return "${difference.inHours}時間前";
-    }else{
-      return "${difference.inDays}日前";
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     String youtube_id = video.youtubeId;
     //String dateString = "2023-10-16 14:30:00";
-    DateTime publishedAt = DateTime.parse(video.publishedAt);
-    Duration difference = DateTime.now().difference(publishedAt);
-    String differenceStr = getFromNow(difference);
     double horizontalPadding = cellHeight*0.1;
     double verticalPadding = cellWidth*0.015;
     double innerWidth = cellWidth - horizontalPadding*2;
@@ -127,7 +105,7 @@ class VideoCellClass extends StatelessWidget {
                                   Container(
                                     color: Colors.black,
                                     child: Text(
-                                      secondsToString(video.totalSeconds),
+                                      video.getReadableDuration(),
                                       maxLines: 1,
                                       style: TextStyle(
                                         fontSize: innerHeight / 10,
@@ -170,7 +148,7 @@ class VideoCellClass extends StatelessWidget {
                                     width: rightSideWidth,
                                     height: innerHeight / 5,
                                     child: Text(
-                                      differenceStr,
+                                      video.getFromNow(),
                                       style: TextStyle(
                                         fontSize: innerHeight /10,
                                         fontWeight: FontWeight.bold,

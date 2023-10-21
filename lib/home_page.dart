@@ -389,7 +389,7 @@ class _HomePageState extends State<HomePage>  {
     bool isHistory = _pageController.isHistoryPage();
     List cellIds = _videoController.selection.map((map) => map.id).toList();
     
-    return VideoCellClass(
+    return VideoCell(
       video: video, 
       isSelectMode: _videoController.isSelectMode,
       isSelected: cellIds.contains(cellId),

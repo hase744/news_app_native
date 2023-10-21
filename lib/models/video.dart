@@ -5,7 +5,7 @@ class Video{
   String channelName;
   int channelId;
   int totalSeconds;
-  String publishedAt;
+  DateTime publishedAt;
   //int second = 0;
   
   Video({
@@ -25,7 +25,7 @@ class Video{
         channelName = json['channel_name'],
         channelId = json['channel_id'],
         totalSeconds = json['total_seconds'],
-        publishedAt = json['published_at']
+        publishedAt = DateTime.parse(json['published_at'])
         ;
   
   Map<String, dynamic> toMap() {
@@ -38,10 +38,24 @@ class Video{
       'published_at': publishedAt,
     };
   }
-
-  setValue(Map<String, dynamic> press){
-      id = press['id'];
-      title = press['title'];
-      channelId = press['channel_id'];
+  
+  getReadableDuration(){
+    final Duration duration = Duration(seconds: totalSeconds);
+    String formattedDuration = '';
+    if (duration.inHours > 0) {
+      formattedDuration += '${duration.inHours.toString().padLeft(2, '0')}:';
     }
+    formattedDuration += '${(duration.inMinutes % 60).toString().padLeft(2, '0')}:';
+    formattedDuration += '${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
+    return formattedDuration;
+  }
+
+  getFromNow(){
+    Duration difference = DateTime.now().difference(publishedAt);
+    if(difference.inDays < 1){
+      return "${difference.inHours}時間前";
+    }else{
+      return "${difference.inDays}日前";
+    }
+  }
 }
