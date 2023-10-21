@@ -7,10 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_news/models/video.dart';
 
 class VideoController{
-  late List videosList = [];
-  late List videos = [];
-  List<Map> selection = [];
-  List selectedVideos = [];
+  late List<List<Video>> videosList = [];
+  late List<Video> videos = [];
+  List<Video> selection = [];
   int videoLength = 20;
   bool displayLoadingScreen = true;
   bool isSelectMode = false;
@@ -21,7 +20,7 @@ class VideoController{
   late final domain = Config.domain;
 
   setVideosList() async {
-    videosList = await getMyVideos();
+    videosList = await listsToModels();
   }
   
   getMyVideos() async {
@@ -51,8 +50,8 @@ class VideoController{
     }
   }
 
-  selectVideo(Map video){
-    int index = selection.indexWhere((map) => map["youtube_id"] == video['youtube_id']);
+  selectVideo(Video video){
+    int index = selection.indexWhere((map) => map.youtubeId == video.youtubeId);
     if(index != -1){
       selection.removeAt(index);
     }else{
@@ -77,33 +76,30 @@ class VideoController{
     int pageCount = ((videoCount + videoLength)/videoLength).ceil();
     switch(pageName) {
       case 'favorite':
-      print("お気に入り");
         if(searching){
-          List searchingVideos = json.decode(await searchFavorites(searchWord, pageCount));
-          videos.addAll(searchingVideos);
+          List<Video> searchingVideos = await jsonToModels(await searchFavorites(searchWord, pageCount));
+          videos.addAll(await searchingVideos);
         }else{
           final response = await getFavorites(pageCount);
           if(response.statusCode == 200){
-            videos.addAll(await json.decode(response.body));
+            videos.addAll(await jsonToModels(response.body));
           }
-          //List videos = json.decode(await getFavorites(pageCount).body);
-          //videos.addAll(videos);
         }
         break;
       case 'history':
         if(searching){
-          List searchingVideos = json.decode(await searchHistories(searchWord, pageCount));
-          videos.addAll(searchingVideos);
+          List<Video> searchingVideos = await jsonToModels(await searchHistories(searchWord, pageCount));
+          videos.addAll(await searchingVideos);
         }else{
           final response = await getHistories(pageCount);
           if(response.statusCode == 200){
-            videos.addAll(await json.decode(response.body));
+            videos.addAll(await jsonToModels(response.body));
           }
         }
         break;
       case 'home':
         if(searching){
-          List searchingVideos = json.decode(await searchVideos(searchWord, pageCount));
+          List<Video> searchingVideos = await jsonToModels(await searchVideos(searchWord, pageCount));
           videos.addAll(searchingVideos);
         }
       default:
@@ -141,22 +137,14 @@ class VideoController{
   listToModels(List videos) async {
     List<Video> videoModels = [];
     for(var video in videos){
-      videoModels.add(mapToModel(video));
+      videoModels.add(Video.fromJson(video));
+      //videoModels.add(mapToModel(video));
     }
     return videoModels;
   }
 
-  Video mapToModel(Map video){
-    return 
-      Video(
-        id: video['id'], 
-        youtubeId: video['youtube_id'], 
-        title: video['title'], 
-        channelName: video['channel_name'], 
-        channelId: video['channel_id'], 
-        totalSeconds: video['total_seconds'], 
-        publishedAt: video['published_at']
-      );
+  jsonToModels(String str){
+    return   listToModels(json.decode(str));
   }
 
   Future<bool> updateVideos(int categoryNumber) async {
@@ -164,14 +152,9 @@ class VideoController{
     videoCount = 0;
     displayLoadingScreen = true;
     if(await accessVideos()) {
-      videosList = await categoryController.getPressOrder();
-      print("モデル");
-      print((await listsToModels()).length);
-      print("動画ロード");
+      videosList = await listsToModels();
       videos = await videosList[categoryNumber];
-      print("更新");
       videoCount = await videos.length;
-      print("更新数 : $videoCount");
       displayLoadingScreen = false;
       return true;
     }else{
@@ -181,22 +164,25 @@ class VideoController{
 
   search(String word, String pageName) async {
     videos = [];
+    String jsonStr = '';
     displayLoadingScreen = true;
     try {
       searchWord = word;
+      print(word);
       switch(pageName) {
         case 'favorite':
-          videos = await json.decode(await searchFavorites(searchWord, 1));
+          jsonStr = await searchFavorites(searchWord, 1);
           break;
         case 'history':
-          videos = await json.decode(await searchHistories(searchWord, 1));
+          jsonStr = await searchHistories(searchWord, 1);
           break;
         case 'home':
-          videos = await json.decode(await searchVideos(searchWord, 1));
+          jsonStr = await searchVideos(searchWord, 1);
         default:
           break;
       }
-    displayLoadingScreen = false;
+      videos = await jsonToModels(jsonStr);
+      displayLoadingScreen = false;
       videoCount = videos.length;
       return true;
     } catch (e) {
@@ -213,32 +199,32 @@ class VideoController{
   Future<bool> displayFavorites() async {
     final response = await getFavorites(1);
     if(response.statusCode == 200){
-      videos = await json.decode(response.body);
+      videos = await jsonToModels(response.body);
       return true;
     }else{
       return false;
     }
   }
 
-  Future <bool> createFavorite(Map video) async {
-    String url = "$domain/user/favorites.json?uuid=${await uuidController.getUuid()}&video_id=${video['id']}";
+  Future <bool> createFavorite(Video video) async {
+    String url = "$domain/user/favorites.json?uuid=${await uuidController.getUuid()}&video_id=${video.id}";
     final response = await http.post(Uri.parse(url));
     return response.statusCode == 204;
   }
 
   Future <bool> createSelectedFavorite() async {
-    List youtubeIds = selection.map((map) => map["id"]).toList();
+    List youtubeIds = selection.map((map) => map.id).toList();
     final queryString = youtubeIds.map((id) => 'video_ids[]=$id').join('&');
     String url = "$domain/user/favorites/create_multiple.json?uuid=${await uuidController.getUuid()}&$queryString";
     final response = await http.post(Uri.parse(url));
     return response.statusCode == 200;
   }
 
-  Future <bool> deleteFavorite(Map video) async {
-    String url = "$domain/user/favorites/${video['id']}.json?uuid=${await uuidController.getUuid()}";
+  Future <bool> deleteFavorite(Video video) async {
+    String url = "$domain/user/favorites/${video.id}.json?uuid=${await uuidController.getUuid()}";
     final response = await http.delete(Uri.parse(url));
     if(response.statusCode == 200){
-      int videoIndex = videos.map((map) => map["id"]).toList().indexOf(video['id']);
+      int videoIndex = videos.map((map) => map.id).toList().indexOf(video.id);
       videoCount -= 1;
       videos.removeAt(videoIndex);
       return true;
@@ -254,7 +240,7 @@ class VideoController{
   }
 
   Future <bool> deleteSelectedFavorite() async {
-    List favoriteIds = selection.map((map) => map["id"]).toList();
+    List favoriteIds = selection.map((map) => map.id).toList();
     final queryString = favoriteIds.map((id) => 'ids[]=$id').join('&');
     String url = "$domain/user/favorites/delete_multiple.json?uuid=${await uuidController.getUuid()}&$queryString";
     final response = await http.delete(Uri.parse(url));
@@ -291,14 +277,15 @@ class VideoController{
     final response = await getHistories(1);
     //print("status : ${response.statusCode}");
     if(response.statusCode == 200){
-      videos = json.decode(response.body);
+      print("200 ok");
+      videos = await jsonToModels(response.body);
       return true;
     }else{
       return false;
     }
   }
-  Future <bool> createHistory(Map video) async {
-    String url = "$domain/user/histories.json?uuid=${await uuidController.getUuid()}&video_id=${video['id']}";
+  Future <bool> createHistory(Video video) async {
+    String url = "$domain/user/histories.json?uuid=${await uuidController.getUuid()}&video_id=${video.id}";
     final response = await http.post(Uri.parse(url));
     return response.statusCode == 200;
   }
@@ -313,11 +300,11 @@ class VideoController{
     }
   }
   
-  Future <bool> deleteHistory(Map video) async {
-    String url = "$domain/user/histories/${video['id']}.json?uuid=${await uuidController.getUuid()}";
+  Future <bool> deleteHistory(Video video) async {
+    String url = "$domain/user/histories/${video.id}.json?uuid=${await uuidController.getUuid()}";
     final response = await http.delete(Uri.parse(url));
     if(response.statusCode == 200){
-      int videoIndex = videos.map((map) => map["id"]).toList().indexOf(video['id']);
+      int videoIndex = videos.map((map) => map.id).toList().indexOf(video.id);
       videoCount -= 1;
       videos.removeAt(videoIndex);
       return true;
@@ -327,7 +314,7 @@ class VideoController{
   }
 
   Future <bool> deleteSelectedHistory() async {
-    List historyIds = selection.map((map) => map["id"]).toList();
+    List historyIds = selection.map((map) => map.id).toList();
     final queryString = historyIds.map((id) => 'ids[]=$id').join('&');
     String url = "$domain/user/histories/delete_multiple.json?uuid=${await uuidController.getUuid()}&$queryString";
     final response = await http.delete(Uri.parse(url));
@@ -341,7 +328,7 @@ class VideoController{
   }
 
   Future <bool> createSelectedHistory() async {
-    List youtubeIds = selection.map((map) => map["id"]).toList();
+    List youtubeIds = selection.map((map) => map.id).toList();
     final queryString = youtubeIds.map((id) => 'video_ids[]=$id').join('&');
     String url = "$domain/user/histories/create_multiple.json?uuid=${await uuidController.getUuid()}&$queryString";
     final response = await http.post(Uri.parse(url));

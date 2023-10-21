@@ -177,8 +177,8 @@ class _HomePageState extends State<HomePage>  {
     homeLayout.setHeightForVideoCells();
   }
 
-  void openYoutube(Map press) async {
-    String youtube_id = press["youtube_id"];
+  void openYoutube(Video press) async {
+    String youtube_id = press.youtubeId;
     homeLayout.displayYoutube();
     homeLayout.setHeightForVideoCells();
     //最後に再生した動画を保存機能
@@ -381,13 +381,13 @@ class _HomePageState extends State<HomePage>  {
     );
   }
 
-  Widget videoCell(BuildContext context, Map video){
-    int cellId = video['id'];
+  Widget videoCell(BuildContext context, Video video){
+    int cellId = video.id;
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth!/2/16*9;
     bool isFavorite = _pageController.isFavoritePage();
     bool isHistory = _pageController.isHistoryPage();
-    List cellIds = _videoController.selection.map((map) => map["id"]).toList();
+    List cellIds = _videoController.selection.map((map) => map.id).toList();
     
     return VideoCellClass(
       video: video, 
@@ -451,7 +451,7 @@ class _HomePageState extends State<HomePage>  {
           scheme: 'https',
           host: 'www.youtube.com',
           path: "watch",
-          queryParameters: {'v': video['youtube_id']}
+          queryParameters: {'v': video.youtubeId}
         );
         _launched = _launchInWebViewOrVC(toLaunch);
       },

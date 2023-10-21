@@ -3,7 +3,7 @@ class Video{
   String youtubeId;
   String title;
   String channelName;
-  String channelId;
+  int channelId;
   int totalSeconds;
   String publishedAt;
   //int second = 0;
@@ -17,6 +17,16 @@ class Video{
     required this.totalSeconds,
     required this.publishedAt,
   });
+
+  Video.fromJson(Map<String, dynamic> json)
+      : id = json['id'],
+        youtubeId = json['youtube_id'],
+        title = json['title'],
+        channelName = json['channel_name'],
+        channelId = json['channel_id'],
+        totalSeconds = json['total_seconds'],
+        publishedAt = json['published_at']
+        ;
   
   Map<String, dynamic> toMap() {
     return {

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:video_news/models/video.dart';
 class VideoCellClass extends StatelessWidget {
-  final Map video;
+  final Video video;
   final double cellWidth;
   final double cellHeight;
   final bool isSelected;
@@ -46,9 +47,9 @@ class VideoCellClass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String youtube_id = video['youtube_id'];
+    String youtube_id = video.youtubeId;
     //String dateString = "2023-10-16 14:30:00";
-    DateTime publishedAt = DateTime.parse(video['published_at']);
+    DateTime publishedAt = DateTime.parse(video.publishedAt);
     Duration difference = DateTime.now().difference(publishedAt);
     String differenceStr = getFromNow(difference);
     double horizontalPadding = cellHeight*0.1;
@@ -62,6 +63,7 @@ class VideoCellClass extends StatelessWidget {
     //double cellWidth = _deviceWidth!;
     //double cellHeight = _deviceWidth! / 2 / 16 * 9;
     return Container(
+      color: isSelected ?Colors.grey.shade300 :Colors.white,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
@@ -70,7 +72,6 @@ class VideoCellClass extends StatelessWidget {
             child: Stack(
               children: [
                 Container(
-                  color: isSelected ?Colors.grey.shade300 :Colors.white,
                   margin: EdgeInsets.symmetric(horizontal:horizontalPadding, vertical: verticalPadding),
                   child:
                   Row(
@@ -126,7 +127,7 @@ class VideoCellClass extends StatelessWidget {
                                   Container(
                                     color: Colors.black,
                                     child: Text(
-                                      secondsToString(video['total_seconds']),
+                                      secondsToString(video.totalSeconds),
                                       maxLines: 1,
                                       style: TextStyle(
                                         fontSize: innerHeight / 10,
@@ -157,7 +158,7 @@ class VideoCellClass extends StatelessWidget {
                                     width: rightSideWidth,
                                     height: innerHeight / 5 * 3,
                                     child: Text(
-                                      video['title'],
+                                      video.title,
                                       style: TextStyle(
                                           fontSize: innerHeight /14 *2,
                                         fontWeight: FontWeight.bold,
@@ -190,7 +191,7 @@ class VideoCellClass extends StatelessWidget {
                                   Container(
                                     width: rightSideWidth - innerHeight/3,
                                     child: Text(
-                                      video['channel_name'],
+                                      video.channelName,
                                       maxLines: 1,
                                       style: TextStyle(
                                           fontSize: innerHeight / 4 / 2,
