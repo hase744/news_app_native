@@ -128,7 +128,7 @@ class VideoController{
 
   listsToModels() async {
     List<List<Video>> videoModelsList = [];
-    for(var videos in await categoryController.getPressOrder()){
+    for(var videos in await categoryController.getRearrangedPress()){
       videoModelsList.add(await listToModels(videos));
     }
     return videoModelsList;

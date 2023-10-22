@@ -18,14 +18,14 @@ class CategoryController{
   }
 
   Future<List> getCurrentPress() async {
-    final prefs = await SharedPreferences.getInstance();
     //await prefs.remove('categoryOrder');
+    final prefs = await SharedPreferences.getInstance();
     String? currentPress = prefs.getString('presses');
     List pressParams = json.decode(currentPress!);
     return pressParams;
   }
 
-  Future<List<Map<String, dynamic>>> getCurrentVideos() async {
+  Future<List<Map<String, dynamic>>> getCurrentCategories() async {
     List pressParams = await getCurrentPress();
     List<Map<String, dynamic>> pressMaps = pressParams.map((item) {
       return {"name": item["name"], "japanese_name": item["japanese_name"]};
@@ -34,50 +34,22 @@ class CategoryController{
   }
 
   Future<List> getSavedOrder() async {
-    List<dynamic> categoryParams  = [];
-    final prefs = await SharedPreferences.getInstance();
     //await prefs.remove('categoryOrder');
+    final prefs = await SharedPreferences.getInstance();
     String? categoriesOrder = prefs.getString('categoryOrder');
-    if(categoriesOrder == null){
-      categoryParams = await getCurrentVideos();
-    }else{
-      categoryParams = json.decode(categoriesOrder);
-    }
+    List<dynamic> categoryParams = categoriesOrder == null 
+      ? await getCurrentCategories()
+      : json.decode(categoriesOrder);
     return categoryParams;
   }
 
-  categoryOrder() async {
-    List<Map<String, dynamic>> pressMaps = await getCurrentVideos();
-    List categoryParams = await getSavedOrder();
-    List newOrder =  [];
-    List newPresses = [];
-    categoryParams.asMap().forEach((int i, category) {
-      pressMaps.asMap().forEach((int j, press) {
-        if(press['name']  == category['name']){
-          newOrder.add(category);
-          newPresses.add(press);
-          return;
-        }
-      });
-    });
-    return newOrder;
-  }
-
-  Future<List> getPressOrder() async {
+  Future<List> getRearrangedPress() async {
     List pressParams = await getCurrentPress();
     List categoryParams = await getSavedOrder();
     List videosList = [];
-
     for (var category in categoryParams ) {
-      for (var press in pressParams ) {
-        if(category['name'] == press['name']){
-          List videos = [];
-          for(var video in json.decode(press['press'])){
-            videos.add(video);
-          }
-          videosList.add(videos);
-        }
-      }
+      Map matchedPress = pressParams.firstWhere((c) => c['name'] == category['name']);
+      videosList.add(json.decode(matchedPress['press']));
     }
     return videosList;
   }
@@ -85,12 +57,7 @@ class CategoryController{
   setSavedCategory() async {
     List categoryParams = await getSavedOrder();
     for (var category in categoryParams ) {
-      categories.add(
-        Category(
-          name: category['name'], 
-          japaneseName: category['japanese_name']
-        )
-      );
+      categories.add(Category.fromMap(category));
     }
   }
 
@@ -99,52 +66,29 @@ class CategoryController{
     List<dynamic> currentVideos = await getCurrentPress();
     for(var category in currentVideos ){
       List matchedCategories = savedParams.where((c) => c['name'] == category['name']).toList();
-      if(matchedCategories.length ==  0){
-        unusedCategories.add(
-          Category(
-            name: category['name'], 
-            japaneseName: category['japanese_name']
-          )
-        );
+      if(matchedCategories.isEmpty){
+        unusedCategories.add(Category.fromMap(category));
       }
     }
   }
 
-  void updateCategoryOrder() async  {
-    List<Map<String, dynamic>> categoryMaps = [];
-    for(var i=0; i<categories.length; i++){
-      Map<String, dynamic> categoryMap = {};
-      categoryMap['name'] = categories[i].name;
-      categoryMap['japanese_name'] = categories[i].japaneseName;
-      categoryMaps.add(categoryMap);
-    }
+  void saveOrder() async  {
+    List<Map<String, dynamic>> categoryMaps = categories.map((c) => c.toMap()).toList();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('categoryOrder',json.encode(categoryMaps.toList()));
   }
 
   void delete(int index) async  {
-    List<Map<String, dynamic>> categoryMaps = [];
     categories.removeAt(index);
-    for(var i=0; i<categories.length; i++){
-      Map<String, dynamic> categoryMap = {};
-      categoryMap['name'] = categories[i].name;
-      categoryMap['japanese_name'] = categories[i].japaneseName;
-      categoryMaps.add(categoryMap);
-    }
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('categoryOrder',json.encode(categoryMaps));
+    saveOrder();
   }
 
   void add(Category category) async  {
-    final prefs = await SharedPreferences.getInstance();
-    List<dynamic> categoryMaps = await getSavedOrder();
-    categoryMaps.add(category.toMap());
-    await prefs.setString('categoryOrder',json.encode(categoryMaps));
+    categories.add(category);
+    saveOrder();
   }
 
   void saveSelection() async {
-    final prefs = await SharedPreferences.getInstance();
     List selectionNames = selection.map((c){return c.name;}).toList();
     List<dynamic> currentCategories = await getCurrentPress();
     for(var category in currentCategories ){
@@ -153,8 +97,8 @@ class CategoryController{
       }
     }
     selection.addAll(unusedCategories);
-    List<dynamic> categoryMaps = 
-    selection.map((c) => c.toMap()).toList();
+    List<dynamic> categoryMaps = selection.map((c) => c.toMap()).toList();
+    final prefs = await SharedPreferences.getInstance();
     await prefs.setString('categoryOrder',json.encode(categoryMaps));
   }
 }

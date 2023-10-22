@@ -174,7 +174,7 @@ class _ReorderableExampleState extends State<ReorderableExample> {
           }
           Category category = categoryController.categories.removeAt(oldIndex);
           categoryController.categories.insert(newIndex, category);
-          categoryController.updateCategoryOrder();
+          categoryController.saveOrder();
           
         });
       },

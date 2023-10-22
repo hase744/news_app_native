@@ -19,7 +19,7 @@ class AddCategoyPage extends StatefulWidget {
 
 class _AddCategoyPageState extends State<AddCategoyPage> {
   PageTransition _pageTransition = PageTransition();
-    CategoryController categoryController = CategoryController();
+    CategoryController _categoryController = CategoryController();
   double? _deviceHeight, _deviceWidth;
   @override
   void initState() {
@@ -28,9 +28,9 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
   }
 
   void init() async {
-    List _category = await categoryController.categoryOrder();
+    CategoryController categoryController = await CategoryController();
     setState(() {
-      //print(_category);
+      _categoryController = categoryController;
       _deviceHeight = MediaQuery.of(context).size.height;
       _deviceWidth = MediaQuery.of(context).size.width;
     });
@@ -59,9 +59,9 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              if(categoryController.unusedCategories.length > 0)
+              if(_categoryController.unusedCategories.length > 0)
               Text("追加ボタンからカテゴリーを追加"),
-              if(categoryController.unusedCategories.length == 0)
+              if(_categoryController.unusedCategories.length == 0)
               Text(
                 "追加可能なカテゴリーはありません",
                 style: TextStyle(
@@ -72,9 +72,9 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
               Flexible(
               child: 
               ListView.builder(
-                itemCount: categoryController.unusedCategories.length,
+                itemCount: _categoryController.unusedCategories.length,
                 itemBuilder: (context, index) {
-                  final category = categoryController.unusedCategories[index];
+                  final category = _categoryController.unusedCategories[index];
                   return 
                   Container(
                     width: _deviceWidth! - 2,
@@ -91,21 +91,21 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
                           ),
                           Spacer(),
                           Container(
-                            child: categoryController.unusedCategories[index].isAdded ?
+                            child: _categoryController.unusedCategories[index].isAdded ?
                               IconButton(
                                 icon:  Icon(Icons.check_circle, color: Colors.green) ,
                                 onPressed: () {
                                   setState(() {
-                                    //categoryController.unusedCategories[index]['is_added'] = !categoryController.unusedCategories[index]['is_added'];
+                                    //_categoryController.unusedCategories[index]['is_added'] = !_categoryController.unusedCategories[index]['is_added'];
                                   });
                                 },
                               ):
                             InkWell(
                               onTap: () {
                                 setState(() {
-                                  categoryController.unusedCategories[index].isAdded = !categoryController.unusedCategories[index].isAdded;
+                                  _categoryController.unusedCategories[index].isAdded = !_categoryController.unusedCategories[index].isAdded;
                                   //addCategory(category.name);
-                                  categoryController.add(categoryController.unusedCategories[index]);
+                                  _categoryController.add(_categoryController.unusedCategories[index]);
                                 });
                               },
                               child: 
