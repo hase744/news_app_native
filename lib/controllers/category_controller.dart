@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 class CategoryController{
   List<Category> categories = [];
+  List<Category> selection = [];
   List<Category> unusedCategories = [];
   int categoryIndex = 0;
   late Category currentCategory = categories[categoryIndex];
@@ -137,9 +138,23 @@ class CategoryController{
 
   void add(Category category) async  {
     final prefs = await SharedPreferences.getInstance();
-    List<dynamic> categoryMaps = await getPressOrder();
-    Map category_param = {'name':category.name, 'japanese_name':category.japaneseName};
-    categoryMaps.add(category_param);
+    List<dynamic> categoryMaps = await getSavedOrder();
+    categoryMaps.add(category.toMap());
+    await prefs.setString('categoryOrder',json.encode(categoryMaps));
+  }
+
+  void saveSelection() async {
+    final prefs = await SharedPreferences.getInstance();
+    List selectionNames = selection.map((c){return c.name;}).toList();
+    List<dynamic> currentCategories = await getCurrentPress();
+    for(var category in currentCategories ){
+      if(!selectionNames.contains(category['name'])){
+        unusedCategories.add(Category.fromMap(category));
+      }
+    }
+    selection.addAll(unusedCategories);
+    List<dynamic> categoryMaps = 
+    selection.map((c) => c.toMap()).toList();
     await prefs.setString('categoryOrder',json.encode(categoryMaps));
   }
 }

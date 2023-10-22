@@ -5,10 +5,11 @@ import 'home_page.dart';
 import 'package:flutter/services.dart';
 import 'package:video_news/controllers/access_controller.dart';
 import 'package:video_news/controllers/video_controller.dart';
+import 'package:video_news/controllers/category_controller.dart';
+import 'package:video_news/views/category_select.dart';
 
 class FirstPage extends StatefulWidget {
   const FirstPage({super.key, required this.title});
-
   final String title;
 
   @override
@@ -19,7 +20,6 @@ class _FirstPageState extends State<FirstPage> {
   @override
   void initState() {
     super.initState();
-    saveLayout();
     fetchData();
   }
 
@@ -30,46 +30,38 @@ class _FirstPageState extends State<FirstPage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text("${MediaQuery.of(context).orientation}"),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'Video News',
-            ),
-          ],
+      body: 
+      Container(
+        //color: Colors.red,
+        child: 
+        Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Text(
+                'Video News',
+              ),
+            ],
+          ),
         ),
-      ),
+      )
     );
   }
 
-  Future<void> saveLayout() async {
-    double _deviceWidth = MediaQuery.of(context).size.width;
-    double _deviceHeight = MediaQuery.of(context).size.height;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('device_width', _deviceWidth);
-    await prefs.setDouble('device_height', _deviceHeight);
-  }
-
   Future<void> fetchData() async {
-    //final url = 'http://10.0.2.2:3000/categories/index.json';
-    final url = 'http://18.178.58.191/categories/index.json';
-    final response = await http.get(Uri.parse(url));
-    String data = "";
-    //AccessController access = AccessController();
     VideoController videoController = VideoController();
-    //await access.accessPress();
-    //data =  access.data;
 
     if (await videoController.accessVideos()) {
       SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
       final prefs = await SharedPreferences.getInstance();
       String defaultYoutubeId = prefs.getString('default_youtube_id') ?? '4b6DuHGcltI';
       await prefs.setString('default_youtube_id', defaultYoutubeId);
-      //await prefs.setString('presses', data);
+      //await prefs.remove('categoryOrder');
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) =>HomePage()),
+        prefs.getString('categoryOrder') == null 
+          ? MaterialPageRoute(builder: (context) =>CategorySelect()) 
+          : MaterialPageRoute(builder: (context) =>HomePage()),
       );
     } else {
       throw Exception('Failed to load data');

@@ -1,3 +1,5 @@
+import 'package:video_news/controllers/category_controller.dart';
+
 class Category{
   String name;
   String japaneseName;
@@ -8,4 +10,15 @@ class Category{
     required this.name,
     required this.japaneseName
   });
+
+  Category.fromMap(Map<String, dynamic> map)
+    : name = map['name'],
+      japaneseName = map['japanese_name'];
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'japanese_name': japaneseName,
+    };
+  }
 }

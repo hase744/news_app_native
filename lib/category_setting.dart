@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_news/setting_page.dart';
-import 'page_transition.dart';
+import 'package:video_news/page_transition.dart';
 import 'package:video_news/controllers/category_controller.dart';
 import 'package:video_news/models/category.dart';
 
