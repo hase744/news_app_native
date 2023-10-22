@@ -41,6 +41,7 @@ class _HomePageState extends State<HomePage>  {
   HomeLayout homeLayout = HomeLayout(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0);
   DefaultValue defaultValue = DefaultValue();
   String? _alert;
+  Timer? _timer;
   Future<void>? _launched;
   TextEditingController _controller = TextEditingController();
   VideoController _videoController = VideoController();
@@ -55,6 +56,7 @@ class _HomePageState extends State<HomePage>  {
         autoPlay: false,  // 自動再生しない
       ),
     );
+  
 
   @override
   void initState() {
@@ -490,13 +492,12 @@ class _HomePageState extends State<HomePage>  {
   }
 
   countLoad(){
-    Timer.periodic(Duration(milliseconds: 25), (timer) {
+    _timer = Timer.periodic(Duration(milliseconds: 25), (timer) {
       setState(() {
         loadController.loadCount += 1;
         if(loadController.loadCount >= loadController.maxLoadCount){
           loadController.canLoad = true;
-          //loadController.isLoading = true;
-          timer.cancel();
+          _timer!.cancel();
         }
       });
     });
@@ -511,6 +512,7 @@ class _HomePageState extends State<HomePage>  {
       }
       if (before > 0) {
         loadController.loadCount = 0;
+        if(_timer != null){_timer!.cancel();}
       }
       if(before >= homeLayout.loadAreaHeight){
         loadController.isLoading = false;
@@ -574,7 +576,7 @@ class _HomePageState extends State<HomePage>  {
   }
 
   updateVideos() async {
-    if(!await _videoController.updateVideos(_pageController.pageIndex)){
+    if(!await _videoController.updateVideos(categoryController.categoryIndex)){
       displayAlert("ロードに失敗しました");
     };
   }
@@ -625,7 +627,6 @@ class _HomePageState extends State<HomePage>  {
                             final max = scrollNotification.metrics.maxScrollExtent;
                             scrollForMenu(before);
                             if (before == max) {
-                              print("ロード");
                               _videoController.loadVideos(_pageController.getCurrentPageName(), homeLayout.displaySearch);
                             }
                             if(loadController.canLoad){
