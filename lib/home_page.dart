@@ -611,31 +611,31 @@ class _HomePageState extends State<HomePage>  {
                   child: 
                   Stack(
                   children: <Widget>[
-                    NotificationListener<ScrollNotification>(
-                      onNotification: (ScrollNotification scrollNotification) {
-                        if (scrollNotification is ScrollEndNotification) {
-                          // The ListView has stopped scrolling
-                          final before = scrollNotification.metrics.extentBefore;
-                          final max = scrollNotification.metrics.maxScrollExtent;
-                          scrollForMenu(before);
-                          if (before == max) {
-                            print("ロード");
-                            _videoController.loadVideos(_pageController.getCurrentPageName(), homeLayout.displaySearch);
-                          }
-                          if(loadController.canLoad){
-                            loadController.isLoading = true;
-                            loadController.canLoad = false;
-                            updateVideos();
-                          }
-                        }//
-                        return true;
-                      },
+                    Positioned(
+                      right: 0,
+                      left: 0,
+                      top: homeLayout.listViewTop(),
+                      bottom: 0,
                       child: 
-                      Positioned(
-                        right: 0,
-                        left: 0,
-                        top: homeLayout.listViewTop(),
-                        bottom: 0,
+                      NotificationListener<ScrollNotification>(
+                        onNotification: (ScrollNotification scrollNotification) {
+                          if (scrollNotification is ScrollEndNotification) {
+                            // The ListView has stopped scrolling
+                            final before = scrollNotification.metrics.extentBefore;
+                            final max = scrollNotification.metrics.maxScrollExtent;
+                            scrollForMenu(before);
+                            if (before == max) {
+                              print("ロード");
+                              _videoController.loadVideos(_pageController.getCurrentPageName(), homeLayout.displaySearch);
+                            }
+                            if(loadController.canLoad){
+                              loadController.isLoading = true;
+                              loadController.canLoad = false;
+                              updateVideos();
+                            }
+                          }//
+                          return true;
+                        },
                         child: 
                         ListView(
                           controller: _scrollController,
@@ -645,7 +645,6 @@ class _HomePageState extends State<HomePage>  {
                               width: _deviceWidth!,
                               height: homeLayout.getTopMenuHeight(),
                               //color: Colors.blue,
-                              child: Spacer(),
                             ),
                             if(_videoController.videos.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
                               for(var i=0; i<_videoController.videoCount; i++)
@@ -670,7 +669,6 @@ class _HomePageState extends State<HomePage>  {
                               width: _deviceWidth!,
                               height: homeLayout.getbottomSpaceHeight(_videoController.videoCount),
                               color: Colors.white,
-                              child: Spacer(),
                             ),
                           ],
                         )
@@ -756,7 +754,6 @@ class _HomePageState extends State<HomePage>  {
                 color: Colors.white,
                 width: _deviceWidth!,
                 height: _deviceHeight!,
-                child: Spacer()
               )
           )
         ]
