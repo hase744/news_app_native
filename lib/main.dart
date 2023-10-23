@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'first_page.dart';
+import 'package:video_news/views/first_page.dart';
 import 'package:flutter/services.dart';
 
 void main() {
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildCon text context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(

@@ -1,7 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'package:video_news/controllers/uuid_controller.dart';
 import 'package:video_news/consts/config.dart';
-import 'package:video_news/models/favorite.dart';
 
 class AccessController{
   String data = "";

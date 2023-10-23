@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:video_news/models/video.dart';
 class VideoCell extends StatelessWidget {
   final Video video;

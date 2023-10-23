@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:video_news/home_page.dart';
 
 class SelectBottomNavigationBar extends StatelessWidget {
   final int initialIndex;

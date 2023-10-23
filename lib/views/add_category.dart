@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'home_page.dart';
 import 'setting_page.dart';
-import 'category_setting.dart';
-import 'dart:convert';
 import 'page_transition.dart';
 import 'package:video_news/controllers/category_controller.dart';
 

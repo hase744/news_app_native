@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:video_news/home_page.dart';
+import 'package:video_news/views/home_page.dart';
 import 'package:video_news/models/navigation_item.dart';
 import 'package:video_news/consts/navigation_list_config.dart';
 

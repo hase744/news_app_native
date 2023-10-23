@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_news/controllers/category_controller.dart';
 import 'package:video_news/models/category.dart';
-import 'package:video_news/home_page.dart';
+import 'package:video_news/views/home_page.dart';
 class CategorySelect extends StatefulWidget {
   @override
   _CategorySelectState createState() => _CategorySelectState();

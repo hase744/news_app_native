@@ -6,7 +6,6 @@ class Video{
   int channelId;
   int totalSeconds;
   DateTime publishedAt;
-  //int second = 0;
   
   Video({
     required this.id,
