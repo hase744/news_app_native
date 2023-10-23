@@ -115,7 +115,7 @@ class VideoController{
   }
 
   accessVideos() async {
-    String url = '$domain/categories/index.json';
+    String url = '$domain/presses.json';
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final prefs = await SharedPreferences.getInstance();
