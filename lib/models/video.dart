@@ -17,14 +17,14 @@ class Video{
     required this.publishedAt,
   });
 
-  Video.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
-        youtubeId = json['youtube_id'],
-        title = json['title'],
-        channelName = json['channel_name'],
-        channelId = json['channel_id'],
-        totalSeconds = json['total_seconds'],
-        publishedAt = DateTime.parse(json['published_at'])
+  Video.fromMap(Map<String, dynamic> map)
+      : id = map['id'],
+        youtubeId = map['youtube_id'],
+        title = map['title'],
+        channelName = map['channel_name'],
+        channelId = map['channel_id'],
+        totalSeconds = map['total_seconds'],
+        publishedAt = DateTime.parse(map['published_at'])
         ;
   
   Map<String, dynamic> toMap() {

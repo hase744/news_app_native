@@ -1,5 +1,3 @@
-import 'package:video_news/controllers/category_controller.dart';
-
 class Category{
   String name;
   String japaneseName;

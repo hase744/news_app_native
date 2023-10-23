@@ -137,7 +137,7 @@ class VideoController{
   listToModels(List videos) async {
     List<Video> videoModels = [];
     for(var video in videos){
-      videoModels.add(Video.fromJson(video));
+      videoModels.add(Video.fromMap(video));
       //videoModels.add(mapToModel(video));
     }
     return videoModels;
