@@ -22,6 +22,8 @@ class CategoryController{
     final prefs = await SharedPreferences.getInstance();
     String? currentPress = prefs.getString('presses');
     List pressParams = json.decode(currentPress!);
+    print("最後");
+    print(pressParams.last);
     return pressParams;
   }
 
@@ -43,18 +45,27 @@ class CategoryController{
     return categoryParams;
   }
 
+  updateNames() async {
+    List pressParams = await getCurrentPress();
+    for(var i=0; i<categories.length; i++){
+      String name = categories[i].name;
+      if(pressParams.any((c) => c['name'] == name)) {
+        categories[i].japaneseName = pressParams.firstWhere((c) => c['name'] == name)['japanese_name'];
+      } else {
+        categories.removeAt(i);
+      }
+    }
+    saveOrder();
+  }
+
   Future<List> getRearrangedPress() async {
+    await updateNames();
     List pressParams = await getCurrentPress();
     List categoryParams = await getSavedOrder();
     List videosList = [];
-    for(var i=0; i<categoryParams.length; i++){
-      String name = categoryParams[i]['name'];
-      if(pressParams.any((c) => c['name'] == name)) {
-        Map matchedPress = pressParams.firstWhere((c) => c['name'] == name);
-        videosList.add(json.decode(matchedPress['press']));
-      } else {
-        delete(i);
-      }
+    for(var category in categoryParams){
+      Map matchedPress = pressParams.firstWhere((c) => c['name'] == category['name']);
+      videosList.add(json.decode(matchedPress['press']));
     }
     return videosList;
   }
