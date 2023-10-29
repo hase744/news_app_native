@@ -47,9 +47,14 @@ class CategoryController{
     List pressParams = await getCurrentPress();
     List categoryParams = await getSavedOrder();
     List videosList = [];
-    for (var category in categoryParams ) {
-      Map matchedPress = pressParams.firstWhere((c) => c['name'] == category['name']);
-      videosList.add(json.decode(matchedPress['press']));
+    for(var i=0; i<categoryParams.length; i++){
+      String name = categoryParams[i]['name'];
+      if(pressParams.any((c) => c['name'] == name)) {
+        Map matchedPress = pressParams.firstWhere((c) => c['name'] == name);
+        videosList.add(json.decode(matchedPress['press']));
+      } else {
+        delete(i);
+      }
     }
     return videosList;
   }

@@ -39,7 +39,7 @@ class _FirstPageState extends State<FirstPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               const Text(
-                'Video News',
+                'Newsnippet',
               ),
             ],
           ),
@@ -52,7 +52,7 @@ class _FirstPageState extends State<FirstPage> {
     VideoController videoController = VideoController();
 
     if (await videoController.accessVideos()) {
-      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+      await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
       final prefs = await SharedPreferences.getInstance();
       String defaultYoutubeId = prefs.getString('default_youtube_id') ?? '4b6DuHGcltI';
       await prefs.setString('default_youtube_id', defaultYoutubeId);
