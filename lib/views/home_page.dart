@@ -76,7 +76,6 @@ class _HomePageState extends State<HomePage>  {
         statusBarColor: Colors.white
       ),
     );
-   setState(() { _videoController.displayLoadingScreen = true;});
     FocusScope.of(context).unfocus();
     setState(() {
       _deviceWidth = MediaQuery.of(context).size.width;
@@ -96,7 +95,6 @@ class _HomePageState extends State<HomePage>  {
       //_favorite.deleteTable();
     });
     updateScreen();
-    setState(() { _videoController.displayLoadingScreen = true;});
   }
 
   Future<void> displayNews() async {
@@ -127,10 +125,7 @@ class _HomePageState extends State<HomePage>  {
     if(!await _videoController.displayHistories()){
       displayAlert("ロードに失敗しました");
     }
-    setState(() {
-      _videoController.displayLoadingScreen = false;
-      resetPressCount();
-    });
+    resetPressCount();
   }
 
   //Future<void> displayHistory() async {
@@ -163,10 +158,7 @@ class _HomePageState extends State<HomePage>  {
     if(!await _videoController.displayFavorites()){
       displayAlert("ロードに失敗しました");
     }
-    setState(() {
-      _videoController.displayLoadingScreen = false;
-      resetPressCount();
-    });
+    resetPressCount();
     closeYoutube();
   }
 
@@ -511,9 +503,8 @@ class _HomePageState extends State<HomePage>  {
   void _onScroll() {
     final before = _scrollController.position.pixels;
     final end = _scrollController.position.maxScrollExtent;
-    print("スクロール");
     setState(() {
-      if (before == end) {
+      if (before == end && _videoController.videoCount >= _videoController.videoLength) {
         _videoController.displayLoadingScreen = true;
       }
       if (before > 0) {
