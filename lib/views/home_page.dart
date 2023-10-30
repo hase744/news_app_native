@@ -30,6 +30,8 @@ import 'package:video_news/controllers/page_controller.dart';
 import 'package:video_news/views/category_bar.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key, required this.initialIndex});
+  final int initialIndex;
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -74,12 +76,14 @@ class _HomePageState extends State<HomePage>  {
         statusBarColor: Colors.white
       ),
     );
+   setState(() { _videoController.displayLoadingScreen = true;});
     FocusScope.of(context).unfocus();
+    _scrollController.addListener(() {
+      _onScroll();
+    });
     setState(() {
       _deviceWidth = MediaQuery.of(context).size.width;
       _deviceHeight = MediaQuery.of(context).size.height;
-      //_history.deleteTable();
-      //_favorite.deleteTable();
       youtubeController =  YoutubePlayerController(
         initialVideoId: defaultYoutubeId!,
         flags: const YoutubePlayerFlags(
@@ -87,13 +91,12 @@ class _HomePageState extends State<HomePage>  {
         ),
       );
       _scrollController = ScrollController(initialScrollOffset: (_deviceWidth!*homeLayout.topMenuRatio));
+      _pageController.pageIndex = widget.initialIndex;
+      //_history.deleteTable();
+      //_favorite.deleteTable();
     });
-    _scrollController.addListener(() {
-      _onScroll();
-    });
-    SettingPage settingPage = SettingPage();
-    await displayNews();
-    resetPressCount();
+    updateScreen();
+    setState(() { _videoController.displayLoadingScreen = true;});
   }
 
   Future<void> displayNews() async {
@@ -106,6 +109,8 @@ class _HomePageState extends State<HomePage>  {
   }
 
   Future<void> displayHistory() async {
+    setDefauldLayout();
+    closeYoutube();
     _videoController.videos = [];
     //await _history.initDatabase();
     //List<Map<String, dynamic>> histories = await _history.all();
@@ -126,7 +131,6 @@ class _HomePageState extends State<HomePage>  {
       _videoController.displayLoadingScreen = false;
       resetPressCount();
     });
-    closeYoutube();
   }
 
   //Future<void> displayHistory() async {
@@ -145,6 +149,7 @@ class _HomePageState extends State<HomePage>  {
   //}
 
   Future<void> displayFavorites() async {
+    setDefauldLayout();
     _videoController.videos = [];
     //List<Map<String, dynamic>> favorites = await _favorite.all();
     //favorites = favorites.reversed.toList();

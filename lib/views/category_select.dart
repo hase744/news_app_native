@@ -102,7 +102,7 @@ class _CategorySelectState extends State<CategorySelect>  {
                       _categoryController.saveSelection();
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) =>HomePage()),
+                        MaterialPageRoute(builder: (context) =>HomePage(initialIndex: 0,)),
                       );
                     },
                     style: ElevatedButton.styleFrom(

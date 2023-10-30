@@ -61,7 +61,7 @@ class _FirstPageState extends State<FirstPage> {
         context,
         prefs.getString('categoryOrder') == null 
           ? MaterialPageRoute(builder: (context) =>CategorySelect()) 
-          : MaterialPageRoute(builder: (context) =>HomePage()),
+          : MaterialPageRoute(builder: (context) =>HomePage(initialIndex: 0,)),
       );
     } else {
       throw Exception('Failed to load data');

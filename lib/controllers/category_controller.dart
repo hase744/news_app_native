@@ -22,8 +22,6 @@ class CategoryController{
     final prefs = await SharedPreferences.getInstance();
     String? currentPress = prefs.getString('presses');
     List pressParams = json.decode(currentPress!);
-    print("最後");
-    print(pressParams.last);
     return pressParams;
   }
 

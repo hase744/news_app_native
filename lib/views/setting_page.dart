@@ -4,6 +4,10 @@ import 'category_setting.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'home_page.dart';
 import 'page_transition.dart';
+import 'package:video_news/models/menu_button.dart';
+import 'package:video_news/models/select_navigation_bar.dart';
+import 'package:video_news/models/navigation_item.dart';
+import 'package:video_news/views/bottom_navigation_bar.dart';
 
 class SettingPage extends StatefulWidget {
   @override
@@ -69,12 +73,9 @@ class _SettingPageState extends State<SettingPage>  {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            // Add your back button functionality here
-            _pageTransition.movePage(HomePage(), context, false);
-          },
+        leading: Opacity(
+          opacity: 0,
+          child: Icon(Icons.arrow_back)
         ),
         title: Text('設定'),
       ),
@@ -97,7 +98,17 @@ class _SettingPageState extends State<SettingPage>  {
             ],
           ),
         ],
-      )
+      ),
+      bottomNavigationBar: HomeBottomNavigationBar(
+        initialIndex: 3, 
+        onTap: (int index){
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) =>HomePage(initialIndex: index,)),
+          );
+        },
+        isSelectMode: false
+      ),
     );
   }
 }

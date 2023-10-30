@@ -157,16 +157,11 @@ class HomeLayout  {
   hideYoutube(){
     youtubeDisplayLeft = deviceWidth;
     youtubeDisplayHeight = 0;
-    print("隠す");
   }
 
   getInnerScrollHeight(){
     double height = appBarHeight + categoryBarHeight + categoryBarLineHeight + youtubeDisplayHeight + pressHeight;
-    if(ishome){
-      return height;
-    }else{
-      return height - getTopMenuHeight();
-    }
+    return height - getTopMenuHeight();
   }
 
   listViewTop(){
