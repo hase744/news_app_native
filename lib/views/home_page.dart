@@ -49,8 +49,8 @@ class _HomePageState extends State<HomePage>  {
   VideoController _videoController = VideoController();
   ScrollController _scrollController = ScrollController();
   ScrollController _categoryScrollController = ScrollController();
-  CategoryController categoryController = CategoryController();
-  LoadController loadController = LoadController();
+  CategoryController _categoryController = CategoryController();
+  LoadController _loadController = LoadController();
   PageControllerClass _pageController = PageControllerClass();
   YoutubePlayerController youtubeController = YoutubePlayerController(
     initialVideoId: '4b6DuHGcltI',
@@ -78,9 +78,6 @@ class _HomePageState extends State<HomePage>  {
     );
    setState(() { _videoController.displayLoadingScreen = true;});
     FocusScope.of(context).unfocus();
-    _scrollController.addListener(() {
-      _onScroll();
-    });
     setState(() {
       _deviceWidth = MediaQuery.of(context).size.width;
       _deviceHeight = MediaQuery.of(context).size.height;
@@ -90,7 +87,10 @@ class _HomePageState extends State<HomePage>  {
           autoPlay: false,  // 自動再生しない
         ),
       );
-      _scrollController = ScrollController(initialScrollOffset: (_deviceWidth!*homeLayout.topMenuRatio));
+      _scrollController = ScrollController(
+        initialScrollOffset: (_deviceWidth!*homeLayout.topMenuRatio),
+        );
+      _scrollController.addListener(_onScroll);
       _pageController.pageIndex = widget.initialIndex;
       //_history.deleteTable();
       //_favorite.deleteTable();
@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage>  {
 
   Future<void> displayNews() async {
     setDefauldLayout();
-    await selectCategory(categoryController.categoryIndex);
+    await selectCategory(_categoryController.categoryIndex);
     resetPressCount();
     setState(() {
       _scrollController.jumpTo(homeLayout.getTopMenuHeight());
@@ -353,7 +353,7 @@ class _HomePageState extends State<HomePage>  {
 
   Widget topNavigation(context){
     return TopNavigation(
-      loadController: loadController,
+      loadController: _loadController,
       homeLayout: homeLayout,
       width: _deviceWidth!, 
       controller: _controller, 
@@ -499,9 +499,9 @@ class _HomePageState extends State<HomePage>  {
   countLoad(){
     _timer = Timer.periodic(Duration(milliseconds: 25), (timer) {
       setState(() {
-        loadController.loadCount += 1;
-        if(loadController.loadCount >= loadController.maxLoadCount){
-          loadController.canLoad = true;
+        _loadController.loadCount += 1;
+        if(_loadController.loadCount >= _loadController.maxLoadCount){
+          _loadController.canLoad = true;
           _timer!.cancel();
         }
       });
@@ -511,26 +511,27 @@ class _HomePageState extends State<HomePage>  {
   void _onScroll() {
     final before = _scrollController.position.pixels;
     final end = _scrollController.position.maxScrollExtent;
+    print("スクロール");
     setState(() {
       if (before == end) {
         _videoController.displayLoadingScreen = true;
       }
       if (before > 0) {
-        loadController.loadCount = 0;
+        _loadController.loadCount = 0;
         if(_timer != null){_timer!.cancel();}
       }
       if(before >= homeLayout.loadAreaHeight){
-        loadController.isLoading = false;
+        _loadController.isLoading = false;
       }
-      if(before <= 0 && !loadController.loadCounting){
+      if(before <= 0 && !_loadController.loadCounting){
         if(_pageController.isHomePage()){
-          loadController.loadCounting = true;
+          _loadController.loadCounting = true;
           countLoad();
         }
       }
-      if(before > 0 || loadController.loadCount >= loadController.maxLoadCount){
-        loadController.loadCounting = false;
-        loadController.loadCount = 1;
+      if(before > 0 || _loadController.loadCount >= _loadController.maxLoadCount){
+        _loadController.loadCounting = false;
+        _loadController.loadCount = 1;
       }
     });
     homeLayout.updateCellsTop(_scrollController.offset);
@@ -581,7 +582,7 @@ class _HomePageState extends State<HomePage>  {
   }
 
   updateVideos() async {
-    if(!await _videoController.updateVideos(categoryController.categoryIndex)){
+    if(!await _videoController.updateVideos(_categoryController.categoryIndex)){
       displayAlert("ロードに失敗しました");
     };
   }
@@ -604,7 +605,7 @@ class _HomePageState extends State<HomePage>  {
             appBar: PreferredSize(
               preferredSize: Size.fromHeight(homeLayout.appBarHeight),
               child: AppBar(
-                title: Text(categoryController.currentCategory.japaneseName),
+                title: Text(_categoryController.currentCategory.japaneseName),
                 leading: Container(),
               ),
             ),
@@ -636,9 +637,9 @@ class _HomePageState extends State<HomePage>  {
                                 _videoController.loadVideos(_pageController.getCurrentPageName(), homeLayout.displaySearch);
                               });
                             }
-                            if(loadController.canLoad){
-                              loadController.isLoading = true;
-                              loadController.canLoad = false;
+                            if(_loadController.canLoad){
+                              _loadController.isLoading = true;
+                              _loadController.canLoad = false;
                               updateVideos();
                             }
                           }//
@@ -695,7 +696,7 @@ class _HomePageState extends State<HomePage>  {
                           barHeight: homeLayout.categoryBarHeight,
                           lineHeight: homeLayout.categoryBarLineHeight,
                           width: _deviceWidth!,
-                          categoryController: categoryController,
+                          categoryController: _categoryController,
                           onSelected: (int i){
                             setState(() {
                               Future.delayed(const Duration(seconds: 0), () {
@@ -705,8 +706,8 @@ class _HomePageState extends State<HomePage>  {
                                   curve: Curves.ease,
                                 );
                               });
-                              categoryController.update(i);
-                              resetCategory(categoryController.categoryIndex);
+                              _categoryController.update(i);
+                              resetCategory(_categoryController.categoryIndex);
                               _scrollController.jumpTo(homeLayout.getTopMenuHeight());
                             });
                           },
