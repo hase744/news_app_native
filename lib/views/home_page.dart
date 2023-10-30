@@ -91,9 +91,12 @@ class _HomePageState extends State<HomePage>  {
         );
       _scrollController.addListener(_onScroll);
       _pageController.pageIndex = widget.initialIndex;
+      homeLayout.updateCellsTop(0);
+      //_scrollController.jumpTo(0.0);
       //_history.deleteTable();
       //_favorite.deleteTable();
     });
+    setDefauldLayout();
     updateScreen();
   }
 
@@ -118,10 +121,7 @@ class _HomePageState extends State<HomePage>  {
       _videoController.displayLoadingScreen = true;
       homeLayout.setForList();
       homeLayout.setHeightForVideoCells();
-      //_videoController.videos = histories; // 取得したデータを _press 変数に代入
-      //resetPressCount();
     });
-    homeLayout.updateCellsTop(0);
     if(!await _videoController.displayHistories()){
       displayAlert("ロードに失敗しました");
     }
@@ -154,7 +154,6 @@ class _HomePageState extends State<HomePage>  {
       homeLayout.setForList();
       homeLayout.setHeightForVideoCells();
     });
-    homeLayout.updateCellsTop(0);
     if(!await _videoController.displayFavorites()){
       displayAlert("ロードに失敗しました");
     }
