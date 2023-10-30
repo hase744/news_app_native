@@ -19,7 +19,6 @@ class _SettingPageState extends State<SettingPage>  {
   @override
   void initState() {
     super.initState();
-    print("イニシャライズ");
     //init();
   }
 
@@ -28,8 +27,6 @@ class _SettingPageState extends State<SettingPage>  {
     super.didChangeDependencies();
     // Access the context here to get the device height.
     _deviceHeight = MediaQuery.of(context).size.height;
-    print("高さ");
-    print(_deviceHeight!);
   }
 
   Future<void> _launchSetting() async {
@@ -82,25 +79,25 @@ class _SettingPageState extends State<SettingPage>  {
         title: Text('設定'),
       ),
       body:SettingsList(
-      platform: DevicePlatform.iOS,
-      sections: [
-        SettingsSection(
-          title: const Text('カテゴリー設定'),
-          tiles: <SettingsTile>[
-            SettingsTile.navigation(
-              leading: const Icon(Icons.format_list_numbered),
-              title: const Text('カテゴリー並び変え'),
-              onPressed: (context) => _pageTransition.movePage(CategorySetting(), context, true)
-            ),
-            SettingsTile.navigation(
-              leading: const Icon(Icons.format_list_bulleted_add),
-              title: const Text('カテゴリー追加'),
-              onPressed: (context) => _pageTransition.movePage(AddCategoyPage(title:"設定"), context, true)
-            ),
-          ],
-        ),
-      ],
-    )
+        platform: DevicePlatform.iOS,
+        sections: [
+          SettingsSection(
+            title: const Text('カテゴリー設定'),
+            tiles: <SettingsTile>[
+              SettingsTile.navigation(
+                leading: const Icon(Icons.format_list_numbered),
+                title: const Text('カテゴリー並び変え'),
+                onPressed: (context) => _pageTransition.movePage(CategorySetting(), context, true)
+              ),
+              SettingsTile.navigation(
+                leading: const Icon(Icons.format_list_bulleted_add),
+                title: const Text('カテゴリー追加'),
+                onPressed: (context) => _pageTransition.movePage(AddCategoyPage(title:"設定"), context, true)
+              ),
+            ],
+          ),
+        ],
+      )
     );
   }
 }

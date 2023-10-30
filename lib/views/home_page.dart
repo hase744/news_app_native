@@ -627,7 +627,9 @@ class _HomePageState extends State<HomePage>  {
                             final max = scrollNotification.metrics.maxScrollExtent;
                             scrollForMenu(before);
                             if (before == max) {
-                              _videoController.loadVideos(_pageController.getCurrentPageName(), homeLayout.displaySearch);
+                              setState(() {
+                                _videoController.loadVideos(_pageController.getCurrentPageName(), homeLayout.displaySearch);
+                              });
                             }
                             if(loadController.canLoad){
                               loadController.isLoading = true;
