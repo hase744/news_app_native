@@ -582,6 +582,15 @@ class _HomePageState extends State<HomePage>  {
     _scrollController.dispose();
     super.dispose();
   }
+  
+  loadVideos() async {
+    if(!await _videoController.loadVideos(_pageController.getCurrentPageName(), homeLayout.displaySearch)){
+      displayAlert("ロードに失敗しました");
+    };
+    setState(() {
+      _videoController = _videoController;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -623,9 +632,7 @@ class _HomePageState extends State<HomePage>  {
                             final max = scrollNotification.metrics.maxScrollExtent;
                             scrollForMenu(before);
                             if (before == max) {
-                              setState(() {
-                                _videoController.loadVideos(_pageController.getCurrentPageName(), homeLayout.displaySearch);
-                              });
+                              loadVideos();
                             }
                             if(_loadController.canLoad){
                               _loadController.isLoading = true;
@@ -646,8 +653,10 @@ class _HomePageState extends State<HomePage>  {
                               //color: Colors.blue,
                             ),
                             if(_videoController.videos.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
-                              for(var i=0; i<_videoController.videoCount; i++)
-                                videoCell(context, _videoController.videos[i]),
+                              for(var video in _videoController.videos)
+                              videoCell(context, video),
+                              //for(var i=0; i<_videoController.videoCount; i++)
+                              //  videoCell(context, _videoController.videos[i]),
                             if(_videoController.displayLoadingScreen)
                             Container(
                               alignment: Alignment.center,

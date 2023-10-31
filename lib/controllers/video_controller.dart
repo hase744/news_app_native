@@ -72,46 +72,47 @@ class VideoController{
     videos = videosList[index];
   }
 
-  loadVideos(String pageName, bool searching)async{
+  loadVideos(String pageName, bool searching) async {
     int pageCount = ((videoCount + videoLength)/videoLength).ceil();
-    switch(pageName) {
+    bool loadSucced = true;
+    if(searching){
+      final response = await getSearchedVideos(searchWord, pageCount, pageName);
+      if(response.statusCode == 200){
+        videos.addAll(await jsonToModels(response.body));
+      }else{
+        loadSucced = false;
+      }
+    }else{
+      switch(pageName) {
       case 'favorite':
-        if(searching){
-          List<Video> searchingVideos = await jsonToModels(await searchFavorites(searchWord, pageCount));
-          videos.addAll(await searchingVideos);
+        final response = await getFavorites(pageCount);
+        if(response.statusCode == 200){
+          videos.addAll(await jsonToModels(response.body));
         }else{
-          final response = await getFavorites(pageCount);
-          if(response.statusCode == 200){
-            videos.addAll(await jsonToModels(response.body));
-          }
+          loadSucced = false;
         }
         break;
       case 'history':
-        if(searching){
-          List<Video> searchingVideos = await jsonToModels(await searchHistories(searchWord, pageCount));
-          videos.addAll(await searchingVideos);
+        final response = await getHistories(pageCount);
+        if(response.statusCode == 200){
+          videos.addAll(await jsonToModels(response.body));
         }else{
-          final response = await getHistories(pageCount);
-          if(response.statusCode == 200){
-            videos.addAll(await jsonToModels(response.body));
-          }
+          loadSucced = false;
         }
         break;
       case 'home':
-        if(searching){
-          List<Video> searchingVideos = await jsonToModels(await searchVideos(searchWord, pageCount));
-          videos.addAll(searchingVideos);
-        }
       default:
         break;
+      }
     }
     videoCount += videoLength;
     if (videoCount > videos.length) { //ロード過多
-      videoCount = videos.length;
+      videoCount = await videos.length;
       if(displayLoadingScreen){
         displayLoadingScreen = false;
       }
     }
+    return loadSucced;
   }
 
   accessVideos() async {
@@ -169,18 +170,8 @@ class VideoController{
     try {
       searchWord = word;
       print(word);
-      switch(pageName) {
-        case 'favorite':
-          jsonStr = await searchFavorites(searchWord, 1);
-          break;
-        case 'history':
-          jsonStr = await searchHistories(searchWord, 1);
-          break;
-        case 'home':
-          jsonStr = await searchVideos(searchWord, 1);
-        default:
-          break;
-      }
+      final response = await getSearchedVideos(word, 1, pageName);
+      jsonStr = response.body;
       videos = await jsonToModels(jsonStr);
       displayLoadingScreen = false;
       videoCount = videos.length;
@@ -245,6 +236,24 @@ class VideoController{
     String url = "$domain/user/favorites/delete_multiple.json?uuid=${await uuidController.getUuid()}&$queryString";
     final response = await http.delete(Uri.parse(url));
     return response.statusCode == 200;
+  }
+
+  getSearchedVideos(String word, int page, String mode) async {
+    String url = '';
+    switch(mode) {
+      case 'favorite':
+        url = '$domain/user/favorites/search.json?word=$word&uuid=${await uuidController.getUuid()}&page=$page';
+        break;
+      case 'history':
+        url = '$domain/user/histories/search.json?word=$word&uuid=${await uuidController.getUuid()}&page=$page';
+        break;
+      case 'home':
+        url = '$domain/videos.json?word=$word&page=$page';
+      default:
+        break;
+    }
+    final response = await http.get(Uri.parse(url));
+    return response;
   }
 
   searchVideos(String word, int page) async {
