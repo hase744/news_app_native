@@ -17,19 +17,24 @@ class FirstPage extends StatefulWidget {
 }
 
 class _FirstPageState extends State<FirstPage> {
+  double? _deviceWidth, _deviceHeight;
   @override
   void initState() {
     super.initState();
     fetchData();
+    init();
+  }
+
+  init() async {
+    setState(() {
+    _deviceWidth = MediaQuery.of(context).size.width;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text("${MediaQuery.of(context).orientation}"),
-      ),
+      appBar: AppBar(),
       body: 
       Container(
         //color: Colors.red,
@@ -38,8 +43,11 @@ class _FirstPageState extends State<FirstPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              const Text(
-                'Newsnippet',
+              Text(
+                'NEWSNIPPET',
+                style: TextStyle(
+                  fontSize: 15
+                ),
               ),
             ],
           ),

@@ -118,7 +118,7 @@ class _ReorderableExampleState extends State<ReorderableExample> {
                         ),
                       ),
                       Container(
-                        child: Text('${categoryController.categories[index].japaneseName}')
+                        child: Text('${categoryController.categories[index].emoji} ${categoryController.categories[index].japaneseName}')
                       ),
                       Spacer(),
                       Container(

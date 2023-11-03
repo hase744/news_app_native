@@ -28,7 +28,7 @@ class CategoryController{
   Future<List<Map<String, dynamic>>> getCurrentCategories() async {
     List pressParams = await getCurrentPress();
     List<Map<String, dynamic>> pressMaps = pressParams.map((item) {
-      return {"name": item["name"], "japanese_name": item["japanese_name"]};
+      return {"name": item["name"], "japanese_name": item["japanese_name"], "emoji" :item["emoji"]};
     }).toList();
     return pressMaps;
   }
@@ -48,7 +48,9 @@ class CategoryController{
     for(var i=0; i<categories.length; i++){
       String name = categories[i].name;
       if(pressParams.any((c) => c['name'] == name)) {
-        categories[i].japaneseName = pressParams.firstWhere((c) => c['name'] == name)['japanese_name'];
+        Map category = pressParams.firstWhere((c) => c['name'] == name);
+        categories[i].japaneseName = category['japanese_name'];
+        categories[i].emoji = category['emoji'];
       } else {
         categories.removeAt(i);
       }

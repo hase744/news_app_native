@@ -42,15 +42,19 @@ class _CategorySelectState extends State<CategorySelect>  {
           color: Colors.white,
           alignment: Alignment.topLeft,
           child: 
-          Column(
+          SingleChildScrollView(
+        child: Column(
             children: <Widget>[
               Text(
-                "興味のあるカテゴリー",
+                "興味のあるカテゴリーを選択",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold
                 ),
               ),
+              SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child:
               Wrap(
                 spacing: 15.0,
                 runSpacing: 10.0,
@@ -61,7 +65,7 @@ class _CategorySelectState extends State<CategorySelect>  {
                     return 
                     ChoiceChip(
                       label: Text(
-                        category.japaneseName,
+                        "${category.emoji}${category.japaneseName}",
                           style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold
@@ -81,6 +85,7 @@ class _CategorySelectState extends State<CategorySelect>  {
                     );
                   },
                 ).toList(),
+              )
               ),
               Center(
                 //color: Colors.red,
@@ -114,7 +119,7 @@ class _CategorySelectState extends State<CategorySelect>  {
               
             ],
           ),
-        ),
+      )),
     );
   }
 }

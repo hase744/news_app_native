@@ -20,7 +20,6 @@ import 'package:video_news/models/favorite.dart';
 import 'package:video_news/views/bottom_menu_bar.dart';
 import 'package:video_news/views/alert.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:video_news/views/top_navigation.dart';
 import 'package:video_news/controllers/video_controller.dart';
 import 'package:video_news/models/category.dart';
@@ -52,7 +51,7 @@ class _HomePageState extends State<HomePage>  {
   CategoryController _categoryController = CategoryController();
   LoadController _loadController = LoadController();
   PageControllerClass _pageController = PageControllerClass();
-  YoutubePlayerController youtubeController = YoutubePlayerController(
+  YoutubePlayerController _youtubeController = YoutubePlayerController(
     initialVideoId: '4b6DuHGcltI',
     flags: YoutubePlayerFlags(
         autoPlay: false,  // 自動再生しない
@@ -80,7 +79,7 @@ class _HomePageState extends State<HomePage>  {
     setState(() {
       _deviceWidth = MediaQuery.of(context).size.width;
       _deviceHeight = MediaQuery.of(context).size.height;
-      youtubeController =  YoutubePlayerController(
+      _youtubeController =  YoutubePlayerController(
         initialVideoId: defaultYoutubeId!,
         flags: const YoutubePlayerFlags(
           autoPlay: false,  // 自動再生しない
@@ -183,7 +182,7 @@ class _HomePageState extends State<HomePage>  {
     final prefs = await SharedPreferences.getInstance();
     await Future.delayed(Duration.zero);
     setState(() {
-      youtubeController.load( youtube_id,startAt:0);
+      _youtubeController.load( youtube_id,startAt:0);
     });
     await prefs.setString('default_youtube_id', youtube_id);
     _videoController.createHistory(press);
@@ -195,17 +194,7 @@ class _HomePageState extends State<HomePage>  {
   void closeYoutube(){
     homeLayout.hideYoutube();
     homeLayout.setHeightForVideoCells();
-    youtubeController.pause();
-  }
-
-  double fontSize(int text_count) {
-    double fontSize = 0;
-    if(text_count < 4){
-      fontSize = _deviceWidth!/20;
-    }else{
-      fontSize = _deviceWidth!/5/text_count;
-    }
-    return fontSize -1;
+    _youtubeController.pause();
   }
 
   Future<void> selectCategory(int category_num) async {
@@ -382,7 +371,7 @@ class _HomePageState extends State<HomePage>  {
   Widget videoCell(BuildContext context, Video video){
     int cellId = video.id;
     double cellWidth = _deviceWidth!;
-    double cellHeight = _deviceWidth!/2/16*9;
+    double cellHeight = _deviceWidth! /2 /16 *9;
     bool isFavorite = _pageController.isFavoritePage();
     bool isHistory = _pageController.isHistoryPage();
     List cellIds = _videoController.selection.map((map) => map.id).toList();
@@ -460,7 +449,7 @@ class _HomePageState extends State<HomePage>  {
     setState(() {
       _videoController.videoCount = 0;
       _pageController.pageIndex = index;
-      youtubeController.pause();
+      _youtubeController.pause();
     });
     updateScreen();
     closeYoutube();
@@ -488,7 +477,7 @@ class _HomePageState extends State<HomePage>  {
   }
 
   countLoad(){
-    _timer = Timer.periodic(Duration(milliseconds: 25), (timer) {
+    _timer = Timer.periodic(const Duration(milliseconds: 25), (timer) {
       setState(() {
         _loadController.loadCount += 1;
         if(_loadController.loadCount >= _loadController.maxLoadCount){
@@ -739,7 +728,7 @@ class _HomePageState extends State<HomePage>  {
               child:
                 YoutubePlayerBuilder(
                   player: YoutubePlayer(
-                      controller: youtubeController,
+                      controller: _youtubeController,
                   ),
                   builder: (context, player){
                   return Column(

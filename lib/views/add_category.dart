@@ -79,7 +79,7 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            category.japaneseName,
+                            " ${category.emoji} ${category.japaneseName}",
                             style: TextStyle(
                               fontSize: 20,
                             ),
