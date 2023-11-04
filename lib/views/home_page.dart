@@ -828,7 +828,7 @@ class _HomePageState extends State<HomePage>  {
               child:
                 YoutubePlayerBuilder(
                   player: YoutubePlayer(
-                      controller: _youtubeController,
+                    controller: _youtubeController,
                   ),
                   builder: (context, player){
                   return Column(

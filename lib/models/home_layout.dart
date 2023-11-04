@@ -83,7 +83,8 @@ class HomeLayout  {
         return 0;
       }
     }{//画面が横向きである
-      return (deviceWidth *(1 - youtubePadding*2))/youtubeDisplayRatio;
+      //return (deviceWidth *(1 - youtubePadding*2))/youtubeDisplayRatio;
+      return deviceHeight;
     }
   }
 
@@ -100,7 +101,8 @@ class HomeLayout  {
         return 0;
       }
     }{//画面が横向きである
-      return deviceWidth *(1 - youtubePadding*2);
+      //return deviceWidth *(1 - youtubePadding*2);
+      return deviceWidth;
     }
   }
   
@@ -122,6 +124,8 @@ class HomeLayout  {
     }{//横向き
       youtubeDisplayTop = deviceWidth * youtubePadding;
       youtubeDisplayLeft = (deviceHeight - deviceWidth/youtubeDisplayRatio)/2 + deviceWidth/youtubeDisplayRatio*youtubePadding;
+      youtubeDisplayTop = 0;
+      youtubeDisplayLeft = 0;
       return Offset(youtubeDisplayLeft,  youtubeDisplayTop);
     }
   }
