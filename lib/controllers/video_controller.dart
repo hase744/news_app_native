@@ -198,14 +198,14 @@ class VideoController{
   }
 
   Future <bool> createFavorite(Video video) async {
-    String url = "$domain/user/favorites.json?uuid=${await uuidController.getUuid()}&video_id=${video.id}";
+    String url = "$domain/user/favorites.json?uuid=${await uuidController.getUuid()}&youtube_id=${video.youtubeId}";
     final response = await http.post(Uri.parse(url));
     return response.statusCode == 204;
   }
 
   Future <bool> createSelectedFavorite() async {
-    List youtubeIds = selection.map((map) => map.id).toList();
-    final queryString = youtubeIds.map((id) => 'video_ids[]=$id').join('&');
+    List youtubeIds = selection.map((map) => map.youtubeId).toList();
+    final queryString = youtubeIds.map((id) => 'youtube_ids[]=$id').join('&');
     String url = "$domain/user/favorites/create_multiple.json?uuid=${await uuidController.getUuid()}&$queryString";
     final response = await http.post(Uri.parse(url));
     return response.statusCode == 200;
@@ -294,7 +294,7 @@ class VideoController{
     }
   }
   Future <bool> createHistory(Video video) async {
-    String url = "$domain/user/histories.json?uuid=${await uuidController.getUuid()}&video_id=${video.id}";
+    String url = "$domain/user/histories.json?uuid=${await uuidController.getUuid()}&youtube_id=${video.youtubeId}";
     final response = await http.post(Uri.parse(url));
     return response.statusCode == 200;
   }
