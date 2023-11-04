@@ -174,8 +174,8 @@ class _HomePageState extends State<HomePage>  {
     homeLayout.setHeightForVideoCells();
   }
 
-  void openYoutube(Video press) async {
-    String youtube_id = press.youtubeId;
+  void openYoutube(Video video) async {
+    String youtube_id = video.youtubeId;
     homeLayout.displayYoutube();
     homeLayout.setHeightForVideoCells();
     //最後に再生した動画を保存機能
@@ -183,12 +183,13 @@ class _HomePageState extends State<HomePage>  {
     await Future.delayed(Duration.zero);
     setState(() {
       _youtubeController.load( youtube_id,startAt:0);
+      homeLayout.updateCellsTop(_scrollController.offset);
     });
     await prefs.setString('default_youtube_id', youtube_id);
-    _videoController.createHistory(press);
+    _videoController.createHistory(video);
     //await _history.initDatabase(); 
     //List<Map<String, dynamic>> histories = await _history.all();
-    //await _history.create(press);
+    //await _history.create(video);
   }
 
   void closeYoutube(){
@@ -619,7 +620,9 @@ class _HomePageState extends State<HomePage>  {
                             // The ListView has stopped scrolling
                             final before = scrollNotification.metrics.extentBefore;
                             final max = scrollNotification.metrics.maxScrollExtent;
-                            scrollForMenu(before);
+                            if(_pageController.isHomePage()){
+                              scrollForMenu(before);
+                            }
                             if (before == max) {
                               loadVideos();
                             }
