@@ -11,6 +11,7 @@ import 'package:video_news/views/setting_page.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:video_news/models/home_layout.dart';
 import 'package:video_news/controllers/default_values_controller.dart';
 import 'video_cell.dart';
@@ -104,7 +105,9 @@ class _HomePageState extends State<HomePage>  {
     await selectCategory(_categoryController.categoryIndex);
     resetPressCount();
     setState(() {
+      print(homeLayout.getTopMenuHeight());
       _scrollController.jumpTo(homeLayout.getTopMenuHeight());
+      print("OK");
     });
   }
 
@@ -185,6 +188,7 @@ class _HomePageState extends State<HomePage>  {
       _youtubeController.load( youtube_id,startAt:0);
       homeLayout.updateCellsTop(_scrollController.offset);
     });
+    print(youtube_id);
     await prefs.setString('default_youtube_id', youtube_id);
     _videoController.createHistory(video);
     //await _history.initDatabase(); 
@@ -350,15 +354,26 @@ class _HomePageState extends State<HomePage>  {
         });
       }, 
       menuOpened: () {
-        showModalBottomSheet(
-          isScrollControlled: true,
+        showCupertinoModalPopup<void>(
           context: context,
-          builder: (BuildContext context) {
-            return ModalWindow(
-              windowWidth: _deviceWidth!,
-              buttons: menuButtons(context),
-            );
-          },
+          builder: (BuildContext context) => CupertinoActionSheet(
+            title: const Text('メニュー'),
+            //message: const Text('Message'),
+            actions: <CupertinoActionSheetAction>[
+              for(var button in menuButtons(context))
+              CupertinoActionSheetAction(
+                isDefaultAction: true,
+                isDestructiveAction: button.isDestractive,
+                onPressed: button.onPressed,
+                child: Text(
+                  button.name,
+                  style: TextStyle(
+                    color: button.isDestractive ? Colors.red : Colors.grey.shade800
+                  ),
+                  ),
+              ),
+            ],
+          ),
         );
       },
       searchOpened: (){
@@ -373,8 +388,6 @@ class _HomePageState extends State<HomePage>  {
     int cellId = video.id;
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth! /2 /16 *9;
-    bool isFavorite = _pageController.isFavoritePage();
-    bool isHistory = _pageController.isHistoryPage();
     List cellIds = _videoController.selection.map((map) => map.id).toList();
     
     return VideoCell(
@@ -392,58 +405,42 @@ class _HomePageState extends State<HomePage>  {
         openYoutube(video);
       },
       onPressedOptions: (){
-        showModalBottomSheet(
+        showCupertinoModalPopup<void>(
           context: context,
-          builder: (BuildContext context) {
-            return ModalWindow(
-              windowWidth: _deviceWidth!,
-              buttons: [
-                MenuButton(
-                  onPressed: () async {
-                    Navigator.of(context).pop();
-                    if (isFavorite) {
-                      if(await _videoController.deleteFavorite(video)){
-                        displayAlert('削除しました');
-                      }else{
-                        displayAlert('削除に失敗しました');
-                      }
-                    } else {
-                      if(await _videoController.createFavorite(video)){
-                        displayAlert('追加しました');
-                      }else{
-                        displayAlert('追加に失敗しました');
-                      }
-                    }
-                  },
-                  name:isFavorite ? "ーお気に入りから削除" : "＋お気に入りに追加"
-                ),
-                if(isHistory)
-                MenuButton(
-                  onPressed: () async {
-                    if(await _videoController.deleteHistory(video)){
-                      displayAlert('削除しました');
-                    }else{
-                      displayAlert('削除に失敗しました');
-                    }
-                    Navigator.of(context).pop();
-                  },
-                  name: "ー履歴から削除"
-                ),
-              ],
-            );
-          }
+          builder: (BuildContext context) => CupertinoActionSheet(
+            title: Text(video.title),
+            //message: const Text('Message'),
+            actions: <CupertinoActionSheetAction>[
+              for(var button in videoButtons(context, video))
+              CupertinoActionSheetAction(
+                isDefaultAction: true,
+                isDestructiveAction: button.isDestractive,
+                onPressed: button.onPressed,
+                child: Text(
+                  button.name,
+                  style: TextStyle(
+                    color: button.isDestractive ? Colors.red : Colors.grey.shade800
+                  ),
+                  ),
+              ),
+            ]
+          )
         );
       },
       onPressedTitle: (){
-        final Uri toLaunch = Uri(
-          scheme: 'https',
-          host: 'www.youtube.com',
-          path: "watch",
-          queryParameters: {'v': video.youtubeId}
-        );
-        _launched = _launchInWebViewOrVC(toLaunch);
+        launchWebView(video);
       },
     );
+  }
+
+  launchWebView (Video video){
+    final Uri toLaunch = Uri(
+      scheme: 'https',
+      host: 'www.youtube.com',
+      path: "watch",
+      queryParameters: {'v': video.youtubeId}
+    );
+    _launched = _launchInWebViewOrVC(toLaunch);
   }
 
   transitNavigation(index){
@@ -517,8 +514,57 @@ class _HomePageState extends State<HomePage>  {
     homeLayout.updateCellsTop(_scrollController.offset);
     FocusScope.of(context).unfocus();
   }
+
+  List<MenuButton> videoButtons(BuildContext context, Video video){
+    bool isFavorite = _pageController.isFavoritePage();
+    bool isHistory = _pageController.isHistoryPage();
+    return [
+      MenuButton(
+        onPressed: () async {
+          Navigator.of(context).pop();
+          launchWebView(video);
+        },
+        isDestractive: false,
+        name: "ページを開く"
+      ),
+      MenuButton(
+        onPressed: () async {
+          Navigator.of(context).pop();
+          if (isFavorite) {
+            if(await _videoController.deleteFavorite(video)){
+              displayAlert('削除しました');
+            }else{
+              displayAlert('削除に失敗しました');
+            }
+          } else {
+            if(await _videoController.createFavorite(video)){
+              displayAlert('追加しました');
+            }else{
+              displayAlert('追加に失敗しました');
+            }
+          }
+        },
+        isDestractive: isFavorite,
+        name:isFavorite ? "ーお気に入りから削除" : "＋お気に入りに追加"
+      ),
+      if(isHistory)
+      MenuButton(
+        onPressed: () async {
+          if(await _videoController.deleteHistory(video)){
+            displayAlert('削除しました');
+          }else{
+            displayAlert('削除に失敗しました');
+          }
+          Navigator.of(context).pop();
+        },
+        isDestractive: true,
+        name: "ー履歴から削除"
+      ),
+    ];
+  }
   
   List<MenuButton> menuButtons(context){
+    final navigator = Navigator.of(context);
     return [
       MenuButton(
         onPressed: () async {
@@ -527,39 +573,62 @@ class _HomePageState extends State<HomePage>  {
             _videoController.ableSelectMode();
           });
         },
-        name:"複数選択"
+        isDestractive: false,
+        name:"複数選択",
       ),
       if(_pageController.isFavoritePage())
       MenuButton(
         onPressed: () async {
           Navigator.of(context).pop();
-          //_favorite.deleteTable();
-          //_favorite = Favorite();
-          if(await _videoController.deleteAllFavorite()){
-            displayAlert("削除しました");
-          }else{
-            displayAlert("削除に失敗しました");
-          }
-          displayFavorites();
+          showConfirmativeButton(
+            context, 
+            MenuButton(
+              onPressed: () async {
+                navigator.pop(); 
+                if(await _videoController.deleteAllFavorite()){
+                  displayFavorites();
+                  displayAlert("削除しました");
+                }else{
+                  displayFavorites();
+                  displayAlert("削除に失敗しました");
+                }
+              },
+              isDestractive: true,
+              name:"お気に入りを全て削除しますか？"
+            ),
+          );
         },
+        isDestractive: true,
         name:"お気に入りを全て削除"
       ),
       if(_pageController.isHistoryPage())
       MenuButton(
         onPressed: () async {
-          //_history.deleteTable();
-          if(await _videoController.deleteAllHistory()){
-            displayAlert("削除しました");
-          }else{
-            displayAlert("削除に失敗しました");
-          }
           Navigator.of(context).pop();
-          displayHistory();
+          showConfirmativeButton(
+            context, 
+            MenuButton(
+              onPressed: () async {
+                navigator.pop(); 
+                if(await _videoController.deleteAllHistory()){
+                  displayHistory();
+                  displayAlert("削除しました");
+                }else{
+                  displayHistory();
+                  displayAlert("削除に失敗しました");
+                }
+              },
+              isDestractive: true,
+              name:"履歴を全て削除しますか？"
+            ),
+          );
         },
+        isDestractive: true,
         name:"履歴を全て削除"
       ),
     ];
   }
+  
 
   updateVideos() async {
     if(!await _videoController.updateVideos(_categoryController.categoryIndex)){
@@ -580,6 +649,34 @@ class _HomePageState extends State<HomePage>  {
     setState(() {
       _videoController = _videoController;
     });
+  }
+
+ void showConfirmativeButton(BuildContext context, MenuButton button) {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        title: Text(button.name),
+        //message: const Text('Message'),
+        actions: <CupertinoActionSheetAction>[
+          CupertinoActionSheetAction(
+            isDefaultAction: true,
+            onPressed: button.onPressed,
+            child: Text(
+              '削除する',
+              style: TextStyle(
+                color: button.isDestractive ? Colors.red : Colors.grey.shade800
+              ),
+            ),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+           child: const Text("キャンセル"),
+           onPressed: () {
+           Navigator.pop(context);
+           },
+        ),
+      ),
+    );
   }
 
   @override
