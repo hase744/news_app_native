@@ -368,7 +368,7 @@ class _HomePageState extends State<HomePage>  {
                 child: Text(
                   button.name,
                   style: TextStyle(
-                    color: button.isDestractive ? Colors.red : Colors.grey.shade800
+                    color: button.isDestractive ? Colors.red : Colors.blue
                   ),
                   ),
               ),
@@ -419,7 +419,7 @@ class _HomePageState extends State<HomePage>  {
                 child: Text(
                   button.name,
                   style: TextStyle(
-                    color: button.isDestractive ? Colors.red : Colors.grey.shade800
+                    color: button.isDestractive ? Colors.red : Colors.blue
                   ),
                   ),
               ),
@@ -664,7 +664,7 @@ class _HomePageState extends State<HomePage>  {
             child: Text(
               '削除する',
               style: TextStyle(
-                color: button.isDestractive ? Colors.red : Colors.grey.shade800
+                color: button.isDestractive ? Colors.red : Colors.blue
               ),
             ),
           ),
