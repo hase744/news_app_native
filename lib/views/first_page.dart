@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_news/views/home_page.dart';
 import 'package:flutter/services.dart';
-import 'package:video_news/controllers/access_controller.dart';
 import 'package:video_news/controllers/video_controller.dart';
-import 'package:video_news/controllers/category_controller.dart';
 import 'package:video_news/views/category_select.dart';
 
 class FirstPage extends StatefulWidget {
@@ -15,6 +12,7 @@ class FirstPage extends StatefulWidget {
   @override
   State<FirstPage> createState() => _FirstPageState();
 }
+
 
 class _FirstPageState extends State<FirstPage> {
   double? _deviceWidth, _deviceHeight;

@@ -3,6 +3,9 @@
         android:label="video_news"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-8457001237911326~3112842987"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

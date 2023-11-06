@@ -15,7 +15,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:video_news/models/home_layout.dart';
 import 'package:video_news/controllers/default_values_controller.dart';
 import 'video_cell.dart';
-import 'modal_window.dart';
 import 'package:video_news/models/menu_button.dart';
 import 'package:video_news/models/favorite.dart';
 import 'package:video_news/views/bottom_menu_bar.dart';
@@ -28,10 +27,13 @@ import 'package:video_news/models/video.dart';
 import 'package:video_news/controllers/load_controller.dart';
 import 'package:video_news/controllers/page_controller.dart';
 import 'package:video_news/views/category_bar.dart';
+import 'package:video_news/ad_helper.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.initialIndex});
   final int initialIndex;
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -58,7 +60,7 @@ class _HomePageState extends State<HomePage>  {
         autoPlay: false,  // 自動再生しない
       ),
     );
-  
+  BannerAd? _bannerAd;
 
   @override
   void initState() {
@@ -70,7 +72,29 @@ class _HomePageState extends State<HomePage>  {
     await defaultValue.initialize();
     String? defaultYoutubeId = defaultValue.getStoredValue('default_youtube_id');
     await _videoController.setVideosList();
-
+    print("広告");
+    WidgetsFlutterBinding.ensureInitialized();
+    MobileAds.instance.initialize();
+    _bannerAd = BannerAd(
+        size: AdSize.banner,
+        adUnitId: AdHelper.bannerAdUnitId,
+        listener: BannerAdListener(
+          onAdLoaded: (ad) {
+            print("成功");
+            setState(() {
+              _bannerAd = ad as BannerAd;
+            });
+          },
+          onAdFailedToLoad: (Ad ad, LoadAdError error) {
+              print("失敗");
+            ad.dispose();
+          },
+        ),
+        request: const AdRequest()
+      );
+    _bannerAd?.load();
+    print("OK");
+    
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: Colors.white
@@ -107,7 +131,6 @@ class _HomePageState extends State<HomePage>  {
     setState(() {
       print(homeLayout.getTopMenuHeight());
       _scrollController.jumpTo(homeLayout.getTopMenuHeight());
-      print("OK");
     });
   }
 
@@ -639,6 +662,7 @@ class _HomePageState extends State<HomePage>  {
   @override
   void dispose() {
     _scrollController.dispose();
+    _bannerAd?.dispose();
     super.dispose();
   }
   
@@ -682,6 +706,7 @@ class _HomePageState extends State<HomePage>  {
   @override
   Widget build(BuildContext context) {
     //_videoController.videosList = json.decode(_videoController.videosListJson!);
+    _bannerAd?.load();
     return 
       SafeArea(
       child:
@@ -740,6 +765,15 @@ class _HomePageState extends State<HomePage>  {
                               width: _deviceWidth!,
                               height: homeLayout.getTopMenuHeight(),
                               //color: Colors.blue,
+                            ),
+                            if (_bannerAd != null)
+                            Align(
+                              alignment: Alignment.topCenter,
+                              child: Container(
+                                width: _bannerAd!.size.width.toDouble(),
+                                height: _bannerAd!.size.height.toDouble(),
+                                child: AdWidget(ad: _bannerAd!),
+                              ),
                             ),
                             if(_videoController.videos.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
                               for(var video in _videoController.videos)
