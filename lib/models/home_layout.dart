@@ -22,7 +22,7 @@ class HomeLayout  {
   double youtubeDisplayRatio = 9/16;
   late double topMenuRatio = searchAreaRatio + loadAreaRatio;
 
-  late double appBarHeight = 40;
+  double appBarHeight = 40;
   late double categoryBarHeight = deviceWidth*categoryBarRatio;
   late double categoryBarLineHeight = 5;
   //late double menu_area = deviceWidth/5;
@@ -45,6 +45,7 @@ class HomeLayout  {
     required this.deviceHeight,
     required this.barHeight,
     required this.innerHeight,
+    required this.appBarHeight,
   });
 
   setForDefault(){

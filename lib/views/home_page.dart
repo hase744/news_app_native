@@ -42,7 +42,7 @@ class _HomePageState extends State<HomePage>  {
   double? _deviceWidth, _deviceHeight;
   History _history = History(); 
   Favorite _favorite = Favorite(); // History クラスのインスタンスを作成
-  HomeLayout homeLayout = HomeLayout(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0);
+  HomeLayout homeLayout = HomeLayout(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0, appBarHeight:0);
   DefaultValue defaultValue = DefaultValue();
   String? _alert;
   Timer? _timer;
@@ -60,7 +60,7 @@ class _HomePageState extends State<HomePage>  {
         autoPlay: false,  // 自動再生しない
       ),
     );
-  BannerAd? _bannerAd;
+  List<BannerAd> _bannerAds = [];
 
   @override
   void initState() {
@@ -72,28 +72,6 @@ class _HomePageState extends State<HomePage>  {
     await defaultValue.initialize();
     String? defaultYoutubeId = defaultValue.getStoredValue('default_youtube_id');
     await _videoController.setVideosList();
-    print("広告");
-    WidgetsFlutterBinding.ensureInitialized();
-    MobileAds.instance.initialize();
-    _bannerAd = BannerAd(
-        size: AdSize.banner,
-        adUnitId: AdHelper.bannerAdUnitId,
-        listener: BannerAdListener(
-          onAdLoaded: (ad) {
-            print("成功");
-            setState(() {
-              _bannerAd = ad as BannerAd;
-            });
-          },
-          onAdFailedToLoad: (Ad ad, LoadAdError error) {
-              print("失敗");
-            ad.dispose();
-          },
-        ),
-        request: const AdRequest()
-      );
-    _bannerAd?.load();
-    print("OK");
     
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
@@ -102,6 +80,22 @@ class _HomePageState extends State<HomePage>  {
     );
     FocusScope.of(context).unfocus();
     setState(() {
+      for(var i =0; i<3; i++){
+        _bannerAds.add(BannerAd(
+          size: AdSize.banner,
+          adUnitId: AdHelper.bannerAdUnitId,
+          listener: BannerAdListener(
+            onAdFailedToLoad: (Ad ad, LoadAdError error) {
+              ad.dispose();
+            },
+          ),
+          request: const AdRequest()
+        )
+        );
+      }
+      for(var bannerAd in _bannerAds){
+        bannerAd.load();
+      }
       _deviceWidth = MediaQuery.of(context).size.width;
       _deviceHeight = MediaQuery.of(context).size.height;
       _youtubeController =  YoutubePlayerController(
@@ -190,6 +184,7 @@ class _HomePageState extends State<HomePage>  {
     setState(() {
       var _padding = MediaQuery.of(context).padding;
       homeLayout = HomeLayout(
+        appBarHeight: 40,
         deviceWidth: _deviceWidth!,
         deviceHeight: _deviceHeight!,
         barHeight: 100,
@@ -407,53 +402,69 @@ class _HomePageState extends State<HomePage>  {
     );
   }
 
-  Widget videoCell(BuildContext context, Video video){
+  Widget videoCell(BuildContext context, Video video, int index){
     int cellId = video.id;
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth! /2 /16 *9;
     List cellIds = _videoController.selection.map((map) => map.id).toList();
     
-    return VideoCell(
-      video: video, 
-      isSelectMode: _videoController.isSelectMode,
-      isSelected: cellIds.contains(cellId),
-      cellHeight: cellHeight, 
-      cellWidth: cellWidth, 
-      onSelected: (){
-        setState(() {
-          _videoController.selectVideo(video);
-        });
-      },
-      onPressedYoutube: (){
-        openYoutube(video);
-      },
-      onPressedOptions: (){
-        showCupertinoModalPopup<void>(
-          context: context,
-          builder: (BuildContext context) => CupertinoActionSheet(
-            title: Text(video.title),
-            //message: const Text('Message'),
-            actions: <CupertinoActionSheetAction>[
-              for(var button in videoButtons(context, video))
-              CupertinoActionSheetAction(
-                isDefaultAction: true,
-                isDestructiveAction: button.isDestractive,
-                onPressed: button.onPressed,
-                child: Text(
-                  button.name,
-                  style: TextStyle(
-                    color: button.isDestractive ? Colors.red : Colors.blue
+    return 
+    Column ( 
+      children: [
+        VideoCell(
+          video: video, 
+          isSelectMode: _videoController.isSelectMode,
+          isSelected: cellIds.contains(cellId),
+          cellHeight: cellHeight, 
+          cellWidth: cellWidth, 
+          onSelected: (){
+            setState(() {
+              _videoController.selectVideo(video);
+            });
+          },
+          onPressedYoutube: (){
+            openYoutube(video);
+          },
+          onPressedOptions: (){
+            showCupertinoModalPopup<void>(
+              context: context,
+              builder: (BuildContext context) => CupertinoActionSheet(
+                title: Text(video.title),
+                //message: const Text('Message'),
+                actions: <CupertinoActionSheetAction>[
+                  for(var button in videoButtons(context, video))
+                  CupertinoActionSheetAction(
+                    isDefaultAction: true,
+                    isDestructiveAction: button.isDestractive,
+                    onPressed: button.onPressed,
+                    child: Text(
+                      button.name,
+                      style: TextStyle(
+                        color: button.isDestractive ? Colors.red : Colors.blue
+                      ),
+                      ),
                   ),
-                  ),
-              ),
-            ]
-          )
-        );
-      },
-      onPressedTitle: (){
-        launchWebView(video);
-      },
+                ]
+              )
+            );
+          },
+          onPressedTitle: (){
+            launchWebView(video);
+          },
+        ),
+        if (_pageController.isHomePage() && (index %5 == 2 && index < 15))
+          Align(
+            alignment: Alignment.topCenter,
+            child: Container(
+              width: _bannerAds[index~/5].size.width.toDouble(),
+              height: _bannerAds[index~/5].size.height.toDouble(),
+              child: AdWidget(ad: _bannerAds[index~/5]),
+            ),
+          ),
+      ],
     );
+    
+    
   }
 
   launchWebView (Video video){
@@ -662,7 +673,9 @@ class _HomePageState extends State<HomePage>  {
   @override
   void dispose() {
     _scrollController.dispose();
-    _bannerAd?.dispose();
+    for(var ad in _bannerAds){
+      ad.dispose();
+    }
     super.dispose();
   }
   
@@ -706,7 +719,6 @@ class _HomePageState extends State<HomePage>  {
   @override
   Widget build(BuildContext context) {
     //_videoController.videosList = json.decode(_videoController.videosListJson!);
-    _bannerAd?.load();
     return 
       SafeArea(
       child:
@@ -766,20 +778,12 @@ class _HomePageState extends State<HomePage>  {
                               height: homeLayout.getTopMenuHeight(),
                               //color: Colors.blue,
                             ),
-                            if (_bannerAd != null)
-                            Align(
-                              alignment: Alignment.topCenter,
-                              child: Container(
-                                width: _bannerAd!.size.width.toDouble(),
-                                height: _bannerAd!.size.height.toDouble(),
-                                child: AdWidget(ad: _bannerAd!),
-                              ),
-                            ),
-                            if(_videoController.videos.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
-                              for(var video in _videoController.videos)
-                              videoCell(context, video),
-                              //for(var i=0; i<_videoController.videoCount; i++)
-                              //  videoCell(context, _videoController.videos[i]),
+                            //if(_videoController.videos.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
+                            //  for(var video in _videoController.videos)
+                            //  videoCell(context, video),
+                            for(var i=0; i<_videoController.videoCount; i++)
+                              if(_videoController.videos.isNotEmpty)
+                              videoCell(context, _videoController.videos[i], i),
                             if(_videoController.displayLoadingScreen)
                             Container(
                               alignment: Alignment.center,
