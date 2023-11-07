@@ -41,10 +41,6 @@ class VideoController{
     return myVideosList;
   }
 
-  Future<void> resetVideoCount() async {
-    displayLoadingScreen = false;
-  }
-
   selectVideo(Video video){
     int index = selection.indexWhere((map) => map.youtubeId == video.youtubeId);
     if(index != -1){
@@ -64,6 +60,7 @@ class VideoController{
   }
 
   changeVideos(int index){
+    displayLoadingScreen = false;
     videos = videosList[index];
   }
 

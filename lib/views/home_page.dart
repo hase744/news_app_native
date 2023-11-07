@@ -116,9 +116,9 @@ class _HomePageState extends State<HomePage>  {
   Future<void> displayNews() async {
     setDefauldLayout();
     await selectCategory(_categoryController.categoryIndex);
-    resetPressCount();
     setState(() {
       closeYoutube();
+      _videoController.displayLoadingScreen = false;
       _scrollController.jumpTo(homeLayout.getTopMenuHeight());
     });
   }
@@ -139,7 +139,9 @@ class _HomePageState extends State<HomePage>  {
     if(!await _videoController.displayHistories()){
       displayAlert("ロードに失敗しました");
     }
-    resetPressCount();
+    setState(() {
+      _videoController.displayLoadingScreen = false;
+    });
   }
 
   //Future<void> displayHistory() async {
@@ -171,7 +173,9 @@ class _HomePageState extends State<HomePage>  {
     if(!await _videoController.displayFavorites()){
       displayAlert("ロードに失敗しました");
     }
-    resetPressCount();
+    setState(() {
+      _videoController.displayLoadingScreen = false;
+    });
     closeYoutube();
   }
 
@@ -219,18 +223,8 @@ class _HomePageState extends State<HomePage>  {
 
   Future<void> selectCategory(int category_num) async {
     setState(() {
+      homeLayout.displaySearch = false;
       _videoController.changeVideos(category_num);
-    });
-  }
-
-  Future<void> resetCategory(int category_num) async {
-    await selectCategory(category_num);
-    await resetPressCount();
-  }
-
-  Future<void> resetPressCount() async {
-    setState(() {
-      _videoController.resetVideoCount();
     });
   }
 
@@ -828,7 +822,7 @@ class _HomePageState extends State<HomePage>  {
                                   );
                                 });
                                 _categoryController.update(i);
-                                resetCategory(_categoryController.categoryIndex);
+                                selectCategory(_categoryController.categoryIndex);
                                 _scrollController.jumpTo(homeLayout.getTopMenuHeight());
                               });
                             },
