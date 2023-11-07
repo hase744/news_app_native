@@ -131,6 +131,18 @@ class HomeLayout  {
     }
   }
 
+  Offset youtubeCloseOffset(context){
+    if(MediaQuery.of(context).orientation == Orientation.portrait){//縦向き
+      youtubeDisplayTop = appBarHeight + getTopMenuHeight() + categoryBarHeight + categoryBarLineHeight - videoCellsTop + youtubeDisplayHeight;
+      if(youtubeDisplayLeft != deviceWidth){//youtubeが開いている
+        youtubeDisplayLeft = 0;
+      }
+      return Offset(youtubeDisplayLeft,  youtubeDisplayTop);
+    }{
+      return Offset(deviceHeight,  deviceWidth);
+    }
+  }
+
   Offset categorybarOffset(){
     return Offset(0, getTopMenuHeight() - videoCellsTop) ;
   }

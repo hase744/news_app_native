@@ -73,11 +73,6 @@ class _HomePageState extends State<HomePage>  {
     String? defaultYoutubeId = defaultValue.getStoredValue('default_youtube_id');
     await _videoController.setVideosList();
     
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: Colors.white
-      ),
-    );
     FocusScope.of(context).unfocus();
     setState(() {
       for(var i =0; i<3; i++){
@@ -123,7 +118,7 @@ class _HomePageState extends State<HomePage>  {
     await selectCategory(_categoryController.categoryIndex);
     resetPressCount();
     setState(() {
-      print(homeLayout.getTopMenuHeight());
+      closeYoutube();
       _scrollController.jumpTo(homeLayout.getTopMenuHeight());
     });
   }
@@ -184,7 +179,7 @@ class _HomePageState extends State<HomePage>  {
     setState(() {
       var _padding = MediaQuery.of(context).padding;
       homeLayout = HomeLayout(
-        appBarHeight: 40,
+        appBarHeight: 0,
         deviceWidth: _deviceWidth!,
         deviceHeight: _deviceHeight!,
         barHeight: 100,
@@ -215,14 +210,15 @@ class _HomePageState extends State<HomePage>  {
   }
 
   void closeYoutube(){
-    homeLayout.hideYoutube();
-    homeLayout.setHeightForVideoCells();
-    _youtubeController.pause();
+    setState(() {
+      homeLayout.hideYoutube();
+      homeLayout.setHeightForVideoCells();
+      _youtubeController.pause();
+    });
   }
 
   Future<void> selectCategory(int category_num) async {
     setState(() {
-      closeYoutube();
       _videoController.changeVideos(category_num);
     });
   }
@@ -407,7 +403,11 @@ class _HomePageState extends State<HomePage>  {
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth! /2 /16 *9;
     List cellIds = _videoController.selection.map((map) => map.id).toList();
-    
+    BannerAd? bannerAd;
+    if (_pageController.isHomePage() && (index %5 == 2 && index < 15)){
+      bannerAd = _bannerAds[index~/5];
+      bannerAd.load();
+    }
     return 
     Column ( 
       children: [
@@ -449,18 +449,19 @@ class _HomePageState extends State<HomePage>  {
             );
           },
           onPressedTitle: (){
-            launchWebView(video);
+            openYoutube(video);
+            //launchWebView(video);
           },
         ),
-        if (_pageController.isHomePage() && (index %5 == 2 && index < 15))
-          Align(
-            alignment: Alignment.topCenter,
-            child: Container(
-              width: _bannerAds[index~/5].size.width.toDouble(),
-              height: _bannerAds[index~/5].size.height.toDouble(),
-              child: AdWidget(ad: _bannerAds[index~/5]),
-            ),
+        if (bannerAd != null)
+        Align(
+          alignment: Alignment.topCenter,
+          child: Container(
+            width: bannerAd.size.width.toDouble(),
+            height: bannerAd.size.height.toDouble(),
+            child: AdWidget(ad: bannerAd),
           ),
+        ),
       ],
     );
     
@@ -668,6 +669,9 @@ class _HomePageState extends State<HomePage>  {
     if(!await _videoController.updateVideos(_categoryController.categoryIndex)){
       displayAlert("ロードに失敗しました");
     };
+    setState(() {
+      _videoController = _videoController;
+    });
   }
 
   @override
@@ -720,178 +724,192 @@ class _HomePageState extends State<HomePage>  {
   Widget build(BuildContext context) {
     //_videoController.videosList = json.decode(_videoController.videosListJson!);
     return 
+    Scaffold(
+      body:
       SafeArea(
-      child:
-      Stack(
-        children: <Widget>[
-          Scaffold(
-            appBar: PreferredSize(
-              preferredSize: Size.fromHeight(homeLayout.appBarHeight),
-              child: AppBar(
-                title: Text(_categoryController.currentCategory.japaneseName),
-                leading: Container(),
+        child:
+        Stack(
+          children: <Widget>[
+            Scaffold(
+              appBar: PreferredSize(
+                preferredSize: Size.fromHeight(homeLayout.appBarHeight),
+                child: AppBar(
+                  title: Text(_categoryController.currentCategory.japaneseName),
+                  leading: Container(),
+                ),
               ),
-            ),
-            body: Container(
-              height: _deviceHeight,
-              width: _deviceWidth,
-              //color: Colors.blue,
-              child: 
-                Container(
-                  height: homeLayout.getInnerScrollHeight(),
-                  child: 
-                  Stack(
-                  children: <Widget>[
-                    Positioned(
-                      right: 0,
-                      left: 0,
-                      top: homeLayout.listViewTop(),
-                      bottom: 0,
-                      child: 
-                      NotificationListener<ScrollNotification>(
-                        onNotification: (ScrollNotification scrollNotification) {
-                          if (scrollNotification is ScrollEndNotification) {
-                            // The ListView has stopped scrolling
-                            final before = scrollNotification.metrics.extentBefore;
-                            final max = scrollNotification.metrics.maxScrollExtent;
-                            if(_pageController.isHomePage()){
-                              scrollForMenu(before);
-                            }
-                            if (before == max) {
-                              loadVideos();
-                            }
-                            if(_loadController.canLoad){
-                              _loadController.isLoading = true;
-                              _loadController.canLoad = false;
-                              updateVideos();
-                            }
-                          }//
-                          return true;
-                        },
+              body: Container(
+                height: _deviceHeight,
+                width: _deviceWidth,
+                //color: Colors.blue,
+                child: 
+                  Container(
+                    height: homeLayout.getInnerScrollHeight(),
+                    child: 
+                    Stack(
+                    children: <Widget>[
+                      Positioned(
+                        right: 0,
+                        left: 0,
+                        top: homeLayout.listViewTop(),
+                        bottom: 0,
                         child: 
-                        ListView(
-                          controller: _scrollController,
-                          physics: ClampingScrollPhysics(),
-                          children: [
-                            Container(
-                              width: _deviceWidth!,
-                              height: homeLayout.getTopMenuHeight(),
-                              //color: Colors.blue,
-                            ),
-                            //if(_videoController.videos.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
-                            //  for(var video in _videoController.videos)
-                            //  videoCell(context, video),
-                            for(var i=0; i<_videoController.videoCount; i++)
-                              if(_videoController.videos.isNotEmpty)
-                              videoCell(context, _videoController.videos[i], i),
-                            if(_videoController.displayLoadingScreen)
-                            Container(
-                              alignment: Alignment.center,
-                              width: _deviceWidth,
-                              child: 
-                              SizedBox(
-                                height: 50,
-                                width: 50,
+                        NotificationListener<ScrollNotification>(
+                          onNotification: (ScrollNotification scrollNotification) {
+                            if (scrollNotification is ScrollEndNotification) {
+                              // The ListView has stopped scrolling
+                              final before = scrollNotification.metrics.extentBefore;
+                              final max = scrollNotification.metrics.maxScrollExtent;
+                              if(_pageController.isHomePage()){
+                                scrollForMenu(before);
+                              }
+                              if (before == max) {
+                                loadVideos();
+                              }
+                              if(_loadController.canLoad){
+                                _loadController.isLoading = true;
+                                _loadController.canLoad = false;
+                                updateVideos();
+                              }
+                            }//
+                            return true;
+                          },
+                          child: 
+                          ListView(
+                            controller: _scrollController,
+                            physics: ClampingScrollPhysics(),
+                            children: [
+                              Container(
+                                width: _deviceWidth!,
+                                height: homeLayout.getTopMenuHeight(),
+                                //color: Colors.blue,
+                              ),
+                              //if(_videoController.videos.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
+                              //  for(var video in _videoController.videos)
+                              //  videoCell(context, video),
+                              for(var i=0; i<_videoController.videoCount; i++)
+                                if(_videoController.videos.isNotEmpty)
+                                videoCell(context, _videoController.videos[i], i),
+                              if(_videoController.displayLoadingScreen)
+                              Container(
+                                alignment: Alignment.center,
+                                width: _deviceWidth,
                                 child: 
-                                CircularProgressIndicator(
-                                  strokeWidth: 8.0,
-                                  backgroundColor: Colors.black,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue)
+                                SizedBox(
+                                  height: 50,
+                                  width: 50,
+                                  child: 
+                                  CircularProgressIndicator(
+                                    strokeWidth: 8.0,
+                                    backgroundColor: Colors.black,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue)
+                                  ),
                                 ),
                               ),
-                            ),
-                            Container(
-                              width: _deviceWidth!,
-                              height: homeLayout.getbottomSpaceHeight(_videoController.videoCount),
-                              color: Colors.white,
-                            ),
-                          ],
-                        )
-                      )
-                    ),
-                    Transform.translate(
-                      offset: homeLayout.getTopMenuOffset(),
-                      child:topNavigation(context),
-                    ),
-                    Container(
-                      child: Transform.translate(
-                        offset: homeLayout.categorybarOffset(),
-                        child: 
-                        CategoryBar(
-                          controller: _categoryScrollController,
-                          barHeight: homeLayout.categoryBarHeight,
-                          lineHeight: homeLayout.categoryBarLineHeight,
-                          width: _deviceWidth!,
-                          categoryController: _categoryController,
-                          onSelected: (int i){
-                            setState(() {
-                              Future.delayed(const Duration(seconds: 0), () {
-                                _categoryScrollController.animateTo(
-                                  _deviceWidth!/5*(i-2),
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.ease,
-                                );
-                              });
-                              _categoryController.update(i);
-                              resetCategory(_categoryController.categoryIndex);
-                              _scrollController.jumpTo(homeLayout.getTopMenuHeight());
-                            });
-                          },
+                              Container(
+                                width: _deviceWidth!,
+                                height: homeLayout.getbottomSpaceHeight(_videoController.videoCount),
+                                color: Colors.white,
+                              ),
+                            ],
+                          )
                         )
                       ),
+                      Transform.translate(
+                        offset: homeLayout.getTopMenuOffset(),
+                        child:topNavigation(context),
+                      ),
+                      Container(
+                        child: Transform.translate(
+                          offset: homeLayout.categorybarOffset(),
+                          child: 
+                          CategoryBar(
+                            controller: _categoryScrollController,
+                            barHeight: homeLayout.categoryBarHeight,
+                            lineHeight: homeLayout.categoryBarLineHeight,
+                            width: _deviceWidth!,
+                            categoryController: _categoryController,
+                            onSelected: (int i){
+                              setState(() {
+                                Future.delayed(const Duration(seconds: 0), () {
+                                  _categoryScrollController.animateTo(
+                                    _deviceWidth!/5*(i-2),
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.ease,
+                                  );
+                                });
+                                _categoryController.update(i);
+                                resetCategory(_categoryController.categoryIndex);
+                                _scrollController.jumpTo(homeLayout.getTopMenuHeight());
+                              });
+                            },
+                          )
+                        ),
+                      ),
+                      if(_alert != null)
+                      Positioned(
+                        right: 0,
+                        left: 0,
+                        top: homeLayout.getAlertTop(),
+                        child:
+                          Alert(
+                            text: _alert!, 
+                            width: _deviceWidth!,
+                            height: homeLayout.alertHeight
+                          )
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              bottomNavigationBar: bottomBar(),
+            ),
+            Transform.translate(
+              offset: homeLayout.youtubePlayerOffset(context),//Offset(0, 0),
+                child: SizedBox(
+                height: homeLayout.getYoutubeDisplayHeight(context),
+                width: homeLayout.getYoutubeDisplayWidth(context),
+                child:
+                  YoutubePlayerBuilder(
+                    player: YoutubePlayer(
+                      controller: _youtubeController,
                     ),
-                    if(_alert != null)
-                    Positioned(
-                      right: 0,
-                      left: 0,
-                      top: homeLayout.getAlertTop(),
-                      child:
-                        Alert(
-                          text: _alert!, 
-                          width: _deviceWidth!,
-                          height: homeLayout.alertHeight
-                        )
-                    )
-                  ],
+                    builder: (context, player){
+                    return Column(
+                      children: [
+                      // some widgets
+                      player,
+                      //some other widgets
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
-            bottomNavigationBar: bottomBar(),
-          ),
-          Transform.translate(
-            offset: homeLayout.youtubePlayerOffset(context),//Offset(0, 0),
-              child: SizedBox(
-              height: homeLayout.getYoutubeDisplayHeight(context),
-              width: homeLayout.getYoutubeDisplayWidth(context),
+            Transform.translate(
+              offset: homeLayout.youtubeCloseOffset(context),//Offset(0, 0),
               child:
-                YoutubePlayerBuilder(
-                  player: YoutubePlayer(
-                    controller: _youtubeController,
-                  ),
-                  builder: (context, player){
-                  return Column(
-                    children: [
-                    // some widgets
-                    player,
-                    //some other widgets
-                    ],
-                  );
-                },
+              InkWell(
+                child: Container(
+                  color: Colors.white,
+                  child: Icon(Icons.clear)
+                ),
+                onTap: () => closeYoutube(),
               ),
             ),
-          ),
-          Positioned(//safeareaのroadAreaが見えないようにする
-            right: 0,
-            left: 0,
-            top: -_deviceHeight!,
-            child:
-              Container(
-                color: Colors.white,
-                width: _deviceWidth!,
-                height: _deviceHeight!,
-              )
-          )
-        ]
+            Positioned(//safeareaのroadAreaが見えないようにする
+              right: 0,
+              left: 0,
+              top: -_deviceHeight!,
+              child:
+                Container(
+                  color: Colors.white,
+                  width: _deviceWidth!,
+                  height: _deviceHeight!,
+                )
+            ),
+          ]
+        )
       )
     );
   }
