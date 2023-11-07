@@ -14,7 +14,6 @@ class VideoController{
   bool displayLoadingScreen = true;
   bool isSelectMode = false;
   String searchWord = '';
-  late int videoCount = videoLength;
   CategoryController categoryController = CategoryController();
   UuidController uuidController = UuidController();
   late final domain = Config.domain;
@@ -44,10 +43,6 @@ class VideoController{
 
   Future<void> resetVideoCount() async {
     displayLoadingScreen = false;
-    videoCount =  videoLength;
-    if (videoCount > videos.length) {
-      videoCount = videos.length;
-    }
   }
 
   selectVideo(Video video){
@@ -73,7 +68,7 @@ class VideoController{
   }
 
   loadVideos(String pageName, bool searching) async {
-    int pageCount = ((videoCount + videoLength)/videoLength).ceil();
+    int pageCount = ((videos.length + videoLength)/videoLength).ceil();
     bool loadSucced = true;
     if(searching){
       final response = await getSearchedVideos(searchWord, pageCount, pageName);
@@ -103,13 +98,6 @@ class VideoController{
       case 'home':
       default:
         break;
-      }
-    }
-    videoCount += videoLength;
-    if (videoCount > videos.length) { //ロード過多
-      videoCount = await videos.length;
-      if(displayLoadingScreen){
-        displayLoadingScreen = false;
       }
     }
     return loadSucced;
@@ -148,14 +136,12 @@ class VideoController{
     return   listToModels(json.decode(str));
   }
 
-  Future<bool> updateVideos(int categoryNumber) async {
+  Future<bool> updatePress(int categoryNumber) async {
     videos = [];
-    videoCount = 0;
     displayLoadingScreen = true;
     if(await accessVideos()) {
       videosList = await listsToModels();
       videos = await videosList[categoryNumber];
-      videoCount = await videos.length;
       displayLoadingScreen = false;
       return true;
     }else{
@@ -174,7 +160,6 @@ class VideoController{
       jsonStr = response.body;
       videos = await jsonToModels(jsonStr);
       displayLoadingScreen = false;
-      videoCount = videos.length;
       return true;
     } catch (e) {
       return false;
@@ -216,7 +201,6 @@ class VideoController{
     final response = await http.delete(Uri.parse(url));
     if(response.statusCode == 200){
       int videoIndex = videos.map((map) => map.id).toList().indexOf(video.id);
-      videoCount -= 1;
       videos.removeAt(videoIndex);
       return true;
     }else{
@@ -314,7 +298,6 @@ class VideoController{
     final response = await http.delete(Uri.parse(url));
     if(response.statusCode == 200){
       int videoIndex = videos.map((map) => map.id).toList().indexOf(video.id);
-      videoCount -= 1;
       videos.removeAt(videoIndex);
       return true;
     }else{

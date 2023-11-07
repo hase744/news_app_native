@@ -360,6 +360,7 @@ class _HomePageState extends State<HomePage>  {
         if(!await _videoController.search(text, _pageController.getCurrentPageName())){
           displayAlert("検索に失敗しました");
         };
+        updateVideos();
         _scrollController.jumpTo(homeLayout.loadAreaHeight);
       }, 
       onClosesd: () => setState(() { homeLayout.displaySearch = false; }) , 
@@ -464,7 +465,6 @@ class _HomePageState extends State<HomePage>  {
 
   transitNavigation(index){
     setState(() {
-      _videoController.videoCount = 0;
       _pageController.pageIndex = index;
       _youtubeController.pause();
     });
@@ -509,12 +509,12 @@ class _HomePageState extends State<HomePage>  {
     final before = _scrollController.position.pixels;
     final end = _scrollController.position.maxScrollExtent;
     setState(() {
-      if (before == end && _videoController.videoCount >= _videoController.videoLength) {
+      if (before == end) {
         _videoController.displayLoadingScreen = true;
       }
       if (before > 0) {
         _loadController.loadCount = 0;
-        if(_timer != null){_timer!.cancel();}
+        _timer?.cancel();
       }
       if(before >= homeLayout.loadAreaHeight){
         _loadController.isLoading = false;
@@ -649,10 +649,14 @@ class _HomePageState extends State<HomePage>  {
   }
   
 
-  updateVideos() async {
-    if(!await _videoController.updateVideos(_categoryController.categoryIndex)){
+  updatePress() async {
+    if(!await _videoController.updatePress(_categoryController.categoryIndex)){
       displayAlert("ロードに失敗しました");
     };
+    updateVideos();
+  }
+
+  updateVideos(){
     setState(() {
       _videoController = _videoController;
     });
@@ -672,7 +676,8 @@ class _HomePageState extends State<HomePage>  {
       displayAlert("ロードに失敗しました");
     };
     setState(() {
-      _videoController = _videoController;
+      _videoController.displayLoadingScreen = false;
+      updateVideos();
     });
   }
 
@@ -753,7 +758,7 @@ class _HomePageState extends State<HomePage>  {
                               if(_loadController.canLoad){
                                 _loadController.isLoading = true;
                                 _loadController.canLoad = false;
-                                updateVideos();
+                                updatePress();
                               }
                             }//
                             return true;
@@ -771,7 +776,7 @@ class _HomePageState extends State<HomePage>  {
                               //if(_videoController.videos.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
                               //  for(var video in _videoController.videos)
                               //  videoCell(context, video),
-                              for(var i=0; i<_videoController.videoCount; i++)
+                              for(var i=0; i<_videoController.videos.length; i++)
                                 if(_videoController.videos.isNotEmpty)
                                 videoCell(context, _videoController.videos[i], i),
                               if(_videoController.displayLoadingScreen)
@@ -792,7 +797,7 @@ class _HomePageState extends State<HomePage>  {
                               ),
                               Container(
                                 width: _deviceWidth!,
-                                height: homeLayout.getbottomSpaceHeight(_videoController.videoCount),
+                                height: homeLayout.getbottomSpaceHeight(_videoController.videos.length),
                                 color: Colors.white,
                               ),
                             ],
