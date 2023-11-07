@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage>  {
       );
       _scrollController = ScrollController(
         initialScrollOffset: (_deviceWidth!*homeLayout.topMenuRatio),
-        );
+      );
       _scrollController.addListener(_onScroll);
       _pageController.pageIndex = widget.initialIndex;
       homeLayout.updateCellsTop(0);
@@ -281,8 +281,8 @@ class _HomePageState extends State<HomePage>  {
 
   displayAlert(String alert){
     setState(() {
-    _alert = alert;
-    homeLayout.alertHeight = 20;
+      _alert = alert;
+      homeLayout.alertHeight = 20;
     });
     Future.delayed(const Duration(seconds: 2), () {
       setState(() {
@@ -362,11 +362,7 @@ class _HomePageState extends State<HomePage>  {
         };
         _scrollController.jumpTo(homeLayout.loadAreaHeight);
       }, 
-      onClosesd: () {
-        setState(() {
-          homeLayout.displaySearch = false;
-        });
-      }, 
+      onClosesd: () => setState(() { homeLayout.displaySearch = false; }) , 
       menuOpened: () {
         showCupertinoModalPopup<void>(
           context: context,
@@ -390,10 +386,7 @@ class _HomePageState extends State<HomePage>  {
           ),
         );
       },
-      searchOpened: (){
-        setState(() {
-          homeLayout.displaySearch = true;
-        });
+      searchOpened: (){ setState(() { homeLayout.displaySearch = true; });
       }
     );
   }
@@ -417,14 +410,8 @@ class _HomePageState extends State<HomePage>  {
           isSelected: cellIds.contains(cellId),
           cellHeight: cellHeight, 
           cellWidth: cellWidth, 
-          onSelected: (){
-            setState(() {
-              _videoController.selectVideo(video);
-            });
-          },
-          onPressedYoutube: (){
-            openYoutube(video);
-          },
+          onSelected: () => setState(() { _videoController.selectVideo(video);}),
+          onPressedYoutube: () => openYoutube(video),
           onPressedOptions: (){
             showCupertinoModalPopup<void>(
               context: context,
@@ -442,16 +429,13 @@ class _HomePageState extends State<HomePage>  {
                       style: TextStyle(
                         color: button.isDestractive ? Colors.red : Colors.blue
                       ),
-                      ),
+                    ),
                   ),
                 ]
               )
             );
           },
-          onPressedTitle: (){
-            openYoutube(video);
-            //launchWebView(video);
-          },
+          onPressedTitle: () => openYoutube(video),
         ),
         if (bannerAd != null)
         Align(

@@ -25,12 +25,14 @@ class CategoryBar extends StatelessWidget {
     required this.controller
   });
 
-  double fontSize(int text_count) {
+  double categoryTextSize(int textCount) {
     double fontSize = 0;
-    if(text_count < 4){
+    if(textCount < 4){
       fontSize = width/20;
+    }else if(textCount == 4){
+      fontSize = width/20 - 1;
     }else{
-      fontSize = width/5/text_count;
+      fontSize = width/5/textCount;
     }
     return fontSize -1;
   }
@@ -78,7 +80,7 @@ class CategoryBar extends StatelessWidget {
                               Text(
                                 categoryController.categories[i].japaneseName,
                                 style: TextStyle(
-                                  fontSize: fontSize(categoryController.categories[i].japaneseName.length),
+                                  fontSize: categoryTextSize(categoryController.categories[i].japaneseName.length),
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),
