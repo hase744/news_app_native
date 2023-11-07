@@ -42,7 +42,7 @@ class VideoController{
   }
 
   selectVideo(Video video){
-    int index = selection.indexWhere((map) => map.youtubeId == video.youtubeId);
+    int index = selection.indexWhere((map) => map.id == video.id);
     if(index != -1){
       selection.removeAt(index);
     }else{
