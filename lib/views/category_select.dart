@@ -34,68 +34,80 @@ class _CategorySelectState extends State<CategorySelect>  {
     double modalHeight = deviceHeight *0.9;
     List categorySelectionNames = _categoryController.selection.map((c){return c.name;}).toList();
     return Scaffold(
-      appBar: AppBar(),
-      body: 
-      Container(
-          height:  modalHeight,
-          width: deviceWidth,
-          color: Colors.white,
-          alignment: Alignment.topLeft,
-          child: 
-          SingleChildScrollView(
-        child: Column(
-            children: <Widget>[
-              Text(
+      appBar: AppBar(
+        title: const Text(
                 "興味のあるカテゴリーを選択",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold
                 ),
               ),
+      ),
+      body: 
+      Container(
+        height:  modalHeight,
+        width: deviceWidth,
+        color: Colors.white,
+        alignment: Alignment.topLeft,
+        child: 
+        SingleChildScrollView(
+          child: 
+          Column(
+            children: <Widget>[
               SingleChildScrollView(
-              scrollDirection: Axis.vertical,
-              child:
-              Wrap(
-                spacing: 15.0,
-                runSpacing: 10.0,
-                children: List<Widget>.generate(
-                  _categoryController.categories.length,
-                  (int index) {
-                    Category category = _categoryController.categories[index];
-                    return 
-                    ChoiceChip(
-                      label: Text(
-                        "${category.emoji}${category.japaneseName}",
-                          style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold
+                scrollDirection: Axis.vertical,
+                child:
+                Wrap(
+                  spacing: 15.0,
+                  runSpacing: 10.0,
+                  children: List<Widget>.generate(
+                    _categoryController.categories.length,
+                    (int index) {
+                      Category category = _categoryController.categories[index];
+                      return 
+                      ChoiceChip(
+                        label: Text(
+                          "${category.emoji}${category.japaneseName}",
+                            style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold
+                          ),
                         ),
-                      ),
-                      selected:  categorySelectionNames.contains(category.name),
-                      onSelected: (bool selected) {
-                        int selectionIndex = categorySelectionNames.indexOf(category.name);
-                        setState(() {
-                          if(selectionIndex == -1){
-                            _categoryController.selection.add(category);
-                          }else{
-                            _categoryController.selection.removeAt(selectionIndex);
-                          }
-                        });
-                      },
-                    );
-                  },
-                ).toList(),
-              )
+                        selected:  categorySelectionNames.contains(category.name),
+                        onSelected: (bool selected) {
+                          int selectionIndex = categorySelectionNames.indexOf(category.name);
+                          setState(() {
+                            if(selectionIndex == -1){
+                              _categoryController.selection.add(category);
+                            }else{
+                              _categoryController.selection.removeAt(selectionIndex);
+                            }
+                          });
+                        },
+                      );
+                    },
+                  ).toList(),
+                )
               ),
               Center(
                 //color: Colors.red,
                 //width: deviceWidth,
                 child:
-                  Container(
+                  SizedBox(
                   width: deviceWidth/3,
                   child: 
                   ElevatedButton(
-                    child: Text(
+                    onPressed: () {
+                      _categoryController.saveSelection();
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) =>const HomePage(initialIndex: 0,)),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.orange,
+                    ),
+                    child: const Text(
                         '次へ',
                         style: TextStyle(
                           color: Colors.white,
@@ -103,23 +115,13 @@ class _CategorySelectState extends State<CategorySelect>  {
                           fontWeight: FontWeight.bold
                       ),
                     ),
-                    onPressed: () {
-                      _categoryController.saveSelection();
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) =>HomePage(initialIndex: 0,)),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      primary: Colors.orange,
-                    ),
                   ),
                 )
               )
-              
             ],
           ),
-      )),
+        )
+      ),
     );
   }
 }

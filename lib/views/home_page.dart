@@ -702,7 +702,6 @@ class _HomePageState extends State<HomePage>  {
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     //_videoController.videosList = json.decode(_videoController.videosListJson!);
@@ -778,7 +777,7 @@ class _HomePageState extends State<HomePage>  {
                                 alignment: Alignment.center,
                                 width: _deviceWidth,
                                 child: 
-                                SizedBox(
+                                const SizedBox(
                                   height: 50,
                                   width: 50,
                                   child: 
