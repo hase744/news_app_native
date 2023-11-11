@@ -11,7 +11,7 @@ class CategoryBar extends StatelessWidget {
   List<Color> colors = [
    const Color.fromRGBO(250, 100, 100, 1),
    const Color.fromRGBO(250, 140, 60, 1),
-   const Color.fromRGBO(90, 255, 110, 1),
+   const Color.fromRGBO(0, 200, 110, 1),
    const Color.fromRGBO(90, 145, 255, 1),
    const Color.fromRGBO(185, 90, 255, 1),
   ];
@@ -40,6 +40,7 @@ class CategoryBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //final width = await getWidth();
+    double radiusSize = width/5/20;
     return 
     Container(
         alignment: Alignment.center,
@@ -57,25 +58,39 @@ class CategoryBar extends StatelessWidget {
                   children: [
                     for (var i = 0; i < categoryController.categories.length; i++)
                     Container(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                      child: 
+                      Stack(
+                        alignment: Alignment.bottomCenter,
+                        //mainAxisAlignment: MainAxisAlignment.end,
                         children: [
+                          Container(
+                            color: categoryController.categoryIndex < i ? colors[(i-1) % colors.length] : colors[(i+1) % colors.length],
+                            width: width / 5,
+                            height: radiusSize
+                          ),
                           Container(
                             decoration: BoxDecoration(
                               borderRadius: 
-                              categoryController.categoryIndex == i ?
-                              const BorderRadius.only(
-                                topLeft: Radius.circular(5),
-                                topRight: Radius.circular(5),
-                              )
-                              :const BorderRadius.only(),
+                              BorderRadius.only(
+                                topLeft: Radius.circular(radiusSize),
+                                topRight: Radius.circular(radiusSize),
+                                bottomLeft: categoryController.categoryIndex < i ? Radius.circular(radiusSize) : const Radius.circular(0),
+                                bottomRight: categoryController.categoryIndex > i ? Radius.circular(radiusSize) : const Radius.circular(0),
+                              ),
                               color: colors[i % colors.length],
                             ),
                             width: width / 5,
                             height: categoryController.categoryIndex == i ? barHeight : barHeight*0.9,
-                            padding: EdgeInsets.all(0),
-                            margin: EdgeInsets.all(0),
+                            padding: const EdgeInsets.all(0),
+                            margin: const EdgeInsets.all(0),
                             child: TextButton(
+                              onPressed: () => onSelected(i),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.all(0), // ボタンの内側の余白
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(0), // 角丸の半径
+                                ),
+                              ),
                               child: 
                               Text(
                                 categoryController.categories[i].japaneseName,
@@ -83,13 +98,6 @@ class CategoryBar extends StatelessWidget {
                                   fontSize: categoryTextSize(categoryController.categories[i].japaneseName.length),
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
-                                ),
-                              ),
-                              onPressed: () => onSelected(i),
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.all(0), // ボタンの内側の余白
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(0), // 角丸の半径
                                 ),
                               ),
                             ),
