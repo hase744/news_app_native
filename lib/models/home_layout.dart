@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 class HomeLayout  {
   double barHeight = 0;
   double deviceWidth = 0;
-  double _number = 0;
   double innerHeight = 0;
   double deviceHeight = 0;
   bool isPortrait = true;
@@ -20,9 +19,9 @@ class HomeLayout  {
   double searchAreaRatio = 1/10;
   double loadAreaRatio = 1/5;
   double youtubeDisplayRatio = 9/16;
-  late double topMenuRatio = searchAreaRatio + loadAreaRatio;
 
   double appBarHeight = 40;
+  late double topMenuRatio = searchAreaRatio + loadAreaRatio;
   late double categoryBarHeight = deviceWidth*categoryBarRatio;
   late double categoryBarLineHeight = 5;
   //late double menu_area = deviceWidth/5;
@@ -38,7 +37,6 @@ class HomeLayout  {
   late double cellsHeight = 0;
   late double videoCellsTop = deviceWidth*topMenuRatio; //menu_areaと同じ値
   late bool ishome = false;
-  double get number => _number;
   
   HomeLayout({
     required this.deviceWidth,
@@ -183,13 +181,5 @@ class HomeLayout  {
 
   listViewTop(){
     return categoryBarHeight + categoryBarLineHeight + youtubeDisplayHeight;
-  }
-
-  // Setter
-  set name(String s) {
-    if (s.length > 0 && s.length < 11) {
-    } else {
-      print('$s:文字数を1文字以上10文字以下にしてください。');
-    }
   }
 }

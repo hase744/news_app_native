@@ -34,7 +34,7 @@ class CategoryBar extends StatelessWidget {
     }else{
       fontSize = width/5/textCount;
     }
-    return fontSize -1;
+    return fontSize.clamp(0.0, width/25) -1;
   }
 
   @override
@@ -47,14 +47,14 @@ class CategoryBar extends StatelessWidget {
         child: 
           Column(
             children: [
-              Container(
+              SizedBox(
                 width: width,
                 height: barHeight,
                 child: 
                 ListView(
                   controller: controller,
                   scrollDirection: Axis.horizontal,
-                  physics: ClampingScrollPhysics(),
+                  physics: const ClampingScrollPhysics(),
                   children: [
                     for (var i = 0; i < categoryController.categories.length; i++)
                     Container(
@@ -74,8 +74,8 @@ class CategoryBar extends StatelessWidget {
                               BorderRadius.only(
                                 topLeft: Radius.circular(radiusSize),
                                 topRight: Radius.circular(radiusSize),
-                                bottomLeft: categoryController.categoryIndex < i ? Radius.circular(radiusSize) : const Radius.circular(0),
-                                bottomRight: categoryController.categoryIndex > i ? Radius.circular(radiusSize) : const Radius.circular(0),
+                                bottomLeft: i > categoryController.categoryIndex ? Radius.circular(radiusSize) : const Radius.circular(0),
+                                bottomRight: i < categoryController.categoryIndex ? Radius.circular(radiusSize) : const Radius.circular(0),
                               ),
                               color: colors[i % colors.length],
                             ),
@@ -105,7 +105,6 @@ class CategoryBar extends StatelessWidget {
                         ]
                       ),
                     )
-                    
                   ],
                 )
               ),
