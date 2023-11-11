@@ -6,9 +6,6 @@ import 'package:video_news/controllers/video_controller.dart';
 import 'package:video_news/views/category_select.dart';
 
 class FirstPage extends StatefulWidget {
-  const FirstPage({super.key, required this.title});
-  final String title;
-
   @override
   State<FirstPage> createState() => _FirstPageState();
 }
@@ -20,6 +17,11 @@ class _FirstPageState extends State<FirstPage> {
   void initState() {
     super.initState();
     fetchData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     init();
   }
 
@@ -32,7 +34,6 @@ class _FirstPageState extends State<FirstPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
       body: 
       Container(
         //color: Colors.red,
@@ -44,7 +45,7 @@ class _FirstPageState extends State<FirstPage> {
               Text(
                 'NEWSNIPPET',
                 style: TextStyle(
-                  fontSize: 15
+                  fontSize: _deviceWidth! /'NEWSNIPPET'.length/2
                 ),
               ),
             ],
@@ -62,12 +63,12 @@ class _FirstPageState extends State<FirstPage> {
       final prefs = await SharedPreferences.getInstance();
       String defaultYoutubeId = prefs.getString('default_youtube_id') ?? '4b6DuHGcltI';
       await prefs.setString('default_youtube_id', defaultYoutubeId);
-      //await prefs.remove('categoryOrder');
+      // ignore: use_build_context_synchronously
       Navigator.pushReplacement(
         context,
         prefs.getString('categoryOrder') == null 
           ? MaterialPageRoute(builder: (context) =>CategorySelect()) 
-          : MaterialPageRoute(builder: (context) =>HomePage(initialIndex: 0,)),
+          : MaterialPageRoute(builder: (context) =>const HomePage(initialIndex: 0,)),
       );
     } else {
       throw Exception('Failed to load data');
