@@ -8,30 +8,30 @@ class SelectBottomNavigationBar extends StatelessWidget {
   List<Map<dynamic, dynamic>> pageMap = [
     {
       "name": 'home',
-      "item": BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム'),
+      "item": const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム'),
     },
     {
       "name": 'favorite',
-      "item": BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'お気に入り'),
+      "item": const BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'お気に入り'),
     },
     {
       "name": 'history',
-      "item": BottomNavigationBarItem(icon: Icon(Icons.history), label: '履歴'),
+      "item": const BottomNavigationBarItem(icon: Icon(Icons.history), label: '履歴'),
     },
     {
       "name": 'setting',
-      "item": BottomNavigationBarItem(icon: Icon(Icons.settings), label: '設定'),
+      "item": const BottomNavigationBarItem(icon: Icon(Icons.settings), label: '設定'),
     },
   ];
 
   List<Map<dynamic, dynamic>> selectMap = [
     {
       "name": 'close',
-      "item": BottomNavigationBarItem(icon: Icon(Icons.close), label: '戻る'),
+      "item": const BottomNavigationBarItem(icon: Icon(Icons.close), label: '戻る'),
     },
     {
       "name": 'favorite',
-      "item": BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'お気に入りに追加'),
+      "item": const BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'お気に入りに追加'),
     },
   ];
 

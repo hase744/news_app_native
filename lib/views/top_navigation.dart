@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:video_news/models/home_layout.dart';
+import 'package:video_news/controllers/home_layout_controller.dart';
 import 'package:video_news/controllers/load_controller.dart';
 class TopNavigation extends StatelessWidget{
-  HomeLayout homeLayout;
+  HomeLayoutController homeLayoutController;
   LoadController loadController;
   double width;
   TextEditingController controller;
@@ -11,17 +11,20 @@ class TopNavigation extends StatelessWidget{
   final VoidCallback onClosesd;
   final VoidCallback menuOpened;
   final VoidCallback searchOpened;
+  // ignore: annotate_overrides, overridden_fields
+  final Key? key;
 
   TopNavigation({
-    required this.homeLayout,
+    required this.homeLayoutController,
     required this.loadController,
     required this.width,
     required this.controller,
     required this.onSearched,
     required this.onClosesd,
     required this.menuOpened,
-    required this.searchOpened
-  });
+    required this.searchOpened,
+    this.key,
+  }) : super(key: key);
 
 @override
 Widget build(BuildContext context){
@@ -29,7 +32,7 @@ Widget build(BuildContext context){
     Column(
       children: [
       Container(
-        height: homeLayout.loadAreaHeight,
+        height: homeLayoutController.loadAreaHeight,
         alignment: Alignment.bottomCenter,
         color: Colors.white,
         child: 
@@ -39,9 +42,9 @@ Widget build(BuildContext context){
             children: <Widget>[
               Text(loadController.getLoadText()),
               if(loadController.loadCounting && loadController.loadCount < loadController.maxLoadCount)
-              Container(
-                height: homeLayout.loadAreaHeight/4,
-                width: homeLayout.loadAreaHeight/4,
+              SizedBox(
+                height: homeLayoutController.loadAreaHeight/4,
+                width: homeLayoutController.loadAreaHeight/4,
                 child: 
                 CircularProgressIndicator(
                   value: loadController.loadCount/loadController.maxLoadCount,
@@ -53,14 +56,14 @@ Widget build(BuildContext context){
         )
       ),
       Container(
-        height: homeLayout.searchAreaHeight,
+        height: homeLayoutController.searchAreaHeight,
         alignment: Alignment.centerRight,
         color: Colors.white,
         child: 
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[
-            if(homeLayout.displaySearch)
+            if(homeLayoutController.displaySearch)
             Container(
               color: Colors.white,
               width: width,
@@ -69,11 +72,11 @@ Widget build(BuildContext context){
                 decoration: InputDecoration(
                   hintText: 'キーワードで検索',
                   prefixIcon: IconButton(
-                    icon: Icon(Icons.arrow_back_ios_new),
+                    icon: const Icon(Icons.arrow_back_ios_new),
                     onPressed: onClosesd
                   ),
                   suffixIcon: IconButton(
-                    icon: Icon(Icons.clear),
+                    icon: const Icon(Icons.clear),
                     onPressed: () {
                       controller.clear();
                     },
@@ -82,17 +85,17 @@ Widget build(BuildContext context){
                 onSubmitted: onSearched,
               ),
             ),
-            if(!homeLayout.displaySearch)
+            if(!homeLayoutController.displaySearch)
             IconButton(
               onPressed: searchOpened,
-              icon: Icon(Icons.search)
+              icon: const Icon(Icons.search)
             ),
-            if(!homeLayout.displaySearch)
+            if(!homeLayoutController.displaySearch)
             SizedBox(
-              width: homeLayout.searchAreaHeight,
+              width: homeLayoutController.searchAreaHeight,
               child:
               IconButton(
-                icon: Icon(Icons.more_vert, color: Colors.grey,),
+                icon: const Icon(Icons.more_vert, color: Colors.grey,),
                 onPressed: menuOpened
               )
             )

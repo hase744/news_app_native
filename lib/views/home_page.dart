@@ -3,26 +3,22 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_news/controllers/category_controller.dart';
-import 'dart:convert';
 import 'bottom_navigation_bar.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:video_news/models/history.dart';
 import 'package:video_news/views/setting_page.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
-import 'package:video_news/models/home_layout.dart';
+import 'package:video_news/controllers/home_layout_controller.dart';
 import 'package:video_news/controllers/default_values_controller.dart';
 import 'video_cell.dart';
 import 'package:video_news/models/menu_button.dart';
 import 'package:video_news/models/favorite.dart';
 import 'package:video_news/views/bottom_menu_bar.dart';
 import 'package:video_news/views/alert.dart';
-import 'package:flutter/services.dart';
 import 'package:video_news/views/top_navigation.dart';
 import 'package:video_news/controllers/video_controller.dart';
-import 'package:video_news/models/category.dart';
 import 'package:video_news/models/video.dart';
 import 'package:video_news/controllers/load_controller.dart';
 import 'package:video_news/controllers/page_controller.dart';
@@ -40,27 +36,27 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>  {
   double? _deviceWidth, _deviceHeight;
-  History _history = History(); 
-  Favorite _favorite = Favorite(); // History クラスのインスタンスを作成
-  HomeLayout homeLayout = HomeLayout(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0, appBarHeight:0);
-  DefaultValue defaultValue = DefaultValue();
   String? _alert;
   Timer? _timer;
+  final _history = History(); 
+  final _favorite = Favorite(); // History クラスのインスタンスを作成
+  HomeLayoutController _homeLayoutController = HomeLayoutController(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0, appBarHeight:0);
+  DefaultValue defaultValue = DefaultValue();
   Future<void>? _launched;
-  TextEditingController _controller = TextEditingController();
   VideoController _videoController = VideoController();
   ScrollController _scrollController = ScrollController();
-  ScrollController _categoryScrollController = ScrollController();
-  CategoryController _categoryController = CategoryController();
-  LoadController _loadController = LoadController();
-  PageControllerClass _pageController = PageControllerClass();
+  final ScrollController _categoryScrollController = ScrollController();
+  final CategoryController _categoryController = CategoryController();
+  final LoadController _loadController = LoadController();
+  final PageControllerClass _pageController = PageControllerClass();
+  final TextEditingController _controller = TextEditingController();
   YoutubePlayerController _youtubeController = YoutubePlayerController(
     initialVideoId: '4b6DuHGcltI',
-    flags: YoutubePlayerFlags(
+    flags: const YoutubePlayerFlags(
         autoPlay: false,  // 自動再生しない
       ),
     );
-  List<BannerAd> _bannerAds = [];
+  final List<BannerAd> _bannerAds = [];
 
   @override
   void initState() {
@@ -72,9 +68,8 @@ class _HomePageState extends State<HomePage>  {
     await defaultValue.initialize();
     String? defaultYoutubeId = defaultValue.getStoredValue('default_youtube_id');
     await _videoController.setVideosList();
-    
-    FocusScope.of(context).unfocus();
     setState(() {
+      FocusScope.of(context).unfocus();
       for(var i =0; i<3; i++){
         _bannerAds.add(BannerAd(
           size: AdSize.banner,
@@ -100,11 +95,11 @@ class _HomePageState extends State<HomePage>  {
         ),
       );
       _scrollController = ScrollController(
-        initialScrollOffset: (_deviceWidth!*homeLayout.topMenuRatio),
+        initialScrollOffset: (_deviceWidth!*_homeLayoutController.topMenuRatio),
       );
       _scrollController.addListener(_onScroll);
       _pageController.pageIndex = widget.initialIndex;
-      homeLayout.updateCellsTop(0);
+      _homeLayoutController.updateCellsTop(0);
       //_scrollController.jumpTo(0.0);
       //_history.deleteTable();
       //_favorite.deleteTable();
@@ -119,7 +114,7 @@ class _HomePageState extends State<HomePage>  {
     setState(() {
       closeYoutube();
       _videoController.displayLoadingScreen = false;
-      _scrollController.jumpTo(homeLayout.getTopMenuHeight());
+      _scrollController.jumpTo(_homeLayoutController.getTopMenuHeight());
     });
   }
 
@@ -133,8 +128,8 @@ class _HomePageState extends State<HomePage>  {
     setState(() {
       _videoController.videos = [];
       _videoController.displayLoadingScreen = true;
-      homeLayout.setForList();
-      homeLayout.setHeightForVideoCells();
+      _homeLayoutController.setForList();
+      _homeLayoutController.setHeightForVideoCells();
     });
     if(!await _videoController.displayHistories()){
       displayAlert("ロードに失敗しました");
@@ -150,12 +145,12 @@ class _HomePageState extends State<HomePage>  {
   //  List<Map<String, dynamic>> histories = await _history.all();
   //  histories = histories.reversed.toList();
   //  setState(() {
-  //    homeLayout.setForList();
-  //    homeLayout.setHeightForVideoCells();
+  //    _homeLayoutController.setForList();
+  //    _homeLayoutController.setHeightForVideoCells();
   //    _videoController.videos = histories; // 取得したデータを _press 変数に代入
   //    resetPressCount();
   //  });
-  //  homeLayout.updateCellsTop(0);
+  //  _homeLayoutController.updateCellsTop(0);
   //  closeYoutube();
   //}
 
@@ -167,8 +162,8 @@ class _HomePageState extends State<HomePage>  {
     setState(() {
       _videoController.videos = [];
       _videoController.displayLoadingScreen = true;
-      homeLayout.setForList();
-      homeLayout.setHeightForVideoCells();
+      _homeLayoutController.setForList();
+      _homeLayoutController.setHeightForVideoCells();
     });
     if(!await _videoController.displayFavorites()){
       displayAlert("ロードに失敗しました");
@@ -181,32 +176,31 @@ class _HomePageState extends State<HomePage>  {
 
   void setDefauldLayout(){
     setState(() {
-      var _padding = MediaQuery.of(context).padding;
-      homeLayout = HomeLayout(
+      var padding = MediaQuery.of(context).padding;
+      _homeLayoutController = HomeLayoutController(
         appBarHeight: 0,
         deviceWidth: _deviceWidth!,
         deviceHeight: _deviceHeight!,
         barHeight: 100,
-        innerHeight: _deviceHeight! - _padding.top - _padding.bottom,
+        innerHeight: _deviceHeight! - padding.top - padding.bottom,
       );
       //_scrollController.jumpTo(100.0);
     });
-    homeLayout.setHeightForVideoCells();
+    _homeLayoutController.setHeightForVideoCells();
   }
 
   void openYoutube(Video video) async {
-    String youtube_id = video.youtubeId;
-    homeLayout.displayYoutube();
-    homeLayout.setHeightForVideoCells();
+    String youtubeId = video.youtubeId;
+    _homeLayoutController.displayYoutube();
+    _homeLayoutController.setHeightForVideoCells();
     //最後に再生した動画を保存機能
     final prefs = await SharedPreferences.getInstance();
     await Future.delayed(Duration.zero);
     setState(() {
-      _youtubeController.load( youtube_id,startAt:0);
-      homeLayout.updateCellsTop(_scrollController.offset);
+      _youtubeController.load( youtubeId,startAt:0);
+      _homeLayoutController.updateCellsTop(_scrollController.offset);
     });
-    print(youtube_id);
-    await prefs.setString('default_youtube_id', youtube_id);
+    await prefs.setString('default_youtube_id', youtubeId);
     _videoController.createHistory(video);
     //await _history.initDatabase(); 
     //List<Map<String, dynamic>> histories = await _history.all();
@@ -215,16 +209,16 @@ class _HomePageState extends State<HomePage>  {
 
   void closeYoutube(){
     setState(() {
-      homeLayout.hideYoutube();
-      homeLayout.setHeightForVideoCells();
+      _homeLayoutController.hideYoutube();
+      _homeLayoutController.setHeightForVideoCells();
       _youtubeController.pause();
     });
   }
 
-  Future<void> selectCategory(int category_num) async {
+  Future<void> selectCategory(int categoryNum) async {
     setState(() {
-      homeLayout.displaySearch = false;
-      _videoController.changeVideos(category_num);
+      _homeLayoutController.displaySearch = false;
+      _videoController.changeVideos(categoryNum);
     });
   }
 
@@ -234,22 +228,6 @@ class _HomePageState extends State<HomePage>  {
     }
   }
 
-  webViewWindow(String youtube_id,BuildContext context) {
-    print("https://emma.tools/magazine/ai-writing-blog/#AI");
-    final controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(
-        Uri.parse("https://emma.tools/magazine/ai-writing-blog/#AI"),
-      );
-    return
-    Container(
-      height: _deviceHeight!*0.7,
-      child: WebViewWidget(
-        controller: controller,
-      ),
-    );
-  }
-  
   void updateScreen(){
     switch(_pageController.getCurrentPageName()) {
       case 'home':
@@ -276,11 +254,11 @@ class _HomePageState extends State<HomePage>  {
   displayAlert(String alert){
     setState(() {
       _alert = alert;
-      homeLayout.alertHeight = 20;
+      _homeLayoutController.alertHeight = 20;
     });
     Future.delayed(const Duration(seconds: 2), () {
       setState(() {
-        homeLayout.alertHeight = 0;
+        _homeLayoutController.alertHeight = 0;
         _alert = null;
       });
     });
@@ -301,7 +279,7 @@ class _HomePageState extends State<HomePage>  {
                   displayAlert("履歴から削除しました");
                 }else{
                   displayAlert("削除に失敗しました");
-                };
+                }
                 setState(() {
                   _videoController.disableSelectMode();
                 });
@@ -315,7 +293,7 @@ class _HomePageState extends State<HomePage>  {
                   displayAlert("お気に入りに追加しました");
                 }else{
                   displayAlert("追加に失敗しました。");
-                };
+                }
                 setState(() {
                   _videoController.disableSelectMode();
                 });
@@ -337,7 +315,6 @@ class _HomePageState extends State<HomePage>  {
         onTap: (int index){
           _pageController.updatePage(index);
           updateScreen();
-          print(index);
         }, 
         isSelectMode: _videoController.isSelectMode
       );
@@ -347,17 +324,17 @@ class _HomePageState extends State<HomePage>  {
   Widget topNavigation(context){
     return TopNavigation(
       loadController: _loadController,
-      homeLayout: homeLayout,
+      homeLayoutController: _homeLayoutController,
       width: _deviceWidth!, 
       controller: _controller, 
       onSearched: (String text) async {
         if(!await _videoController.search(text, _pageController.getCurrentPageName())){
           displayAlert("検索に失敗しました");
-        };
+        }
         updateVideos();
-        _scrollController.jumpTo(homeLayout.loadAreaHeight);
+        _scrollController.jumpTo(_homeLayoutController.loadAreaHeight);
       }, 
-      onClosesd: () => setState(() { homeLayout.displaySearch = false; }) , 
+      onClosesd: () => setState(() { _homeLayoutController.displaySearch = false; }) , 
       menuOpened: () {
         showCupertinoModalPopup<void>(
           context: context,
@@ -381,7 +358,7 @@ class _HomePageState extends State<HomePage>  {
           ),
         );
       },
-      searchOpened: (){ setState(() { homeLayout.displaySearch = true; });
+      searchOpened: (){ setState(() { _homeLayoutController.displaySearch = true; });
       }
     );
   }
@@ -435,7 +412,7 @@ class _HomePageState extends State<HomePage>  {
         if (bannerAd != null)
         Align(
           alignment: Alignment.topCenter,
-          child: Container(
+          child: SizedBox(
             width: bannerAd.size.width.toDouble(),
             height: bannerAd.size.height.toDouble(),
             child: AdWidget(ad: bannerAd),
@@ -443,8 +420,6 @@ class _HomePageState extends State<HomePage>  {
         ),
       ],
     );
-    
-    
   }
 
   launchWebView (Video video){
@@ -464,7 +439,7 @@ class _HomePageState extends State<HomePage>  {
     });
     updateScreen();
     closeYoutube();
-    homeLayout.hideYoutube();
+    _homeLayoutController.hideYoutube();
   }
 
   scrollToPoint(double offset){
@@ -478,12 +453,12 @@ class _HomePageState extends State<HomePage>  {
   }
 
   scrollForMenu(double offest){
-    if(homeLayout.loadAreaHeight > 0 && offest < homeLayout.loadAreaHeight){
-      scrollToPoint(homeLayout.loadAreaHeight);
-    }else if(offest > homeLayout.loadAreaHeight && offest < homeLayout.loadAreaHeight + homeLayout.searchAreaHeight/2){
-      scrollToPoint(homeLayout.loadAreaHeight);
-    }else if(offest > homeLayout.loadAreaHeight + homeLayout.searchAreaHeight/2 && offest < homeLayout.getTopMenuHeight()){
-      scrollToPoint(homeLayout.getTopMenuHeight());
+    if(_homeLayoutController.loadAreaHeight > 0 && offest < _homeLayoutController.loadAreaHeight){
+      scrollToPoint(_homeLayoutController.loadAreaHeight);
+    }else if(offest > _homeLayoutController.loadAreaHeight && offest < _homeLayoutController.loadAreaHeight + _homeLayoutController.searchAreaHeight/2){
+      scrollToPoint(_homeLayoutController.loadAreaHeight);
+    }else if(offest > _homeLayoutController.loadAreaHeight + _homeLayoutController.searchAreaHeight/2 && offest < _homeLayoutController.getTopMenuHeight()){
+      scrollToPoint(_homeLayoutController.getTopMenuHeight());
     }
   }
 
@@ -510,7 +485,7 @@ class _HomePageState extends State<HomePage>  {
         _loadController.loadCount = 0;
         _timer?.cancel();
       }
-      if(before >= homeLayout.loadAreaHeight){
+      if(before >= _homeLayoutController.loadAreaHeight){
         _loadController.isLoading = false;
       }
       if(before <= 0 && !_loadController.loadCounting){
@@ -524,7 +499,7 @@ class _HomePageState extends State<HomePage>  {
         _loadController.loadCount = 1;
       }
     });
-    homeLayout.updateCellsTop(_scrollController.offset);
+    _homeLayoutController.updateCellsTop(_scrollController.offset);
     FocusScope.of(context).unfocus();
   }
 
@@ -568,7 +543,7 @@ class _HomePageState extends State<HomePage>  {
           }else{
             displayAlert('削除に失敗しました');
           }
-          Navigator.of(context).pop();
+          setState(() {Navigator.of(context).pop();});
         },
         isDestractive: true,
         name: "ー履歴から削除"
@@ -646,7 +621,7 @@ class _HomePageState extends State<HomePage>  {
   updatePress() async {
     if(!await _videoController.updatePress(_categoryController.categoryIndex)){
       displayAlert("ロードに失敗しました");
-    };
+    }
     updateVideos();
   }
 
@@ -666,9 +641,9 @@ class _HomePageState extends State<HomePage>  {
   }
   
   loadVideos() async {
-    if(!await _videoController.loadVideos(_pageController.getCurrentPageName(), homeLayout.displaySearch)){
+    if(!await _videoController.loadVideos(_pageController.getCurrentPageName(), _homeLayoutController.displaySearch)){
       displayAlert("ロードに失敗しました");
-    };
+    }
     setState(() {
       _videoController.displayLoadingScreen = false;
       updateVideos();
@@ -694,10 +669,10 @@ class _HomePageState extends State<HomePage>  {
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
-           child: const Text("キャンセル"),
-           onPressed: () {
-           Navigator.pop(context);
-           },
+          child: const Text("キャンセル"),
+          onPressed: () {
+          Navigator.pop(context);
+          },
         ),
       ),
     );
@@ -714,26 +689,26 @@ class _HomePageState extends State<HomePage>  {
           children: <Widget>[
             Scaffold(
               appBar: PreferredSize(
-                preferredSize: Size.fromHeight(homeLayout.appBarHeight),
+                preferredSize: Size.fromHeight(_homeLayoutController.appBarHeight),
                 child: AppBar(
                   title: Text(_categoryController.currentCategory.japaneseName),
                   leading: Container(),
                 ),
               ),
-              body: Container(
+              body: 
+              SizedBox(
                 height: _deviceHeight,
                 width: _deviceWidth,
-                //color: Colors.blue,
                 child: 
-                  Container(
-                    height: homeLayout.getInnerScrollHeight(),
+                  SizedBox(
+                    height: _homeLayoutController.getInnerScrollHeight(),
                     child: 
                     Stack(
                     children: <Widget>[
                       Positioned(
                         right: 0,
                         left: 0,
-                        top: homeLayout.listViewTop(),
+                        top: _homeLayoutController.listViewTop(),
                         bottom: 0,
                         child: 
                         NotificationListener<ScrollNotification>(
@@ -759,11 +734,11 @@ class _HomePageState extends State<HomePage>  {
                           child: 
                           ListView(
                             controller: _scrollController,
-                            physics: ClampingScrollPhysics(),
+                            physics: const ClampingScrollPhysics(),
                             children: [
-                              Container(
+                              SizedBox(
                                 width: _deviceWidth!,
-                                height: homeLayout.getTopMenuHeight(),
+                                height: _homeLayoutController.getTopMenuHeight(),
                                 //color: Colors.blue,
                               ),
                               //if(_videoController.videos.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
@@ -790,7 +765,7 @@ class _HomePageState extends State<HomePage>  {
                               ),
                               Container(
                                 width: _deviceWidth!,
-                                height: homeLayout.getbottomSpaceHeight(_videoController.videos.length),
+                                height: _homeLayoutController.getbottomSpaceHeight(_videoController.videos.length),
                                 color: Colors.white,
                               ),
                             ],
@@ -798,47 +773,45 @@ class _HomePageState extends State<HomePage>  {
                         )
                       ),
                       Transform.translate(
-                        offset: homeLayout.getTopMenuOffset(),
+                        offset: _homeLayoutController.getTopMenuOffset(),
                         child:topNavigation(context),
                       ),
-                      Container(
-                        child: Transform.translate(
-                          offset: homeLayout.categorybarOffset(),
-                          child: 
-                          CategoryBar(
-                            controller: _categoryScrollController,
-                            barHeight: homeLayout.categoryBarHeight,
-                            lineHeight: homeLayout.categoryBarLineHeight,
-                            width: _deviceWidth!,
-                            categoryController: _categoryController,
-                            onSelected: (int i){
-                              setState(() {
-                                Future.delayed(const Duration(seconds: 0), () {
-                                  _categoryScrollController.animateTo(
-                                    _deviceWidth!/5*(i-2),
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.ease,
-                                  );
-                                });
-                                _categoryController.update(i);
-                                selectCategory(_categoryController.categoryIndex);
-                                _scrollController.jumpTo(homeLayout.getTopMenuHeight());
+                      Transform.translate(
+                        offset: _homeLayoutController.categorybarOffset(),
+                        child: 
+                        CategoryBar(
+                          controller: _categoryScrollController,
+                          barHeight: _homeLayoutController.categoryBarHeight,
+                          lineHeight: _homeLayoutController.categoryBarLineHeight,
+                          width: _deviceWidth!,
+                          categoryController: _categoryController,
+                          onSelected: (int i){
+                            setState(() {
+                              Future.delayed(const Duration(seconds: 0), () {
+                                _categoryScrollController.animateTo(
+                                  _deviceWidth!/5*(i-2),
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.ease,
+                                );
                               });
-                            },
-                          )
-                        ),
+                              _categoryController.update(i);
+                              selectCategory(_categoryController.categoryIndex);
+                              _scrollController.jumpTo(_homeLayoutController.getTopMenuHeight());
+                            });
+                          },
+                        )
                       ),
                       if(_alert != null)
                       Positioned(
                         right: 0,
                         left: 0,
-                        top: homeLayout.getAlertTop(),
+                        top: _homeLayoutController.getAlertTop(),
                         child:
-                          Alert(
-                            text: _alert!, 
-                            width: _deviceWidth!,
-                            height: homeLayout.alertHeight
-                          )
+                        Alert(
+                          text: _alert!, 
+                          width: _deviceWidth!,
+                          height: _homeLayoutController.alertHeight
+                        )
                       )
                     ],
                   ),
@@ -847,21 +820,19 @@ class _HomePageState extends State<HomePage>  {
               bottomNavigationBar: bottomBar(),
             ),
             Transform.translate(
-              offset: homeLayout.youtubePlayerOffset(context),//Offset(0, 0),
+              offset: _homeLayoutController.youtubePlayerOffset(context),//Offset(0, 0),
                 child: SizedBox(
-                height: homeLayout.getYoutubeDisplayHeight(context),
-                width: homeLayout.getYoutubeDisplayWidth(context),
+                height: _homeLayoutController.getYoutubeDisplayHeight(context),
+                width: _homeLayoutController.getYoutubeDisplayWidth(context),
                 child:
-                  YoutubePlayerBuilder(
-                    player: YoutubePlayer(
-                      controller: _youtubeController,
-                    ),
-                    builder: (context, player){
+                YoutubePlayerBuilder(
+                  player: YoutubePlayer(
+                    controller: _youtubeController,
+                  ),
+                  builder: (context, player){
                     return Column(
                       children: [
-                      // some widgets
                       player,
-                      //some other widgets
                       ],
                     );
                   },
@@ -869,12 +840,12 @@ class _HomePageState extends State<HomePage>  {
               ),
             ),
             Transform.translate(
-              offset: homeLayout.youtubeCloseOffset(context),//Offset(0, 0),
+              offset: _homeLayoutController.youtubeCloseOffset(context),//Offset(0, 0),
               child:
               InkWell(
                 child: Container(
                   color: Colors.white,
-                  child: Icon(Icons.clear)
+                  child: const Icon(Icons.clear)
                 ),
                 onTap: () => closeYoutube(),
               ),
@@ -884,11 +855,11 @@ class _HomePageState extends State<HomePage>  {
               left: 0,
               top: -_deviceHeight!,
               child:
-                Container(
-                  color: Colors.white,
-                  width: _deviceWidth!,
-                  height: _deviceHeight!,
-                )
+              Container(
+                color: Colors.white,
+                width: _deviceWidth!,
+                height: _deviceHeight!,
+              )
             ),
           ]
         )

@@ -6,13 +6,14 @@ import 'package:video_news/controllers/video_controller.dart';
 import 'package:video_news/views/category_select.dart';
 
 class FirstPage extends StatefulWidget {
+  const FirstPage({super.key});
   @override
   State<FirstPage> createState() => _FirstPageState();
 }
 
 
 class _FirstPageState extends State<FirstPage> {
-  double? _deviceWidth, _deviceHeight;
+  double? _deviceWidth;
   @override
   void initState() {
     super.initState();
@@ -35,21 +36,17 @@ class _FirstPageState extends State<FirstPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: 
-      Container(
-        //color: Colors.red,
-        child: 
-        Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                'NEWSNIPPET',
-                style: TextStyle(
-                  fontSize: _deviceWidth! /'NEWSNIPPET'.length/2
-                ),
+      Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              'NEWSNIPPET',
+              style: TextStyle(
+                fontSize: _deviceWidth! /'NEWSNIPPET'.length/2
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       )
     );

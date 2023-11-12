@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-class HomeLayout  {
+class HomeLayoutController  {
   double barHeight = 0;
   double deviceWidth = 0;
   double innerHeight = 0;
@@ -38,7 +38,7 @@ class HomeLayout  {
   late double videoCellsTop = deviceWidth*topMenuRatio; //menu_areaと同じ値
   late bool ishome = false;
   
-  HomeLayout({
+  HomeLayoutController({
     required this.deviceWidth,
     required this.deviceHeight,
     required this.barHeight,

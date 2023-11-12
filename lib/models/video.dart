@@ -45,7 +45,7 @@ class Video{
       formattedDuration += '${duration.inHours.toString().padLeft(2, '0')}:';
     }
     formattedDuration += '${(duration.inMinutes % 60).toString().padLeft(2, '0')}:';
-    formattedDuration += '${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
+    formattedDuration += (duration.inSeconds % 60).toString().padLeft(2, '0');
     return formattedDuration;
   }
 

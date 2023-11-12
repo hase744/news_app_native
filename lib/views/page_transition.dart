@@ -8,9 +8,9 @@ class PageTransition {
           return page;
         },
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final Offset begin = fromRight ? Offset(1.0, 0.0):Offset(-1.0, 0.0) ; // 右から左
+           Offset begin = fromRight ? const Offset(1.0, 0.0): const Offset(-1.0, 0.0) ; // 右から左
           // final Offset begin = Offset(-1.0, 0.0); // 左から右
-          final Offset end = Offset.zero;
+          const Offset end = Offset.zero;
           final Animatable<Offset> tween = Tween(begin: begin, end: end)
               .chain(CurveTween(curve: Curves.easeInOut));
           final Animation<Offset> offsetAnimation = animation.drive(tween);

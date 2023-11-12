@@ -105,7 +105,7 @@ class _CategorySelectState extends State<CategorySelect>  {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.orange,
+                      backgroundColor: Colors.orange,
                     ),
                     child: const Text(
                         '次へ',
