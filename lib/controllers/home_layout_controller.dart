@@ -19,6 +19,7 @@ class HomeLayoutController  {
   double searchAreaRatio = 1/10;
   double loadAreaRatio = 1/5;
   double youtubeDisplayRatio = 9/16;
+  double youtubeCloseButtonRatio = 1/15;
 
   double appBarHeight = 40;
   late double topMenuRatio = searchAreaRatio + loadAreaRatio;
@@ -36,6 +37,7 @@ class HomeLayoutController  {
   late double pressHeight = 0;
   late double cellsHeight = 0;
   late double videoCellsTop = deviceWidth*topMenuRatio; //menu_areaと同じ値
+  late double youtubeCloseButtonSize = deviceWidth*youtubeCloseButtonRatio;
   late bool ishome = false;
   
   HomeLayoutController({
@@ -133,7 +135,7 @@ class HomeLayoutController  {
     if(MediaQuery.of(context).orientation == Orientation.portrait){//縦向き
       youtubeDisplayTop = appBarHeight + getTopMenuHeight() + categoryBarHeight + categoryBarLineHeight - videoCellsTop + youtubeDisplayHeight;
       if(youtubeDisplayLeft != deviceWidth){//youtubeが開いている
-        youtubeDisplayLeft = 0;
+        youtubeDisplayLeft = deviceWidth - youtubeCloseButtonSize;
       }
       return Offset(youtubeDisplayLeft,  youtubeDisplayTop);
     }{

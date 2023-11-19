@@ -847,8 +847,10 @@ class _HomePageState extends State<HomePage>  {
               child:
               InkWell(
                 child: Container(
+                  width: _homeLayoutController.youtubeCloseButtonSize,
+                  height: _homeLayoutController.youtubeCloseButtonSize,
                   color: Colors.white,
-                  child: const Icon(Icons.clear)
+                  child: Icon(Icons.clear, size: _homeLayoutController.youtubeCloseButtonSize,)
                 ),
                 onTap: () => closeYoutube(),
               ),
