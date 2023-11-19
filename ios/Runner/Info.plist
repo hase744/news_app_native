@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSUserTrackingUsageDescription</key>
+    <string>表示する広告を適切に選択するために使用します。</string>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-8457001237911326~3112842987</string>
 	<key>CFBundleDevelopmentRegion</key>

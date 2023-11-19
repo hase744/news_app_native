@@ -70,6 +70,7 @@ class _HomePageState extends State<HomePage>  {
     await _videoController.setVideosList();
     setState(() {
       FocusScope.of(context).unfocus();
+      MobileAds.instance.initialize();
       for(var i =0; i<3; i++){
         _bannerAds.add(BannerAd(
           size: AdSize.banner,
@@ -104,6 +105,8 @@ class _HomePageState extends State<HomePage>  {
       //_history.deleteTable();
       //_favorite.deleteTable();
     });
+    print("プロダクト");
+    print(const bool.fromEnvironment('dart.vm.product'));
     setDefauldLayout();
     updateScreen();
   }
