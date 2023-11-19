@@ -5,6 +5,7 @@ import 'package:settings_ui/settings_ui.dart';
 import 'home_page.dart';
 import 'page_transition.dart';
 import 'package:video_news/views/bottom_navigation_bar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingPage extends StatefulWidget {
   @override
@@ -53,6 +54,15 @@ class _SettingPageState extends State<SettingPage>  {
     );
   }
 
+  launchWebView (String id){
+    final Uri toLaunch = Uri(
+      scheme: 'https',
+      host: 'drive.google.com',
+      path: "file/d/$id",
+    );
+    launchUrl(toLaunch, mode: LaunchMode.inAppWebView);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,6 +88,19 @@ class _SettingPageState extends State<SettingPage>  {
                 leading: const Icon(Icons.format_list_bulleted_add),
                 title: const Text('カテゴリー追加'),
                 onPressed: (context) => _pageTransition.movePage(const AddCategoyPage(title:"設定"), context, true)
+              ),
+            ],
+          ),
+          SettingsSection(
+            title: const Text('このアプリについて'),
+            tiles: <SettingsTile>[
+              SettingsTile.navigation(
+                title: const Text('プライバシーポリシー'),
+                onPressed: (context) => launchWebView('1PgEtfqTtfMca055Poaa5yO4B_mwcxalP')
+              ),
+              SettingsTile.navigation(
+                title: const Text('ニュースメディアの連絡先情報'),
+                onPressed: (context) => launchWebView('1uZYKr-RHIide-OjtNXr51XoHpFbkx2vW')
               ),
             ],
           ),
