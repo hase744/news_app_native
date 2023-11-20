@@ -71,8 +71,8 @@ class _HomePageState extends State<HomePage>  {
     await defaultValue.initialize();
     String? defaultYoutubeId = defaultValue.getStoredValue('default_youtube_id');
     await _videoController.setVideosList();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('version');
+    //final prefs = await SharedPreferences.getInstance();
+    //await prefs.remove('version');
     await _versionController.initialize();
     await updateVersion();
     setState(() {
