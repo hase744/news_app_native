@@ -1,30 +1,31 @@
 // ignore_for_file: unused_field
-
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:video_news/controllers/category_controller.dart';
-import 'bottom_navigation_bar.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
-import 'package:video_news/models/history.dart';
-import 'package:video_news/views/setting_page.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
+import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:video_news/controllers/home_layout_controller.dart';
-import 'package:video_news/controllers/default_values_controller.dart';
-import 'video_cell.dart';
+import 'package:video_news/models/history.dart';
 import 'package:video_news/models/menu_button.dart';
 import 'package:video_news/models/favorite.dart';
-import 'package:video_news/views/bottom_menu_bar.dart';
-import 'package:video_news/views/alert.dart';
-import 'package:video_news/views/top_navigation.dart';
-import 'package:video_news/controllers/video_controller.dart';
 import 'package:video_news/models/video.dart';
+import 'package:video_news/views/setting_page.dart';
+import 'package:video_news/views/video_cell.dart';
+import 'package:video_news/views/alert.dart';
+import 'package:video_news/views/category_bar.dart';
+import 'package:video_news/views/top_navigation.dart';
+import 'package:video_news/views/bottom_menu_bar.dart';
+import 'package:video_news/views/bottom_navigation_bar.dart';
+import 'package:video_news/controllers/home_layout_controller.dart';
+import 'package:video_news/controllers/default_values_controller.dart';
+import 'package:video_news/controllers/video_controller.dart';
+import 'package:video_news/controllers/category_controller.dart';
 import 'package:video_news/controllers/load_controller.dart';
 import 'package:video_news/controllers/page_controller.dart';
-import 'package:video_news/views/category_bar.dart';
+import 'package:video_news/controllers/version_controller.dart';
 import 'package:video_news/ad_helper.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.initialIndex});
@@ -35,7 +36,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage>  {
-  double? _deviceWidth, _deviceHeight;
+  double _deviceWidth = 0.0;
+  double _deviceHeight = 0.0;
   String? _alert;
   Timer? _timer;
   final _history = History(); 
@@ -45,6 +47,7 @@ class _HomePageState extends State<HomePage>  {
   Future<void>? _launched;
   VideoController _videoController = VideoController();
   ScrollController _scrollController = ScrollController();
+  VersionController _versionController = VersionController();
   final ScrollController _categoryScrollController = ScrollController();
   final CategoryController _categoryController = CategoryController();
   final LoadController _loadController = LoadController();
@@ -68,6 +71,10 @@ class _HomePageState extends State<HomePage>  {
     await defaultValue.initialize();
     String? defaultYoutubeId = defaultValue.getStoredValue('default_youtube_id');
     await _videoController.setVideosList();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('version');
+    await _versionController.initialize();
+    await updateVersion();
     setState(() {
       FocusScope.of(context).unfocus();
       MobileAds.instance.initialize();
@@ -109,6 +116,12 @@ class _HomePageState extends State<HomePage>  {
     print(const bool.fromEnvironment('dart.vm.product'));
     setDefauldLayout();
     updateScreen();
+  }
+
+  updateVersion() async {
+    setState(() {
+      _versionController = _versionController;
+    });
   }
 
   Future<void> displayNews() async {
@@ -366,7 +379,7 @@ class _HomePageState extends State<HomePage>  {
     );
   }
 
-  Widget videoCell(BuildContext context, Video video, int index){
+  Widget videoCell(BuildContext context, Video video, int index) {
     int cellId = video.id;
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth! /2 /16 *9;
@@ -412,7 +425,13 @@ class _HomePageState extends State<HomePage>  {
           },
           onPressedTitle: () => openYoutube(video),
         ),
-        if (bannerAd != null)
+        if (
+          bannerAd != null 
+          && (
+            !_homeLayoutController.isYoutubeDisplaying() 
+            || _versionController.isReleased
+            )
+          )
         Align(
           alignment: Alignment.topCenter,
           child: SizedBox(
@@ -694,7 +713,7 @@ class _HomePageState extends State<HomePage>  {
               appBar: PreferredSize(
                 preferredSize: Size.fromHeight(_homeLayoutController.appBarHeight),
                 child: AppBar(
-                  title: Text(_categoryController.currentCategory.japaneseName),
+                  title: Text("_categoryController.currentCategory.japaneseName"),
                   leading: Container(),
                 ),
               ),

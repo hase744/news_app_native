@@ -176,6 +176,10 @@ class HomeLayoutController  {
     youtubeDisplayHeight = 0;
   }
 
+  isYoutubeDisplaying(){
+    return youtubeDisplayHeight != 0;
+  }
+
   getInnerScrollHeight(){
     double height = appBarHeight + categoryBarHeight + categoryBarLineHeight + youtubeDisplayHeight + pressHeight;
     return height - getTopMenuHeight();
