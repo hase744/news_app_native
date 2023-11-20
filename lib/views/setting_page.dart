@@ -77,7 +77,7 @@ class _SettingPageState extends State<SettingPage>  {
         platform: DevicePlatform.iOS,
         sections: [
           SettingsSection(
-            title: const Text('カテゴリー設定'),
+            title: const Text('カテゴリー'),
             tiles: <SettingsTile>[
               SettingsTile.navigation(
                 leading: const Icon(Icons.format_list_numbered),
