@@ -1,4 +1,4 @@
-package com.example.hase744.video_news
+package com.ray.hase744.newsnippet
 
 import io.flutter.embedding.android.FlutterActivity
 

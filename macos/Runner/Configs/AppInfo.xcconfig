@@ -8,7 +8,7 @@
 PRODUCT_NAME = video_news
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.hase744.videoNews
+PRODUCT_BUNDLE_IDENTIFIER = com.ray.hase744.newsnippet
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2023 com.example.hase744. All rights reserved.
