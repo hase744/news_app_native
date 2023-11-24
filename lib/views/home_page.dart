@@ -54,7 +54,7 @@ class _HomePageState extends State<HomePage>  {
   final PageControllerClass _pageController = PageControllerClass();
   final TextEditingController _controller = TextEditingController();
   YoutubePlayerController _youtubeController = YoutubePlayerController(
-    initialVideoId: '4b6DuHGcltI',
+    initialVideoId: '',
     flags: const YoutubePlayerFlags(
         autoPlay: false,  // 自動再生しない
       ),

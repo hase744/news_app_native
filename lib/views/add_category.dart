@@ -37,13 +37,6 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
       appBar: AppBar(
           elevation: 0,
           backgroundColor: Color.fromRGBO(255,251,255, 1),
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            color: Colors.black,
-            onPressed: () {
-              _pageTransition.movePage(SettingPage(), context, false);
-            },
-          ),
           title: Text('カテゴリー追加',style: TextStyle(color: Colors.black)),
         ),
       body: 

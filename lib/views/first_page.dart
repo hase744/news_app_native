@@ -97,7 +97,7 @@ class _FirstPageState extends State<FirstPage> {
     if (await videoController.accessVideos()) {
       await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
       final prefs = await SharedPreferences.getInstance();
-      String defaultYoutubeId = prefs.getString('default_youtube_id') ?? '4b6DuHGcltI';
+      String defaultYoutubeId = prefs.getString('default_youtube_id') ?? '';
       await prefs.setString('default_youtube_id', defaultYoutubeId);
       // ignore: use_build_context_synchronously
       Navigator.pushReplacement(

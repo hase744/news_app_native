@@ -18,42 +18,29 @@ class _CategorySetting extends State<CategorySetting>  {
   PageTransition _pageTransition = PageTransition();
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      color: Colors.red,
-      home: Scaffold(
-        appBar: AppBar(
-          elevation: 0,
-          backgroundColor: Color.fromRGBO(255,251,255, 1),
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            color: Colors.black,
-            onPressed: () {
-              _pageTransition.movePage(SettingPage(), context, false);
-            },
-          ),
-          title: Text('カテゴリー並び替え',style: TextStyle(color: Colors.black)),
-        ),
-        body: 
-          //Flexible(
-          //  child:
-            Container(
-              color: Color.fromRGBO(242, 242, 247, 1),
-              child: 
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: <Widget>[
-                  Text("ドラッグ&ドロップで並び替え"),
-                  Flexible(
-                    child:Container(
-                      color: Color.fromRGBO(242, 242, 247, 1),
-                      child: const ReorderableExample(),)
-                  )
-                ]
-              )
-      
-            )
-          //)
+    return
+    Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Color.fromRGBO(255,251,255, 1),
+        title: Text('カテゴリー並び替え',style: TextStyle(color: Colors.black)),
       ),
+      body: 
+      Container(
+        color: Color.fromRGBO(242, 242, 247, 1),
+        child: 
+        Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Text("ドラッグ&ドロップで並び替え"),
+            Flexible(
+              child:Container(
+                color: Color.fromRGBO(242, 242, 247, 1),
+                child: const ReorderableExample(),)
+            )
+          ]
+        )
+      )
     );
   }
 }
