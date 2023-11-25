@@ -73,6 +73,7 @@ class _FirstPageState extends State<FirstPage> {
 
   @override
   Widget build(BuildContext context) {
+    double titleSize = _deviceWidth! /1.5 /'NEWSNIPPET'.length;
     return Scaffold(
       body: 
       Center(
@@ -82,9 +83,20 @@ class _FirstPageState extends State<FirstPage> {
             Text(
               'NEWSNIPPET',
               style: TextStyle(
-                fontSize: _deviceWidth! /'NEWSNIPPET'.length/2
+                fontSize: titleSize
               ),
             ),
+            SizedBox(
+              height: _deviceWidth!/20,
+              width: _deviceWidth!,
+            ),
+            SizedBox(
+              width: _deviceWidth! /2,
+              child: const LinearProgressIndicator(
+                color: Colors.blue,
+                backgroundColor: Colors.grey,
+              ),
+            )
           ],
         ),
       )
