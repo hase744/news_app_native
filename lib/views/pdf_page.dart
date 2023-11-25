@@ -5,16 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 
-class PdfScreen extends StatefulWidget {
-  const PdfScreen({Key? key, required this.url, required this.title}) : super(key: key);
+class PdfPage extends StatefulWidget {
+  const PdfPage({Key? key, required this.url, required this.title}) : super(key: key);
   final String url;
   final String title;
 
   @override
-  _PdfScreenState createState() => _PdfScreenState();
+  _PdfPageState createState() => _PdfPageState();
 }
 
-class _PdfScreenState extends State<PdfScreen> {
+class _PdfPageState extends State<PdfPage> {
   final Completer<PDFViewController> _controller =
       Completer<PDFViewController>();
   int? pages = 0;

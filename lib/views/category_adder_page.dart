@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'setting_page.dart';
-import 'page_transition.dart';
+import '../helpers/page_transition.dart';
 import 'package:video_news/controllers/category_controller.dart';
 
 class AddCategoyPage extends StatefulWidget {
@@ -35,22 +35,22 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          elevation: 0,
-          backgroundColor: Color.fromRGBO(255,251,255, 1),
-          title: Text('カテゴリー追加',style: TextStyle(color: Colors.black)),
-        ),
+        elevation: 0,
+        backgroundColor: const Color.fromRGBO(255,251,255, 1),
+        title: const Text('カテゴリー追加',style: TextStyle(color: Colors.black)),
+      ),
       body: 
       Container(
-        color: Color.fromRGBO(242, 242, 247, 1),
+        color: const Color.fromRGBO(242, 242, 247, 1),
         child: 
         Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              if(_categoryController.unusedCategories.length > 0)
-              Text("追加ボタンからカテゴリーを追加"),
-              if(_categoryController.unusedCategories.length == 0)
-              Text(
+              if(_categoryController.unusedCategories.isNotEmpty)
+              const Text("追加ボタンからカテゴリーを追加"),
+              if(_categoryController.unusedCategories.isEmpty)
+              const Text(
                 "追加可能なカテゴリーはありません",
                 style: TextStyle(
                   fontSize: 20,
@@ -73,15 +73,15 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
                         children: [
                           Text(
                             " ${category.emoji} ${category.japaneseName}",
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 20,
                             ),
                           ),
-                          Spacer(),
+                          const Spacer(),
                           Container(
                             child: _categoryController.unusedCategories[index].isAdded ?
                               IconButton(
-                                icon:  Icon(Icons.check_circle, color: Colors.green) ,
+                                icon:  const Icon(Icons.check_circle, color: Colors.green) ,
                                 onPressed: () {
                                   setState(() {
                                     //_categoryController.unusedCategories[index]['is_added'] = !_categoryController.unusedCategories[index]['is_added'];
@@ -105,7 +105,7 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
                                     color: Colors.red
                                   ),
                                   child: 
-                                  Row(
+                                  const Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                     Text(
@@ -116,7 +116,7 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
                                         fontWeight: FontWeight.bold
                                       ),
                                     ),
-                                    const Icon(Icons.add_circle, color: Colors.white),
+                                    Icon(Icons.add_circle, color: Colors.white),
                                   ]
                                 ),
                                 

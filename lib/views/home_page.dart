@@ -25,7 +25,7 @@ import 'package:video_news/controllers/category_controller.dart';
 import 'package:video_news/controllers/load_controller.dart';
 import 'package:video_news/controllers/page_controller.dart';
 import 'package:video_news/controllers/version_controller.dart';
-import 'package:video_news/ad_helper.dart';
+import 'package:video_news/helpers/ad_helper.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.initialIndex});

@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_news/views/home_page.dart';
 import 'package:flutter/services.dart';
 import 'package:video_news/controllers/video_controller.dart';
-import 'package:video_news/views/category_select.dart';
+import 'package:video_news/views/category_selector_page.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
 class FirstPage extends StatefulWidget {

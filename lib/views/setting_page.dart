@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
-import 'add_category.dart';
-import 'category_setting.dart';
+import 'category_adder_page.dart';
+import 'category_order_page.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'home_page.dart';
-import 'page_transition.dart';
+import '../helpers/page_transition.dart';
 import 'package:video_news/views/bottom_navigation_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:video_news/views/pdf_screen.dart';
-import 'dart:async';
-import 'dart:io';
+import 'package:video_news/views/pdf_page.dart';
 import 'package:video_news/consts/config.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 
 class SettingPage extends StatefulWidget {
   @override
@@ -20,7 +15,7 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage>  {
-  var categorySetting = CategorySetting();
+  final categorySetting = CategoryOrder();
   double? _deviceHeight;
   final ButtonStyle style = ElevatedButton.styleFrom(textStyle: const TextStyle(fontSize: 20));
   final PageTransition _pageTransition = PageTransition();
@@ -91,7 +86,7 @@ class _SettingPageState extends State<SettingPage>  {
               SettingsTile.navigation(
                 leading: const Icon(Icons.format_list_numbered),
                 title: const Text('カテゴリー並び変え'),
-                onPressed: (context) => _pageTransition.movePage(CategorySetting(), context, true)
+                onPressed: (context) => _pageTransition.movePage(const CategoryOrder(), context, true)
               ),
               SettingsTile.navigation(
                 leading: const Icon(Icons.format_list_bulleted_add),
@@ -105,27 +100,25 @@ class _SettingPageState extends State<SettingPage>  {
             tiles: <SettingsTile>[
               SettingsTile.navigation(
                 title: const Text('プライバシーポリシー'),
-                onPressed:(context) => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PdfScreen(
-                      url: '$domain/uploads/pdf_file/file/1/privacy.pdf',
-                      title: 'プライバシーポリシー'
-                      ),
+                onPressed:(context) => _pageTransition.movePage(
+                  PdfPage(
+                    url: '$domain/uploads/pdf_file/file/1/privacy.pdf',
+                    title: 'プライバシーポリシー'
                   ),
-                )//launchWebView('1PgEtfqTtfMca055Poaa5yO4B_mwcxalP')
+                  context, 
+                  true
+                  ),//launchWebView('1PgEtfqTtfMca055Poaa5yO4B_mwcxalP')
               ),
               SettingsTile.navigation(
                 title: const Text('ニュースメディアの連絡先情報'),
-                onPressed: (context) => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PdfScreen(
-                      url: '$domain/uploads/pdf_file/file/2/contact.pdf',
-                      title: 'ニュースメディアの連絡先情報'
-                      ),
+                onPressed: (context) => _pageTransition.movePage(
+                  PdfPage(
+                    url: '$domain/uploads/pdf_file/file/1/privacy.pdf',
+                    title: 'プライバシーポリシー'
                   ),
-                )
+                  context, 
+                  true
+                  ),
               ),
             ],
           ),
