@@ -184,7 +184,10 @@ class VideoCell extends StatelessWidget {
                                       child: Container(
                                         height: innerHeight/5,
                                         width: innerHeight/5,
-                                        child: Icon(Icons.more_horiz),
+                                        child: const Icon(
+                                          Icons.more_horiz,
+                                          color: Colors.black54,
+                                          ),
                                       )
                                     )
                                   ),

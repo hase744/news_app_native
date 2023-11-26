@@ -102,7 +102,9 @@ class _PdfPageState extends State<PdfPage> {
           errorMessage.isEmpty
               ? !isReady
                   ? const Center(
-                      child: CircularProgressIndicator(),
+                      child: CircularProgressIndicator(
+                        color: Colors.blue,
+                      ),
                     )
                   : Container()
               : Center(

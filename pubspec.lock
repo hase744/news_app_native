@@ -480,6 +480,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.0"
+  simple_platform:
+    dependency: "direct main"
+    description:
+      name: simple_platform
+      sha256: "9692505720fc5d4cce6e60a79b444dde4599469d485c1611b42a578c30ff7d2c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   sky_engine:
     dependency: transitive
     description: flutter
