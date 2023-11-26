@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 
-class SelectBottomNavigationBar extends StatelessWidget {
+final class SelectBottomNavigationBar extends StatelessWidget {
   final int initialIndex;
   final Function(int) onTap;
   final GlobalKey _bottomNavigationKey = GlobalKey();
-  bool isSelectMode;
-  List<Map<dynamic, dynamic>> pageMap = [
+  final bool isSelectMode;
+  SelectBottomNavigationBar({
+    super.key,
+    required this.initialIndex,
+    required this.onTap,
+    required this.isSelectMode
+  });
+
+  final List<Map<dynamic, dynamic>> pageMap = [
     {
       "name": 'home',
       "item": const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム'),
@@ -24,7 +31,7 @@ class SelectBottomNavigationBar extends StatelessWidget {
     },
   ];
 
-  List<Map<dynamic, dynamic>> selectMap = [
+  final List<Map<dynamic, dynamic>> selectMap = [
     {
       "name": 'close',
       "item": const BottomNavigationBarItem(icon: Icon(Icons.close), label: '戻る'),
@@ -34,12 +41,6 @@ class SelectBottomNavigationBar extends StatelessWidget {
       "item": const BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'お気に入りに追加'),
     },
   ];
-
-  SelectBottomNavigationBar({
-    required this.initialIndex,
-    required this.onTap,
-    required this.isSelectMode
-  });
 
   String getButtonName(index){
       return pageMap[index]['name'];

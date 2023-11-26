@@ -4,7 +4,9 @@ class Alert extends StatelessWidget {
   String text = "";
   double height = 0.0;
   double width= 0.0;
+  
   Alert({
+    super.key,
     required this.text,
     required this.height,
     required this.width

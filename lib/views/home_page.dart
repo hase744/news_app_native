@@ -1,6 +1,5 @@
 // ignore_for_file: unused_field
 import 'dart:async';
-import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -36,8 +35,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage>  {
-  double _deviceWidth = 0.0;
-  double _deviceHeight = 0.0;
+  double? _deviceWidth;
+  double? _deviceHeight;
   String? _alert;
   Timer? _timer;
   final _history = History(); 

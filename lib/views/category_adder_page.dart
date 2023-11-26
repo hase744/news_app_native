@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'setting_page.dart';
-import '../helpers/page_transition.dart';
 import 'package:video_news/controllers/category_controller.dart';
 
 class AddCategoyPage extends StatefulWidget {
@@ -13,7 +11,6 @@ class AddCategoyPage extends StatefulWidget {
 }
 
 class _AddCategoyPageState extends State<AddCategoyPage> {
-  PageTransition _pageTransition = PageTransition();
     CategoryController _categoryController = CategoryController();
   double? _deviceHeight, _deviceWidth;
   @override
