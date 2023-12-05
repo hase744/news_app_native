@@ -7,6 +7,7 @@ import '../helpers/page_transition.dart';
 import 'package:video_news/views/bottom_navigation_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_news/views/pdf_page.dart';
+import 'package:video_news/views/html_page.dart';
 import 'package:video_news/consts/config.dart';
 import 'dart:io';
 
@@ -129,12 +130,12 @@ class _SettingPageState extends State<SettingPage> {
               title: const Text('カテゴリー'),
               tiles: <SettingsTile>[
                 settingTile(
-                  'カテゴリー並び替え', 
+                  '並び替え', 
                   const Icon(Icons.format_list_numbered), 
                   const CategoryOrder()
                 ),
                 settingTile(
-                  'カテゴリー追加', 
+                  '追加', 
                   const Icon(Icons.format_list_bulleted_add), 
                   const AddCategoyPage(title: "設定")
                 ),
@@ -146,7 +147,7 @@ class _SettingPageState extends State<SettingPage> {
                 settingTile(
                   'プライバシーポリシー',
                   null ,
-                  PdfPage(url: '$domain/uploads/pdf_file/file/1/privacy.pdf',
+                  HtmlPage(url: '$domain/documents/privacy_policy',
                   title: 'プライバシーポリシー')
                 ),
                 settingTile('ニュースメディアの連絡先情報',
