@@ -10,6 +10,7 @@ import 'package:video_news/models/history.dart';
 import 'package:video_news/models/menu_button.dart';
 import 'package:video_news/models/favorite.dart';
 import 'package:video_news/models/video.dart';
+import 'package:video_news/models/ad_display.dart';
 import 'package:video_news/views/setting_page.dart';
 import 'package:video_news/views/video_cell.dart';
 import 'package:video_news/views/alert.dart';
@@ -24,6 +25,7 @@ import 'package:video_news/controllers/category_controller.dart';
 import 'package:video_news/controllers/load_controller.dart';
 import 'package:video_news/controllers/page_controller.dart';
 import 'package:video_news/controllers/version_controller.dart';
+import 'package:video_news/controllers/banner_adds_controller.dart';
 import 'package:video_news/helpers/ad_helper.dart';
 
 class HomePage extends StatefulWidget {
@@ -47,6 +49,7 @@ class _HomePageState extends State<HomePage>  {
   VideoController _videoController = VideoController();
   ScrollController _scrollController = ScrollController();
   VersionController _versionController = VersionController();
+  BannerAddsController _bannerAddsController = BannerAddsController();
   final ScrollController _categoryScrollController = ScrollController();
   final CategoryController _categoryController = CategoryController();
   final LoadController _loadController = LoadController();
@@ -104,6 +107,7 @@ class _HomePageState extends State<HomePage>  {
       _scrollController = ScrollController(
         initialScrollOffset: (_deviceWidth!*_homeLayoutController.topMenuRatio),
       );
+      _bannerAddsController = BannerAddsController();
       _scrollController.addListener(_onScroll);
       _pageController.pageIndex = widget.initialIndex;
       _homeLayoutController.updateCellsTop(0);
@@ -383,11 +387,6 @@ class _HomePageState extends State<HomePage>  {
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth! /2 /16 *9;
     List cellIds = _videoController.selection.map((map) => map.id).toList();
-    BannerAd? bannerAd;
-    if (_pageController.isHomePage() && (index %5 == 2 && index < 15)){
-      bannerAd = _bannerAds[index~/5];
-      bannerAd.load();
-    }
     return 
     Column ( 
       children: [
@@ -424,23 +423,34 @@ class _HomePageState extends State<HomePage>  {
           },
           onPressedTitle: () => openYoutube(video),
         ),
-        if (
-          bannerAd != null 
-          && (
-            !_homeLayoutController.isYoutubeDisplaying() 
-            || _versionController.isReleased
-            )
-          )
-        Align(
-          alignment: Alignment.topCenter,
-          child: SizedBox(
-            width: bannerAd.size.width.toDouble(),
-            height: bannerAd.size.height.toDouble(),
-            child: AdWidget(ad: bannerAd),
-          ),
-        ),
+        adDisplay(index),
       ],
     );
+  }
+
+  Widget adDisplay(int index){
+    if (_homeLayoutController.isYoutubeDisplaying()) {
+      return const SizedBox();
+    } else if (!_pageController.isHomePage()) {
+      return const SizedBox();
+    } else if (index % 5 != 2) {
+      return const SizedBox();
+    } else if ((index ~/ 5) > (_bannerAddsController.bannerAds.length -1)) {
+      return const SizedBox();
+    } else if (!_versionController.isReleased) {
+      return const SizedBox();
+    } else {
+      BannerAd bannerAd = _bannerAddsController.bannerAds[index~/5];
+      bannerAd.load();
+      return Align(
+        alignment: Alignment.topCenter,
+        child: SizedBox(
+          width: bannerAd!.size.width.toDouble(),
+          height: bannerAd.size.height.toDouble(),
+          child: AdWidget(ad: bannerAd),
+        ),
+      );
+    }
   }
 
   launchWebView (Video video){
