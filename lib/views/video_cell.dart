@@ -78,10 +78,10 @@ class VideoCell extends StatelessWidget {
                                         "assets/images/no_image.png",
                                         fit: BoxFit.cover,
                                       );
-                                      const Icon(
-                                        Icons.error,
-                                        color: Colors.red,
-                                      );
+                                      //const Icon(
+                                      //  Icons.error,
+                                      //  color: Colors.red,
+                                      //);
                                     },
                                   )
                                 ),

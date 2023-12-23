@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_news/views/home_page.dart';
@@ -53,8 +55,7 @@ class _FirstPageState extends State<FirstPage> {
     });
   }
 
-  Future<void> showCustomTrackingDialog(BuildContext context) async =>
-      await showDialog<void>(
+  Future<void> showCustomTrackingDialog(BuildContext context) async => await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('ご利用者様へ'),
@@ -100,27 +101,66 @@ class _FirstPageState extends State<FirstPage> {
     ));
   }
 
+  displayDialog(context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("ロードエラー"),
+          content: const Text("リロードしますか？"),
+          actions: [
+            Builder(builder: (context) {
+              return TextButton(
+                child: const Text("Cancel"),
+                onPressed: (){
+                  Navigator.pop(context);
+                }
+              );
+            }),
+            Builder(builder: (context) {
+              return TextButton(
+                child: const Text("Yes"),
+                onPressed: (){
+                  fetchData();
+                  Navigator.pop(context);
+                }
+              );
+            }),
+          ],
+        );
+      },
+    );
+  }
+
+  
+
   Future<void> fetchData() async {
     VideoController videoController = VideoController();
 
-    if (await videoController.accessVideos()) {
-      await SystemChrome.setPreferredOrientations(
-          [DeviceOrientation.portraitUp]);
-      final prefs = await SharedPreferences.getInstance();
-      String defaultYoutubeId = prefs.getString('default_youtube_id') ?? '';
-      await prefs.setString('default_youtube_id', defaultYoutubeId);
-      // ignore: use_build_context_synchronously
-      Navigator.pushReplacement(
-        context,
-        prefs.getString('category_order') == null
+    try {
+      if (await videoController.accessVideos()) {
+        await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+        final prefs = await SharedPreferences.getInstance();
+        String defaultYoutubeId = prefs.getString('default_youtube_id') ?? '';
+        await prefs.setString('default_youtube_id', defaultYoutubeId);
+        
+        Navigator.pushReplacement(
+          context,
+          prefs.getString('category_order') == null
             ? MaterialPageRoute(builder: (context) => CategoryDefault())
             : MaterialPageRoute(
-                builder: (context) => const HomePage(
-                      initialIndex: 0,
-                    )),
-      );
-    } else {
-      throw Exception('Failed to load data');
+              builder: (context) => const HomePage(
+                    initialIndex: 0,
+                  )
+                ),
+        );
+      } else {
+        displayDialog(context);
+        throw Exception('Failed to load data');
+      }
+    } catch (e) {
+      displayDialog(context);
+      throw Exception('error $e');
     }
   }
 }
