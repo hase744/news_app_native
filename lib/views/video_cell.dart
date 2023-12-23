@@ -74,7 +74,11 @@ class VideoCell extends StatelessWidget {
                                     "http://img.youtube.com/vi/$youtube_id/sddefault.jpg",
                                     fit: BoxFit.cover,
                                     errorBuilder: (c, o, s) {
-                                      return const Icon(
+                                      return  Image.asset(
+                                        "assets/images/no_image.png",
+                                        fit: BoxFit.cover,
+                                      );
+                                      const Icon(
                                         Icons.error,
                                         color: Colors.red,
                                       );
