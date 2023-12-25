@@ -9,7 +9,7 @@ class VersionController{
   late final domain = Config.domain;
   late final versionName = Config.version;
 
-  Future<Version> save() async {
+  Future<Version> update() async {
     String url = '$domain/versions.json?name=$versionName';
     Response response = await get(Uri.parse(url));
     Map<String, dynamic> data = await jsonDecode(response.body);
@@ -23,7 +23,7 @@ class VersionController{
     final prefs = await SharedPreferences.getInstance();
     String? versionString = prefs.getString('version');
     version = versionString == null 
-    ? await save() 
+    ? await update() 
     : Version.fromMap(jsonDecode(versionString));
     return version!;
   }

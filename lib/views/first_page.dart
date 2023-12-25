@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_news/views/home_page.dart';
 import 'package:flutter/services.dart';
 import 'package:video_news/controllers/video_controller.dart';
+import 'package:video_news/controllers/version_controller.dart';
 import 'package:video_news/views/category_default_page.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
@@ -21,25 +22,24 @@ class _FirstPageState extends State<FirstPage> {
   @override
   void initState() {
     super.initState();
+    init();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    init();
-  }
-
-  init() async {
     setState(() {
       _deviceWidth = MediaQuery.of(context).size.width;
     });
+  }
+
+  init() async {
     await initPlugin(context);
     fetchData();
   }
 
   Future<void> initPlugin(context) async {
-    TrackingStatus status =
-        await AppTrackingTransparency.trackingAuthorizationStatus;
+    TrackingStatus status = await AppTrackingTransparency.trackingAuthorizationStatus;
     setState(() => _authStatus = '$status');
     if (status == TrackingStatus.notDetermined) {
       await showCustomTrackingDialog(context);
@@ -56,62 +56,75 @@ class _FirstPageState extends State<FirstPage> {
   }
 
   Future<void> showCustomTrackingDialog(BuildContext context) async => await showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('ご利用者様へ'),
-          content: const Text(
-            '端末のトラッキングを許可することで、あなたのお気に入りや履歴をクラウド上に保存できるようになります。\n\n'
-            'また、あなたに最適化された広告を表示することができるようになります。\n\n'
-            'ご協力をお願い申し上げます。',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('次へ'),
-            ),
-          ],
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('ご利用者様へ'),
+      content: const Text(
+        '端末のトラッキングを許可することで、あなたのお気に入りや履歴をクラウド上に保存できるようになります。\n\n'
+        'また、あなたに最適化された広告を表示することができるようになります。\n\n'
+        'ご協力をお願い申し上げます。',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('次へ'),
         ),
-      );
+      ],
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     double titleSize = _deviceWidth! / 1.5 / 'NEWSNIPPET'.length;
     return Scaffold(
-        body: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text(
-            'NEWSNIPPET',
-            style: TextStyle(fontSize: titleSize),
-          ),
-          SizedBox(
-            height: _deviceWidth! / 20,
-            width: _deviceWidth!,
-          ),
-          SizedBox(
-            width: _deviceWidth! / 2,
-            child: const LinearProgressIndicator(
-              color: Colors.blue,
-              backgroundColor: Colors.grey,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              'NEWSNIPPET',
+              style: TextStyle(fontSize: titleSize),
             ),
-          )
-        ],
-      ),
-    ));
+            SizedBox(
+              height: _deviceWidth! / 20,
+              width: _deviceWidth!,
+            ),
+            SizedBox(
+              width: _deviceWidth! / 2,
+              child: const LinearProgressIndicator(
+                color: Colors.blue,
+                backgroundColor: Colors.grey,
+              ),
+            )
+          ],
+        ),
+      )
+    );
   }
 
-  displayDialog(context) {
+  displayDialog(context, dynamic e) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("ロードエラー"),
-          content: const Text("リロードしますか？"),
+          title: const Text(
+            "ロードに失敗しました。\nリロードしますか？",
+            style: TextStyle(
+              fontSize: 20,
+              color: Colors.black87
+            ),
+            ),
+          content: Text(
+            e.toString(),
+            style: const TextStyle(
+              fontSize: 10,
+              color: Colors.black45
+            ),
+            ),
           actions: [
             Builder(builder: (context) {
               return TextButton(
-                child: const Text("Cancel"),
+                child: const Text("キャンセル"),
                 onPressed: (){
                   Navigator.pop(context);
                 }
@@ -119,9 +132,10 @@ class _FirstPageState extends State<FirstPage> {
             }),
             Builder(builder: (context) {
               return TextButton(
-                child: const Text("Yes"),
+                child: const Text("はい"),
                 onPressed: (){
                   fetchData();
+                  //MaterialPageRoute(builder: (context) => PreFirstPage());
                   Navigator.pop(context);
                 }
               );
@@ -132,35 +146,28 @@ class _FirstPageState extends State<FirstPage> {
     );
   }
 
-  
-
   Future<void> fetchData() async {
     VideoController videoController = VideoController();
+    VersionController versionController = VersionController();
 
     try {
-      if (await videoController.accessVideos()) {
-        await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-        final prefs = await SharedPreferences.getInstance();
-        String defaultYoutubeId = prefs.getString('default_youtube_id') ?? '';
-        await prefs.setString('default_youtube_id', defaultYoutubeId);
-        
-        Navigator.pushReplacement(
-          context,
-          prefs.getString('category_order') == null
-            ? MaterialPageRoute(builder: (context) => CategoryDefault())
-            : MaterialPageRoute(
-              builder: (context) => const HomePage(
-                    initialIndex: 0,
-                  )
-                ),
-        );
-      } else {
-        displayDialog(context);
-        throw Exception('Failed to load data');
-      }
+      if(!(await videoController.accessVideos())){throw Exception('Failed to load data');};
+      await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+      final prefs = await SharedPreferences.getInstance();
+      String defaultYoutubeId = prefs.getString('default_youtube_id') ?? '';
+      await prefs.setString('default_youtube_id', defaultYoutubeId);
+      
+      Navigator.pushReplacement(
+        context,
+        prefs.getString('category_order') == null
+          ? MaterialPageRoute(builder: (context) => CategoryDefault())
+          : MaterialPageRoute(builder: (context) => const HomePage(initialIndex: 0)),
+      );
+
     } catch (e) {
-      displayDialog(context);
-      throw Exception('error $e');
+      displayDialog(context, e);
+      throw Exception('Failed to load data');
     }
+    versionController.update();
   }
 }
