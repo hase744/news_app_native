@@ -856,18 +856,42 @@ class _HomePageState extends State<HomePage>  {
                 height: _homeLayoutController.getYoutubeDisplayHeight(context),
                 width: _homeLayoutController.getYoutubeDisplayWidth(context),
                 child:
-                YoutubePlayerBuilder(
-                  player: YoutubePlayer(
-                    controller: _youtubeController,
+                Stack(
+                  children: <Widget>[
+                  YoutubePlayerBuilder(
+                    player: YoutubePlayer(
+                      controller: _youtubeController,
+                    ),
+                    builder: (context, player){
+                      return Column(
+                        children: [
+                        player,
+                        ],
+                      );
+                    },
                   ),
-                  builder: (context, player){
-                    return Column(
-                      children: [
-                      player,
-                      ],
-                    );
-                  },
-                ),
+                  if(!_versionController.isReleased)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: 
+                    Container(
+                      width: _deviceWidth!*3/10,
+                      height: _deviceWidth!*1/10,
+                      color: Colors.black,
+                      alignment: Alignment.center,
+                      child: Text(
+                        "NEWSNIPPET",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: _deviceWidth!*3/10/8,
+                          fontWeight: FontWeight.bold
+                        ),
+                        )
+                    )
+                  ),
+                ])
               ),
             ),
             Transform.translate(
