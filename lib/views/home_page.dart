@@ -26,7 +26,9 @@ import 'package:video_news/controllers/load_controller.dart';
 import 'package:video_news/controllers/page_controller.dart';
 import 'package:video_news/controllers/version_controller.dart';
 import 'package:video_news/controllers/banner_adds_controller.dart';
+import 'package:video_news/consts/config.dart';
 import 'package:video_news/helpers/ad_helper.dart';
+import 'package:video_player/video_player.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.initialIndex});
@@ -54,14 +56,12 @@ class _HomePageState extends State<HomePage>  {
   final CategoryController _categoryController = CategoryController();
   final LoadController _loadController = LoadController();
   final PageControllerClass _pageController = PageControllerClass();
+  
   final TextEditingController _controller = TextEditingController();
-  YoutubePlayerController _youtubeController = YoutubePlayerController(
-    initialVideoId: '',
-    flags: const YoutubePlayerFlags(
-        autoPlay: false,  // 自動再生しない
-      ),
-    );
+  late YoutubePlayerController _youtubeController;
   final List<BannerAd> _bannerAds = [];
+  late Future<void> _initializeVideoPlayerFuture;
+  late VideoPlayerController _videoPlayerController;
 
   @override
   void initState() {
@@ -98,12 +98,22 @@ class _HomePageState extends State<HomePage>  {
       }
       _deviceWidth = MediaQuery.of(context).size.width;
       _deviceHeight = MediaQuery.of(context).size.height;
-      _youtubeController =  YoutubePlayerController(
-        initialVideoId: defaultYoutubeId!,
-        flags: const YoutubePlayerFlags(
-          autoPlay: false,  // 自動再生しない
-        ),
-      );
+      if(_versionController.isReleased){
+        _youtubeController =  YoutubePlayerController(
+          initialVideoId: defaultYoutubeId!,
+          flags: const YoutubePlayerFlags(
+            autoPlay: false,  // 自動再生しない
+          ),
+        );
+      }else{
+        _videoPlayerController = VideoPlayerController.networkUrl(
+          Uri.parse(
+            '${Config.domain}/videos/MKq4tyzf3Dw.mp4',
+          ),
+        );
+        _videoPlayerController.setLooping(true);
+        _initializeVideoPlayerFuture = _videoPlayerController.initialize();
+      }
       _scrollController = ScrollController(
         initialScrollOffset: (_deviceWidth!*_homeLayoutController.topMenuRatio),
       );
@@ -216,7 +226,18 @@ class _HomePageState extends State<HomePage>  {
     final prefs = await SharedPreferences.getInstance();
     await Future.delayed(Duration.zero);
     setState(() {
-      _youtubeController.load( youtubeId,startAt:0);
+      if(_versionController.isReleased){
+        _youtubeController.load( youtubeId,startAt:0);
+      }else{
+        _initializeVideoPlayerFuture = _videoPlayerController.initialize();
+        _videoPlayerController.pause();
+        _videoPlayerController = VideoPlayerController.network('${Config.domain}/videos/${youtubeId}.mp4')
+        ..initialize().then((_) {
+          setState(() {
+            _videoPlayerController.play();
+          });
+        });
+      }
       _homeLayoutController.updateCellsTop(_scrollController.offset);
     });
     await prefs.setString('default_youtube_id', youtubeId);
@@ -230,7 +251,11 @@ class _HomePageState extends State<HomePage>  {
     setState(() {
       _homeLayoutController.hideYoutube();
       _homeLayoutController.setHeightForVideoCells();
-      _youtubeController.pause();
+      if(_versionController.isReleased){
+        _youtubeController.pause();
+      }else{
+        _videoPlayerController.pause();
+      }
     });
   }
 
@@ -394,6 +419,7 @@ class _HomePageState extends State<HomePage>  {
           video: video, 
           isSelectMode: _videoController.isSelectMode,
           isSelected: cellIds.contains(cellId),
+          isReleased: _versionController.isReleased,
           cellHeight: cellHeight, 
           cellWidth: cellWidth, 
           onSelected: () => setState(() { _videoController.selectVideo(video);}),
@@ -463,16 +489,6 @@ class _HomePageState extends State<HomePage>  {
     _launched = _launchInWebViewOrVC(toLaunch);
   }
 
-  transitNavigation(index){
-    setState(() {
-      _pageController.pageIndex = index;
-      _youtubeController.pause();
-    });
-    updateScreen();
-    closeYoutube();
-    _homeLayoutController.hideYoutube();
-  }
-
   scrollToPoint(double offset){
     Future.delayed(const Duration(seconds: 0), () {
       _scrollController.animateTo(
@@ -538,6 +554,7 @@ class _HomePageState extends State<HomePage>  {
     bool isFavorite = _pageController.isFavoritePage();
     bool isHistory = _pageController.isHistoryPage();
     return [
+      if(_versionController.isReleased)
       MenuButton(
         onPressed: () async {
           Navigator.of(context).pop();
@@ -858,6 +875,7 @@ class _HomePageState extends State<HomePage>  {
                 child:
                 Stack(
                   children: <Widget>[
+                  if(_versionController.isReleased)
                   YoutubePlayerBuilder(
                     player: YoutubePlayer(
                       controller: _youtubeController,
@@ -869,26 +887,74 @@ class _HomePageState extends State<HomePage>  {
                         ],
                       );
                     },
+                  ), 
+                  if(!_versionController.isReleased)
+                  FutureBuilder(
+                    future: _initializeVideoPlayerFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        return  
+                          Center(
+                            child:
+                            AspectRatio(
+                          aspectRatio: _videoPlayerController.value.aspectRatio,
+                          child: VideoPlayer(_videoPlayerController),
+                          )
+                        );
+                      } else {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                    },
                   ),
                   if(!_versionController.isReleased)
+                  InkWell(
+                    child: Container(
+                      width: _deviceWidth!,
+                      height: _deviceWidth!/16*9,
+                    ),
+                    onTap: (){
+                      print(_homeLayoutController.displayingVideoButton);
+                      setState(() {
+                        _homeLayoutController.displayingVideoButton = !_homeLayoutController.displayingVideoButton;
+                      });
+                      if(_homeLayoutController.displayingVideoButton){
+                        Future.delayed(const Duration(seconds: 3), () {
+                          setState(() {
+                              _homeLayoutController.displayingVideoButton = false;
+                          });
+                        });
+                      }
+                    },
+                  ),
+                  if(_homeLayoutController.displayingVideoButton && !_versionController.isReleased)
                   Positioned(
-                    right: 0,
-                    bottom: 0,
+                    right: _deviceWidth!/3,
+                    top: _deviceWidth!*(9/16 - 1/3)/2,
                     child: 
-                    Container(
-                      width: _deviceWidth!*3/10,
-                      height: _deviceWidth!*1/10,
-                      color: Colors.black,
-                      alignment: Alignment.center,
-                      child: Text(
-                        "NEWSNIPPET",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
+                    InkWell(
+                      child: Container(
+                        child: Icon(
+                          size: _deviceWidth!/3,
                           color: Colors.white,
-                          fontSize: _deviceWidth!*3/10/8,
-                          fontWeight: FontWeight.bold
+                          _videoPlayerController.value.isPlaying ? Icons.pause : Icons.play_arrow,
                         ),
-                        )
+                      ),
+                      onTap: (){
+                        setState(() {
+                          if (_videoPlayerController.value.isPlaying) {
+                            _videoPlayerController.pause();
+                          } else {
+                            _videoPlayerController.play();
+                          }
+                        });
+                        Future.delayed(const Duration(seconds: 2), () {
+                          setState(() {
+                            _homeLayoutController.displayingVideoButton = false;
+                          });
+                        });
+                      },
                     )
                   ),
                 ])

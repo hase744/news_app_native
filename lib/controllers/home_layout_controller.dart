@@ -8,6 +8,7 @@ class HomeLayoutController  {
   bool isLoading = false;
   bool canLoad = false;
   bool displaySearch = false;
+  bool displayingVideoButton = false;
   double youtubePadding = 0.07;
 
   int loadCount = 1;

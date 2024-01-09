@@ -81,7 +81,13 @@ class CategoryController {
     List videosList = [];
     for (var category in categoryParams) {
       Map matchedPress = pressParams.firstWhere((c) => c['name'] == category['name']);
-      videosList.add(json.decode(matchedPress['press']));
+      print(matchedPress['press']);
+      try {
+      print(json.decode(matchedPress['press']));
+        videosList.add(json.decode(matchedPress['press']));
+      } catch (e) {
+        videosList.add(matchedPress['press']);
+      }
     }
     return videosList;
   }

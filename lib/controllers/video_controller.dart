@@ -2,6 +2,7 @@ import 'package:video_news/controllers/category_controller.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:video_news/controllers/uuid_controller.dart';
+import 'package:video_news/controllers/version_controller.dart';
 import 'package:video_news/consts/config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_news/models/video.dart';
@@ -15,6 +16,7 @@ class VideoController{
   bool isSelectMode = false;
   String searchWord = '';
   CategoryController categoryController = CategoryController();
+  VersionController versionController = VersionController();
   UuidController uuidController = UuidController();
   late final domain = Config.domain;
 
@@ -101,7 +103,8 @@ class VideoController{
   }
 
   accessVideos() async {
-    String url = '$domain/presses.json';
+    await versionController.initialize();
+    String url = versionController.isReleased ? '$domain/presses.json' : '$domain/fakes/presses.json' ;
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final prefs = await SharedPreferences.getInstance();
@@ -229,7 +232,8 @@ class VideoController{
         url = '$domain/user/histories/search.json?word=$word&uuid=${await uuidController.getUuid()}&page=$page';
         break;
       case 'home':
-        url = '$domain/videos.json?word=$word&page=$page';
+        await versionController.initialize();
+        url = versionController.isReleased ? '$domain/videos.json?word=$word&page=$page' : '$domain/fakes.json?word=$word&page=$page';
       default:
         break;
     }

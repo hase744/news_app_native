@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:video_news/consts/config.dart';
 import 'package:video_news/models/video.dart';
+import 'package:video_news/controllers/version_controller.dart';
 class VideoCell extends StatelessWidget {
+  final VersionController versionController = VersionController();
+  late final domain = Config.domain;
   final Video video;
   final double cellWidth;
   final double cellHeight;
   final bool isSelected;
   final bool isSelectMode;
+  final bool isReleased;
   //final BuildContext context; // BuildContext型のcontext変数
   //final void Function(String) openYoutube; // 関数型を使用した変数の定義
   final VoidCallback onPressedYoutube;
@@ -23,6 +28,7 @@ class VideoCell extends StatelessWidget {
     required this.onSelected,
     required this.isSelected,
     required this.isSelectMode,
+    required this.isReleased,
   });
 
   @override
@@ -71,7 +77,7 @@ class VideoCell extends StatelessWidget {
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8.0),
                                   child:Image.network(
-                                    "http://img.youtube.com/vi/$youtube_id/sddefault.jpg",
+                                    isReleased ? "http://img.youtube.com/vi/$youtube_id/sddefault.jpg" : '$domain/images/${youtube_id}.jpg',
                                     fit: BoxFit.cover,
                                     errorBuilder: (c, o, s) {
                                       return  Image.asset(
