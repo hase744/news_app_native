@@ -9,6 +9,9 @@ class HomeLayoutController  {
   bool canLoad = false;
   bool displaySearch = false;
   bool displayingVideoButton = false;
+  bool displayingYoutubeControl = false;
+  bool rewinded = false;
+  bool fastForwarded = false;
   double youtubePadding = 0.07;
 
   int loadCount = 1;

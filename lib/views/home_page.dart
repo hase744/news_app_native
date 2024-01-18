@@ -121,6 +121,7 @@ class _HomePageState extends State<HomePage>  {
       _scrollController.addListener(_onScroll);
       _pageController.pageIndex = widget.initialIndex;
       _homeLayoutController.updateCellsTop(0);
+      _youtubeController.addListener(_onChangeYoutube);
       //_scrollController.jumpTo(0.0);
       //_history.deleteTable();
       //_favorite.deleteTable();
@@ -521,6 +522,12 @@ class _HomePageState extends State<HomePage>  {
     });
   }
 
+  void _onChangeYoutube(){
+    setState(() {
+      _homeLayoutController.displayingYoutubeControl = _youtubeController.value.isControlsVisible;
+    });
+  }
+
   void _onScroll() {
     final before = _scrollController.position.pixels;
     final end = _scrollController.position.maxScrollExtent;
@@ -888,6 +895,70 @@ class _HomePageState extends State<HomePage>  {
                       );
                     },
                   ), 
+                  if(_homeLayoutController.displayingYoutubeControl)
+                  InkWell(
+                    child: 
+                    Container(
+                      width: _deviceWidth!*2/5,
+                      height: _deviceWidth!/16*5,
+                      //color: _homeLayoutController.rewinded ?  Colors.black : Colors.transparent,
+                      margin: EdgeInsets.only(top: _deviceWidth!/16*2),
+                      child: 
+                      AnimatedOpacity(
+                        duration: Duration(milliseconds: _homeLayoutController.rewinded ? 0 : 500),
+                        opacity: _homeLayoutController.rewinded ? 1 : 0.5,
+                        child:
+                        Icon(
+                          Icons.chevron_left,
+                          size: _deviceWidth!/16*3,
+                          color: Colors.white,
+                        ),
+                      )
+                    ),
+                    onTap: (){
+                      setState(() {
+                        _youtubeController.seekTo(_youtubeController.value.position - const Duration(seconds: 10));
+                        _homeLayoutController.rewinded = true;  
+                        Future.delayed(const Duration(milliseconds: 500), () {
+                            _homeLayoutController.rewinded = false;
+                        });
+                      });
+                    },
+                  ),
+                  if(_homeLayoutController.displayingYoutubeControl)
+                  Align( // 赤のコンテナだけを右下に配置する
+                    alignment: Alignment.topRight,
+                    child: 
+                    InkWell(
+                      child: 
+                      Container(
+                        width: _deviceWidth!*2/5,
+                        height: _deviceWidth!/16*5,
+                        //color: _homeLayoutController.fastForwarded ?  Colors.black : Colors.transparent,
+                        margin: EdgeInsets.only(top: _deviceWidth!/16*2),
+                        child: 
+                        AnimatedOpacity(
+                          duration: Duration(milliseconds: _homeLayoutController.fastForwarded ? 0 : 500),
+                          opacity: _homeLayoutController.fastForwarded ? 1 : 0.5,
+                          child:
+                          Icon(
+                            Icons.chevron_right,
+                            size: _deviceWidth!/16*3,
+                            color: Colors.white,
+                          ),
+                        )
+                      ),
+                      onTap: (){
+                        setState(() {
+                          _youtubeController.seekTo(_youtubeController.value.position + const Duration(seconds: 10));
+                          _homeLayoutController.fastForwarded = true;  
+                          Future.delayed(const Duration(milliseconds: 500), () {
+                              _homeLayoutController.fastForwarded = false;
+                          });
+                        });
+                      },
+                    )
+                  ),
                   if(!_versionController.isReleased)
                   FutureBuilder(
                     future: _initializeVideoPlayerFuture,
