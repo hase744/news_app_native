@@ -8,6 +8,8 @@ import 'dart:convert';
 
 class CategoryController {
   List<Category> categories = [];
+  List<Category> defaultCategories = [];
+  List<Category> childCategories = [];
   List<Category> selection = [];
   List<Category> unusedCategories = [];
   int categoryIndex = 0;
@@ -16,6 +18,7 @@ class CategoryController {
   CategoryController() {
     setSavedCategory();
     setUnusedCategory();
+    setDeraultCategory();
   }
 
   update(i) {
@@ -31,7 +34,8 @@ class CategoryController {
   }
 
   Future<List> getCategoriesData() async {
-    var response = await http.get(Uri.parse("${Config.domain}/categories.json"));
+    var response =
+        await http.get(Uri.parse("${Config.domain}/categories.json"));
     var categoryParams = await json.decode(response.body);
     return categoryParams;
   }
@@ -44,6 +48,7 @@ class CategoryController {
         "japanese_name": item["japanese_name"],
         "emoji": item["emoji"],
         "is_default": item["is_default"] == true,
+        "is_formal": item["is_formal"] == true,
       };
     }).toList();
     return pressMaps;
@@ -80,10 +85,9 @@ class CategoryController {
     List categoryParams = await getSavedOrder();
     List videosList = [];
     for (var category in categoryParams) {
-      Map matchedPress = pressParams.firstWhere((c) => c['name'] == category['name']);
-      print(matchedPress['press']);
+      Map matchedPress =
+          pressParams.firstWhere((c) => c['name'] == category['name']);
       try {
-      print(json.decode(matchedPress['press']));
         videosList.add(json.decode(matchedPress['press']));
       } catch (e) {
         videosList.add(matchedPress['press']);
@@ -98,11 +102,22 @@ class CategoryController {
       categories.add(Category.fromMap(category));
     }
   }
+  setDeraultCategory() async {
+    List categoryParams = await getSavedOrder();
+    for (var categoryParam in categoryParams) {
+      Category category = Category.fromMap(categoryParam);
+      if (category.isDefault && category.isFormal) {
+        defaultCategories.add(category);
+      }
+    }
+  }
 
   setUnusedCategory() async {
     List savedParams = await getSavedOrder();
-    List<dynamic> currentVideos = await getCurrentPress();
-    for (var category in currentVideos) {
+    List<dynamic> currentCategories = await getCurrentPress();
+    List<dynamic> formalCategories =
+        currentCategories.where((c) => c['is_formal'] == true).toList();
+    for (var category in formalCategories) {
       List matchedCategories =
           savedParams.where((c) => c['name'] == category['name']).toList();
       if (matchedCategories.isEmpty) {
@@ -144,5 +159,19 @@ class CategoryController {
     List<dynamic> categoryMaps = selection.map((c) => c.toMap()).toList();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('category_order', json.encode(categoryMaps));
+  }
+
+  insertChildCategories(int index) async {
+    List<dynamic> currentCategories = await getCurrentPress();
+    String currentCategoryName = (await getSavedOrder())[index]['name'];
+    Map currentCategory =
+        currentCategories.firstWhere((c) => c['name'] == currentCategoryName);
+    List<dynamic> childCategoryNames = currentCategory['child_categories'];
+    childCategories = [];
+    for (var press in await getCurrentPress()) {
+      if (childCategoryNames.contains(press['name'])) {
+        childCategories.add(Category.fromMap(press));
+      }
+    }
   }
 }

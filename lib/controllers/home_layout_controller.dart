@@ -7,7 +7,7 @@ class HomeLayoutController  {
   bool isPortrait = true;
   bool isLoading = false;
   bool canLoad = false;
-  bool displaySearch = false;
+  bool displayingTextField = false;
   bool displayingVideoButton = false;
   bool displayingYoutubeControl = false;
   bool rewinded = false;

@@ -143,7 +143,7 @@ class _HomePageState extends State<HomePage>  {
     await selectCategory(_categoryController.categoryIndex);
     setState(() {
       closeYoutube();
-      _videoController.displayLoadingScreen = false;
+      _videoController.displayingLoadingScreen = false;
       _scrollController.jumpTo(_homeLayoutController.getTopMenuHeight());
     });
   }
@@ -157,7 +157,7 @@ class _HomePageState extends State<HomePage>  {
     //histories = histories.reversed.toList();
     setState(() {
       _videoController.videos = [];
-      _videoController.displayLoadingScreen = true;
+      _videoController.displayingLoadingScreen = true;
       _homeLayoutController.setForList();
       _homeLayoutController.setHeightForVideoCells();
     });
@@ -165,7 +165,7 @@ class _HomePageState extends State<HomePage>  {
       displayAlert("ロードに失敗しました");
     }
     setState(() {
-      _videoController.displayLoadingScreen = false;
+      _videoController.displayingLoadingScreen = false;
     });
   }
 
@@ -191,7 +191,7 @@ class _HomePageState extends State<HomePage>  {
     //favorites = favorites.reversed.toList();
     setState(() {
       _videoController.videos = [];
-      _videoController.displayLoadingScreen = true;
+      _videoController.displayingLoadingScreen = true;
       _homeLayoutController.setForList();
       _homeLayoutController.setHeightForVideoCells();
     });
@@ -199,7 +199,7 @@ class _HomePageState extends State<HomePage>  {
       displayAlert("ロードに失敗しました");
     }
     setState(() {
-      _videoController.displayLoadingScreen = false;
+      _videoController.displayingLoadingScreen = false;
     });
     closeYoutube();
   }
@@ -261,8 +261,10 @@ class _HomePageState extends State<HomePage>  {
   }
 
   Future<void> selectCategory(int categoryNum) async {
+    _categoryController.insertChildCategories(categoryNum);
     setState(() {
-      _homeLayoutController.displaySearch = false;
+      _homeLayoutController.displayingTextField = false;
+      _videoController.searchingCategory = null;
       _videoController.changeVideos(categoryNum);
     });
   }
@@ -379,7 +381,7 @@ class _HomePageState extends State<HomePage>  {
         updateVideos();
         _scrollController.jumpTo(_homeLayoutController.loadAreaHeight);
       }, 
-      onClosesd: () => setState(() { _homeLayoutController.displaySearch = false; }) , 
+      onClosesd: () => setState(() { _homeLayoutController.displayingTextField = false; }) , 
       menuOpened: () {
         showCupertinoModalPopup<void>(
           context: context,
@@ -403,7 +405,7 @@ class _HomePageState extends State<HomePage>  {
           ),
         );
       },
-      searchOpened: (){ setState(() { _homeLayoutController.displaySearch = true; });
+      searchOpened: (){ setState(() { _homeLayoutController.displayingTextField = true; });
       }
     );
   }
@@ -523,9 +525,11 @@ class _HomePageState extends State<HomePage>  {
   }
 
   void _onChangeYoutube(){
-    setState(() {
-      _homeLayoutController.displayingYoutubeControl = _youtubeController.value.isControlsVisible;
-    });
+    if(_homeLayoutController.displayingYoutubeControl != _youtubeController.value.isControlsVisible){
+      setState(() {
+        _homeLayoutController.displayingYoutubeControl = _youtubeController.value.isControlsVisible;
+      });
+    }
   }
 
   void _onScroll() {
@@ -533,7 +537,7 @@ class _HomePageState extends State<HomePage>  {
     final end = _scrollController.position.maxScrollExtent;
     setState(() {
       if (before == end) {
-        _videoController.displayLoadingScreen = true;
+        _videoController.displayingLoadingScreen = true;
       }
       if (before > 0) {
         _loadController.loadCount = 0;
@@ -696,12 +700,23 @@ class _HomePageState extends State<HomePage>  {
   }
   
   loadVideos() async {
-    if(!await _videoController.loadVideos(_pageController.getCurrentPageName(), _homeLayoutController.displaySearch)){
+    if(!await _videoController.loadVideos(_pageController.getCurrentPageName(), _homeLayoutController.displayingTextField)){
       displayAlert("ロードに失敗しました");
     }
     setState(() {
-      _videoController.displayLoadingScreen = false;
+      _videoController.displayingLoadingScreen = false;
       updateVideos();
+    });
+  }
+
+  selectChilsCategory(int index) async {
+    setState(() {
+      _videoController.displayingLoadingScreen = true;
+    });
+    print(await _videoController.searchCategory(_categoryController.childCategories[index].name));
+    setState(() {
+      _videoController.displayingLoadingScreen = false;
+      _videoController = _videoController;
     });
   }
 
@@ -799,10 +814,37 @@ class _HomePageState extends State<HomePage>  {
                               //if(_videoController.videos.isNotEmpty)//これがないテーブルごと全て削除した時にエラーが起きる
                               //  for(var video in _videoController.videos)
                               //  videoCell(context, video),
+                              if(_categoryController.childCategories.isNotEmpty)
+                              Container(
+                                height: _homeLayoutController.categoryBarHeight, // Set the height of the button row
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: _categoryController.childCategories.length,
+                                  itemBuilder: (context, index) {
+                                    return Padding(
+                                      padding: EdgeInsets.all(_homeLayoutController.categoryBarHeight/8),
+                                      child: ElevatedButton(
+                                        onPressed: () => selectChilsCategory(index),
+                                        style: ElevatedButton.styleFrom(
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_homeLayoutController.categoryBarHeight/8),),
+                                          elevation: 0,
+                                          backgroundColor: Colors.blueGrey[50],
+                                        ),
+                                        child: Text(
+                                           _categoryController.childCategories[index].japaneseName,
+                                            style: const TextStyle(
+                                              color: Colors.black, // Adjust the value as needed
+                                            )
+                                          ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
                               for(var i=0; i<_videoController.videos.length; i++)
                                 if(_videoController.videos.isNotEmpty)
                                 videoCell(context, _videoController.videos[i], i),
-                              if(_videoController.displayLoadingScreen)
+                              if(_videoController.displayingLoadingScreen)
                               Container(
                                 alignment: Alignment.center,
                                 width: _deviceWidth,

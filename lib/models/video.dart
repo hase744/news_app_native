@@ -23,7 +23,7 @@ class Video{
         title = map['title'],
         channelName = map['channel_name'],
         channelId = map['channel_id'],
-        totalSeconds = map['total_seconds'],
+        totalSeconds = map['total_seconds'] == null ? 0 : map['total_seconds'],
         publishedAt = DateTime.parse(map['published_at'])
         ;
   

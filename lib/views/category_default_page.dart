@@ -59,10 +59,10 @@ class _CategoryDefaultState extends State<CategoryDefault> {
                   spacing: 15.0,
                   runSpacing: 10.0,
                   children: List<Widget>.generate(
-                    _categoryController.categories.length,
+                    _categoryController.defaultCategories.length,
                     (int index) {
                       Category category =
-                          _categoryController.categories[index];
+                          _categoryController.defaultCategories[index];
                       return ChoiceChip(
                         label: Text(
                           "${category.emoji}${category.japaneseName}",

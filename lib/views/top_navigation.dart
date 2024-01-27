@@ -63,7 +63,7 @@ Widget build(BuildContext context){
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[
-            if(homeLayoutController.displaySearch)
+            if(homeLayoutController.displayingTextField)
             Container(
               color: Colors.white,
               width: width,
@@ -85,12 +85,12 @@ Widget build(BuildContext context){
                 onSubmitted: onSearched,
               ),
             ),
-            if(!homeLayoutController.displaySearch)
+            if(!homeLayoutController.displayingTextField)
             IconButton(
               onPressed: searchOpened,
               icon: const Icon(Icons.search)
             ),
-            if(!homeLayoutController.displaySearch)
+            if(!homeLayoutController.displayingTextField)
             SizedBox(
               width: homeLayoutController.searchAreaHeight,
               child:

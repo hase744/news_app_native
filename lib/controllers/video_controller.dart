@@ -12,9 +12,10 @@ class VideoController{
   late List<Video> videos = [];
   List<Video> selection = [];
   int videoLength = 20;
-  bool displayLoadingScreen = true;
+  bool displayingLoadingScreen = true;
   bool isSelectMode = false;
-  String searchWord = '';
+  String searchingWord = '';
+  String? searchingCategory;
   CategoryController categoryController = CategoryController();
   VersionController versionController = VersionController();
   UuidController uuidController = UuidController();
@@ -62,7 +63,7 @@ class VideoController{
   }
 
   changeVideos(int index){
-    displayLoadingScreen = false;
+    displayingLoadingScreen = false;
     videos = videosList[index];
   }
 
@@ -70,7 +71,14 @@ class VideoController{
     int pageCount = ((videos.length + videoLength)/videoLength).ceil();
     bool loadSucced = true;
     if(searching){
-      final response = await getSearchedVideos(searchWord, pageCount, pageName);
+      final response = await getSearchedVideos(searchingWord, pageCount, pageName);
+      if(response.statusCode == 200){
+        videos.addAll(await jsonToModels(response.body));
+      }else{
+        loadSucced = false;
+      }
+    }else if(searchingCategory != null){
+      final response = await getCategoryVideos(searchingCategory!, pageCount);
       if(response.statusCode == 200){
         videos.addAll(await jsonToModels(response.body));
       }else{
@@ -138,11 +146,11 @@ class VideoController{
 
   Future<bool> updatePress(int categoryNumber) async {
     videos = [];
-    displayLoadingScreen = true;
+    displayingLoadingScreen = true;
     if(await accessVideos()) {
       videosList = await listsToModels();
       videos = await videosList[categoryNumber];
-      displayLoadingScreen = false;
+      displayingLoadingScreen = false;
       return true;
     }else{
       return false;
@@ -152,16 +160,34 @@ class VideoController{
   search(String word, String pageName) async {
     videos = [];
     String jsonStr = '';
-    displayLoadingScreen = true;
+    displayingLoadingScreen = true;
     try {
-      searchWord = word;
+      searchingWord = word;
       print(word);
       final response = await getSearchedVideos(word, 1, pageName);
       jsonStr = response.body;
       videos = await jsonToModels(jsonStr);
-      displayLoadingScreen = false;
+      displayingLoadingScreen = false;
       return true;
     } catch (e) {
+      return false;
+    }
+  }
+
+  searchCategory(String category) async {
+    videos = [];
+    String jsonStr = '';
+    displayingLoadingScreen = true;
+    try {
+      searchingCategory = category;
+      print(category);
+      final response = await getCategoryVideos(category, 1);
+      jsonStr = response.body;
+      videos = await jsonToModels(jsonStr);
+      displayingLoadingScreen = false;
+      return true;
+    } catch (e) {
+      print(e);
       return false;
     }
   }
@@ -237,6 +263,16 @@ class VideoController{
       default:
         break;
     }
+    final response = await http.get(Uri.parse(url));
+    return response;
+  }
+
+  getCategoryVideos(String category, int page) async {
+    String url = '';
+    await versionController.initialize();
+    url = versionController.isReleased ? '$domain/videos.json?category=$category&page=$page' : '$domain/fakes.json?category=$category&page=$page';
+        print('url');
+        print(url);
     final response = await http.get(Uri.parse(url));
     return response;
   }
