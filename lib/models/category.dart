@@ -17,8 +17,8 @@ class Category{
   Category.fromMap(Map<String, dynamic> map)
     : name = map['name'],
       japaneseName = map['japanese_name'],
-      isDefault = map['is_default'],
-      isFormal = map['is_formal'],
+      isDefault = map['is_default'] == true,
+      isFormal = map['is_formal'] == true,
       emoji = map['emoji'];
 
   Map<String, dynamic> toMap() {
