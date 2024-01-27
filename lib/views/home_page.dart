@@ -27,6 +27,7 @@ import 'package:video_news/controllers/page_controller.dart';
 import 'package:video_news/controllers/version_controller.dart';
 import 'package:video_news/controllers/banner_adds_controller.dart';
 import 'package:video_news/consts/config.dart';
+import 'package:video_news/consts/device.dart';
 import 'package:video_news/helpers/ad_helper.dart';
 import 'package:video_player/video_player.dart';
 
@@ -941,10 +942,9 @@ class _HomePageState extends State<HomePage>  {
                   InkWell(
                     child: 
                     Container(
-                      width: _deviceWidth!*2/5,
-                      height: _deviceWidth!/16*5,
-                      //color: _homeLayoutController.rewinded ?  Colors.black : Colors.transparent,
-                      margin: EdgeInsets.only(top: _deviceWidth!/16*2),
+                      width: _homeLayoutController.getYoutubeDisplayWidth(context)*2/5,
+                      height: _homeLayoutController.getYoutubeDisplayWidth(context)/16*5,
+                      margin: EdgeInsets.only(top: _homeLayoutController.getYoutubeDisplayWidth(context)/16*(Device.isVertical(context) ? 2 : 1)),
                       child: 
                       AnimatedOpacity(
                         duration: Duration(milliseconds: _homeLayoutController.rewinded ? 0 : 500),
@@ -952,7 +952,7 @@ class _HomePageState extends State<HomePage>  {
                         child:
                         Icon(
                           Icons.chevron_left,
-                          size: _deviceWidth!/16*3,
+                          size: _homeLayoutController.getYoutubeDisplayWidth(context)/16*3,
                           color: Colors.white,
                         ),
                       )
@@ -974,10 +974,9 @@ class _HomePageState extends State<HomePage>  {
                     InkWell(
                       child: 
                       Container(
-                        width: _deviceWidth!*2/5,
-                        height: _deviceWidth!/16*5,
-                        //color: _homeLayoutController.fastForwarded ?  Colors.black : Colors.transparent,
-                        margin: EdgeInsets.only(top: _deviceWidth!/16*2),
+                        width: _homeLayoutController.getYoutubeDisplayWidth(context)*2/5,
+                        height: _homeLayoutController.getYoutubeDisplayWidth(context)/16*5,
+                        margin: EdgeInsets.only(top: _homeLayoutController.getYoutubeDisplayWidth(context)/16*(Device.isVertical(context) ? 2 : 1)),
                         child: 
                         AnimatedOpacity(
                           duration: Duration(milliseconds: _homeLayoutController.fastForwarded ? 0 : 500),
@@ -985,7 +984,7 @@ class _HomePageState extends State<HomePage>  {
                           child:
                           Icon(
                             Icons.chevron_right,
-                            size: _deviceWidth!/16*3,
+                            size: _homeLayoutController.getYoutubeDisplayWidth(context)/16*3,
                             color: Colors.white,
                           ),
                         )
