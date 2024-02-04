@@ -9,7 +9,7 @@ import 'dart:convert';
 class CategoryController {
   List<Category> categories = [];
   List<Category> defaultCategories = [];
-  List<Category> childCategories = [];
+  List<List<Category>> childCategoriesList = [];
   List<Category> selection = [];
   List<Category> unusedCategories = [];
   int categoryIndex = 0;
@@ -161,17 +161,23 @@ class CategoryController {
     await prefs.setString('category_order', json.encode(categoryMaps));
   }
 
-  insertChildCategories(int index) async {
+  insertAllChildCategories() async {
     List<dynamic> currentCategories = await getCurrentPress();
-    String currentCategoryName = (await getSavedOrder())[index]['name'];
-    Map currentCategory =
-        currentCategories.firstWhere((c) => c['name'] == currentCategoryName);
-    List<dynamic> childCategoryNames = currentCategory['child_categories'];
-    childCategories = [];
-    for (var press in await getCurrentPress()) {
-      if (childCategoryNames.contains(press['name'])) {
-        childCategories.add(Category.fromMap(press));
+    List<dynamic> savedCategories = await getSavedOrder();
+    List<Category> childCategories = [];
+    childCategoriesList = [];
+    for(var index = 0; index < savedCategories.length; index++ ){
+      String currentCategoryName = savedCategories[index]['name'];
+      Map currentCategory =
+          currentCategories.firstWhere((c) => c['name'] == currentCategoryName);
+      List<dynamic> childCategoryNames = currentCategory['child_categories'];
+      childCategories = [];
+      for (var press in await getCurrentPress()) {
+        if (childCategoryNames.contains(press['name'])) {
+          childCategories.add(Category.fromMap(press));
+        }
       }
+      childCategoriesList.add(childCategories);
     }
   }
 }

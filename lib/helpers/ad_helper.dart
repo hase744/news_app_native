@@ -6,7 +6,7 @@ class AdHelper {
     if (Platform.isAndroid) {
       return isRelease ? 'ca-app-pub-8457001237911326/9672142788' : 'ca-app-pub-3940256099942544/6300978111';
     } else if (Platform.isIOS) {
-      return isRelease ? 'ca-app-pub-8457001237911326/7388798217' : 'ca-app-pub-3940256099942544/6300978111';
+      return isRelease ? 'ca-app-pub-8457001237911326/8678884415' : 'ca-app-pub-3940256099942544/6300978111';
     } else {
       throw new UnsupportedError('Unsupported platform');
     }

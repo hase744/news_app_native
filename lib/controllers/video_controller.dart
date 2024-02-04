@@ -15,6 +15,7 @@ class VideoController{
   bool displayingLoadingScreen = true;
   bool displayingVideoList = true;
   bool displayingVideos = true;
+  bool displayingAllVideos = true;
   bool isSelectMode = false;
   String searchingWord = '';
   String? searchingCategory;
@@ -28,17 +29,18 @@ class VideoController{
   }
   
   displayVideos(){
+    displayingAllVideos = true;
     displayingVideoList = false;
     displayingVideos = true;
   }
   displayVideoList(){
+    displayingAllVideos = true;
     displayingVideoList = true;
     displayingVideos = false;
   }
   coverVideoAndVideoList(){
     displayingLoadingScreen = true;
-    displayingVideoList = false;
-    displayingVideos = true;
+    displayingAllVideos = false;
   }
   getMyVideos() async {
     List pressParams = await categoryController.getCurrentPress();
@@ -162,6 +164,7 @@ class VideoController{
   Future<bool> updatePress(int categoryNumber) async {
     videos = [];
     displayingLoadingScreen = true;
+    coverVideoAndVideoList();
     if(await accessVideos()) {
       videosList = await listsToModels();
       videos = await videosList[categoryNumber];
@@ -176,6 +179,7 @@ class VideoController{
     videos = [];
     String jsonStr = '';
     displayingLoadingScreen = true;
+    coverVideoAndVideoList();
     try {
       searchingWord = word;
       print(word);
@@ -183,8 +187,10 @@ class VideoController{
       jsonStr = response.body;
       videos = await jsonToModels(jsonStr);
       displayingLoadingScreen = false;
+      displayVideos();
       return true;
     } catch (e) {
+      displayVideoList();
       return false;
     }
   }
@@ -200,9 +206,11 @@ class VideoController{
       jsonStr = response.body;
       videos = await jsonToModels(jsonStr);
       displayingLoadingScreen = false;
+      displayVideos();
       return true;
     } catch (e) {
       print(e);
+      displayVideoList();
       return false;
     }
   }
