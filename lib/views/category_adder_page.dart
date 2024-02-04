@@ -121,7 +121,6 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
                               
                             )
                           ),
-                          
                         ]
                       ),
                     );

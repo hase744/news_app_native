@@ -66,5 +66,4 @@ class History{
   Future<List<Map<String, dynamic>>> all() async {
     return await _database.query('Histories');
   }
-
 }

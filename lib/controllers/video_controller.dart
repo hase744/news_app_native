@@ -13,6 +13,8 @@ class VideoController{
   List<Video> selection = [];
   int videoLength = 20;
   bool displayingLoadingScreen = true;
+  bool displayingVideoList = true;
+  bool displayingVideos = true;
   bool isSelectMode = false;
   String searchingWord = '';
   String? searchingCategory;
@@ -25,6 +27,19 @@ class VideoController{
     videosList = await listsToModels();
   }
   
+  displayVideos(){
+    displayingVideoList = false;
+    displayingVideos = true;
+  }
+  displayVideoList(){
+    displayingVideoList = true;
+    displayingVideos = false;
+  }
+  coverVideoAndVideoList(){
+    displayingLoadingScreen = true;
+    displayingVideoList = false;
+    displayingVideos = true;
+  }
   getMyVideos() async {
     List pressParams = await categoryController.getCurrentPress();
     List categoryParams = await categoryController.getSavedOrder();
