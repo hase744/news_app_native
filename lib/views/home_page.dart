@@ -107,6 +107,7 @@ class _HomePageState extends State<HomePage>  {
             autoPlay: false,  // 自動再生しない
           ),
         );
+        _youtubeController.addListener(_onChangeYoutube);
       }else{
         _videoPlayerController = VideoPlayerController.networkUrl(
           Uri.parse(
@@ -123,7 +124,6 @@ class _HomePageState extends State<HomePage>  {
       _scrollController.addListener(_onScroll);
       _pageController.pageIndex = widget.initialIndex;
       _homeLayoutController.updateCellsTop(0);
-      _youtubeController.addListener(_onChangeYoutube);
       _pressPageController.addListener(() => changeCategory(_pressPageController.page!));
       _categoryController.insertAllChildCategories();
       //_scrollController.jumpTo(0.0);
@@ -162,6 +162,7 @@ class _HomePageState extends State<HomePage>  {
 
   Future<void> displayNews() async {
     setDefauldLayout();
+    await _videoController.displayVideoList();
     await selectCategory(_categoryController.categoryIndex);
     setState(() {
       closeYoutube();
@@ -482,9 +483,7 @@ class _HomePageState extends State<HomePage>  {
   }
 
   Widget adDisplay(int index){
-    if (_homeLayoutController.isYoutubeDisplaying()) {
-      return const SizedBox();
-    } else if (!_pageController.isHomePage()) {
+    if (!_pageController.isHomePage()) {
       return const SizedBox();
     } else if (index % 5 != 2) {
       return const SizedBox();
@@ -841,7 +840,7 @@ class _HomePageState extends State<HomePage>  {
                                     width: _deviceWidth!,
                                     height: _homeLayoutController.getTopMenuHeight(),
                                   ),
-                                  if(_categoryController.childCategoriesList[j].isNotEmpty)
+                                  if(_categoryController.childCategoriesList.isNotEmpty && _categoryController.childCategoriesList[j].isNotEmpty)
                                   Container(
                                     height: _homeLayoutController.categoryBarHeight, // Set the height of the button row
                                     child: ListView.builder(
