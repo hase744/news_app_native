@@ -2,11 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:video_news/controllers/category_controller.dart';
+import 'package:video_news/controllers/category_bar_controller.dart';
 class CategoryBar extends StatelessWidget {
   final double barHeight;
   final double lineHeight;
   final double width;
   final CategoryController categoryController;
+  late CategoryBarController categoryBarController;
   final ScrollController controller;
   Function(int) onSelected;
   // ignore: annotate_overrides
@@ -17,7 +19,7 @@ class CategoryBar extends StatelessWidget {
    const Color.fromRGBO(250, 140, 60, 1),
    const Color.fromRGBO(0, 200, 110, 1),
    const Color.fromRGBO(90, 145, 255, 1),
-   const Color.fromRGBO(185, 90, 255, 1),
+   const Color.fromRGBO(200, 90, 255, 1),
   ];
 
   CategoryBar({
@@ -25,15 +27,11 @@ class CategoryBar extends StatelessWidget {
     required this.lineHeight,
     required this.width,
     required this.categoryController,
+    required this.categoryBarController,
     required this.onSelected,
     required this.controller,
     this.key,
   }) : super(key: key);
-
-  double categoryTextSize(int textCount) {
-    double fontSize =width/5/textCount;
-    return fontSize.clamp(0.0, width/25) -1;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +59,8 @@ class CategoryBar extends StatelessWidget {
                   children: [
                     Container(
                       color: categoryController.categoryIndex < i ? colors[(i-1) % colors.length] : colors[(i+1) % colors.length],
-                      width: width / 5,
+                      width: categoryBarController.lablSize(i),
+                      //width: width / 5,
                       height: radiusSize
                     ),
                     Container(
@@ -75,7 +74,7 @@ class CategoryBar extends StatelessWidget {
                         ),
                         color: colors[i % colors.length],
                       ),
-                      width: width / 5,
+                      width: categoryBarController.lablSize(i),
                       height: categoryController.categoryIndex == i ? barHeight : barHeight*0.9,
                       padding: const EdgeInsets.all(0),
                       margin: const EdgeInsets.all(0),
@@ -91,7 +90,7 @@ class CategoryBar extends StatelessWidget {
                         Text(
                           categoryController.categories[i].japaneseName,
                           style: TextStyle(
-                            fontSize: categoryTextSize(categoryController.categories[i].japaneseName.length),
+                            fontSize: categoryBarController.categoryTextSize(i),
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),

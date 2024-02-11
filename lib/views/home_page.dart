@@ -22,6 +22,7 @@ import 'package:video_news/controllers/home_layout_controller.dart';
 import 'package:video_news/controllers/default_values_controller.dart';
 import 'package:video_news/controllers/video_controller.dart';
 import 'package:video_news/controllers/category_controller.dart';
+import 'package:video_news/controllers/category_bar_controller.dart';
 import 'package:video_news/controllers/load_controller.dart';
 import 'package:video_news/controllers/page_controller.dart';
 import 'package:video_news/controllers/version_controller.dart';
@@ -64,7 +65,7 @@ class _HomePageState extends State<HomePage>  {
   final List<BannerAd> _bannerAds = [];
   late Future<void> _initializeVideoPlayerFuture;
   late VideoPlayerController _videoPlayerController;
-
+  late CategoryBarController _categoryBarController;
   @override
   void initState() {
     super.initState();
@@ -126,6 +127,10 @@ class _HomePageState extends State<HomePage>  {
       _homeLayoutController.updateCellsTop(0);
       _pressPageController.addListener(() => changeCategory(_pressPageController.page!));
       _categoryController.insertAllChildCategories();
+      _categoryBarController = CategoryBarController(
+        width: _deviceWidth!, 
+        categoryController: _categoryController
+      );
       //_scrollController.jumpTo(0.0);
       //_history.deleteTable();
       //_favorite.deleteTable();
@@ -139,7 +144,7 @@ class _HomePageState extends State<HomePage>  {
   changeCategory(double i){
     Future.delayed(const Duration(seconds: 0), () {
       _categoryScrollController.animateTo(
-        _deviceWidth!/5*(i-2),
+        _categoryBarController.labelSumSize(_categoryController.categoryIndex),
         duration: const Duration(milliseconds: 300),
         curve: Curves.ease,
       );
@@ -910,6 +915,7 @@ class _HomePageState extends State<HomePage>  {
                           controller: _categoryScrollController,
                           barHeight: _homeLayoutController.categoryBarHeight,
                           lineHeight: _homeLayoutController.categoryBarLineHeight,
+                          categoryBarController: _categoryBarController,
                           width: _deviceWidth!,
                           categoryController: _categoryController,
                           onSelected: (int i){
