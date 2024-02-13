@@ -10,11 +10,13 @@ import 'package:video_news/models/history.dart';
 import 'package:video_news/models/menu_button.dart';
 import 'package:video_news/models/favorite.dart';
 import 'package:video_news/models/video.dart';
+import 'package:video_news/models/downloader/mode.dart';
 import 'package:video_news/models/ad_display.dart';
 import 'package:video_news/views/setting_page.dart';
 import 'package:video_news/views/video_cell.dart';
 import 'package:video_news/views/alert.dart';
 import 'package:video_news/views/category_bar.dart';
+import 'package:video_news/views/downloader/video_downloader_page.dart';
 import 'package:video_news/views/top_navigation.dart';
 import 'package:video_news/views/bottom_menu_bar.dart';
 import 'package:video_news/views/bottom_navigation_bar.dart';
@@ -322,6 +324,15 @@ class _HomePageState extends State<HomePage>  {
           context,
           MaterialPageRoute(builder: (context) =>SettingPage()),
         );
+    case 'downloader':
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const DownLoaderPage(
+          path: 'video',
+          target: null,
+          mode: Mode.play
+        )),
+      );
         break;
       default:
         break;

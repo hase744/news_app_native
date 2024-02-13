@@ -41,4 +41,7 @@ class PageControllerClass{
   isFavoritePage(){
     return pageList[pageIndex].name == 'favorite';
   }
+  isDownloaderPage(){
+    return pageList[pageIndex].name == 'downloader';
+  }
 }

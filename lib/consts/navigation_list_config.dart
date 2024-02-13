@@ -48,8 +48,24 @@ class NavigationListConfig{
       item: const BottomNavigationBarItem(icon: Icon(Icons.history), label: '履歴'),
     ),
     NavigationItem(
+      name: 'downloader',
+      item: const BottomNavigationBarItem(icon: Icon(Icons.download), label: 'オフライン'),
+    ),
+    NavigationItem(
       name: 'setting',
       item: const BottomNavigationBarItem(icon: Icon(Icons.settings), label: '設定'),
     ),
+  ];
+
+
+  static List<NavigationItem> downloaderMenuList = [
+    NavigationItem(
+      name:"close", 
+      item: const BottomNavigationBarItem(icon: Icon(Icons.close), label: '閉じる')
+      ),
+    NavigationItem(
+      name:"transit", 
+      item: const BottomNavigationBarItem(icon: Icon(Icons.drive_file_move), label: 'ここに移動')
+      )
   ];
 }
