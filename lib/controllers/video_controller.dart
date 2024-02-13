@@ -8,9 +8,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_news/models/video.dart';
 
 class VideoController{
-  late List<List<Video>> videosList = [];
-  late List<Video> videos = [];
-  List<Video> selection = [];
+  late List<List<VideoForm>> videosList = [];
+  late List<VideoForm> videos = [];
+  List<VideoForm> selection = [];
   int videoLength = 20;
   bool displayingLoadingScreen = true;
   bool displayingVideoList = true;
@@ -61,7 +61,7 @@ class VideoController{
     return myVideosList;
   }
 
-  selectVideo(Video video){
+  selectVideo(VideoForm video){
     int index = selection.indexWhere((map) => map.id == video.id);
     if(index != -1){
       selection.removeAt(index);
@@ -141,7 +141,7 @@ class VideoController{
   }
 
   listsToModels() async {
-    List<List<Video>> videoModelsList = [];
+    List<List<VideoForm>> videoModelsList = [];
     for(var videos in await categoryController.getRearrangedPress()){
       videoModelsList.add(await listToModels(videos));
     }
@@ -149,9 +149,9 @@ class VideoController{
   }
 
   listToModels(List videos) async {
-    List<Video> videoModels = [];
+    List<VideoForm> videoModels = [];
     for(var video in videos){
-      videoModels.add(Video.fromMap(video));
+      videoModels.add(VideoForm.fromMap(video));
       //videoModels.add(mapToModel(video));
     }
     return videoModels;
@@ -231,7 +231,7 @@ class VideoController{
     }
   }
 
-  Future <bool> createFavorite(Video video) async {
+  Future <bool> createFavorite(VideoForm video) async {
     String url = "$domain/user/favorites.json?uuid=${await uuidController.getUuid()}&is_released=${versionController.isReleased}&youtube_id=${video.youtubeId}";
     final response = await http.post(Uri.parse(url));
     return response.statusCode == 204;
@@ -245,7 +245,7 @@ class VideoController{
     return response.statusCode == 200;
   }
 
-  Future <bool> deleteFavorite(Video video) async {
+  Future <bool> deleteFavorite(VideoForm video) async {
     String url = "$domain/user/favorites/${video.id}.json?uuid=${await uuidController.getUuid()}&is_released=${versionController.isReleased}";
     final response = await http.delete(Uri.parse(url));
     if(response.statusCode == 200){
@@ -337,7 +337,7 @@ class VideoController{
       return false;
     }
   }
-  Future <bool> createHistory(Video video) async {
+  Future <bool> createHistory(VideoForm video) async {
     String url = "$domain/user/histories.json?uuid=${await uuidController.getUuid()}&is_released=${versionController.isReleased}&youtube_id=${video.youtubeId}";
     final response = await http.post(Uri.parse(url));
     return response.statusCode == 200;
@@ -353,7 +353,7 @@ class VideoController{
     }
   }
   
-  Future <bool> deleteHistory(Video video) async {
+  Future <bool> deleteHistory(VideoForm video) async {
     String url = "$domain/user/histories/${video.id}.json?uuid=${await uuidController.getUuid()}&is_released=${versionController.isReleased}";
     final response = await http.delete(Uri.parse(url));
     if(response.statusCode == 200){

@@ -1,4 +1,4 @@
-class Video{
+class VideoForm{
   int id;
   String youtubeId;
   String title;
@@ -7,7 +7,7 @@ class Video{
   int totalSeconds;
   DateTime publishedAt;
   
-  Video({
+  VideoForm({
     required this.id,
     required this.youtubeId,
     required this.title,
@@ -17,7 +17,7 @@ class Video{
     required this.publishedAt,
   });
 
-  Video.fromMap(Map<String, dynamic> map)
+  VideoForm.fromMap(Map<String, dynamic> map)
       : id = map['id'],
         youtubeId = map['youtube_id'],
         title = map['title'],

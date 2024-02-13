@@ -5,7 +5,7 @@ import 'package:video_news/controllers/version_controller.dart';
 class VideoCell extends StatelessWidget {
   final VersionController versionController = VersionController();
   late final domain = Config.domain;
-  final Video video;
+  final VideoForm video;
   final double cellWidth;
   final double cellHeight;
   final bool isSelected;

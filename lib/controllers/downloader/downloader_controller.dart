@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 
 class DownloaderController{
   String downloadPath;
-  double progress;
+  double progress = 0.0;
   late final Function(double) onProcessed;
   final _videoForm = FileForm(type: FileType.video);
   final _imageForm = FileForm(type: FileType.image);
@@ -24,7 +24,6 @@ class DownloaderController{
 
   DownloaderController({
     required this.downloadPath,
-    required this.progress,
     required this.onProcessed
   });
   Future<void> download(youtubeId, type) async{

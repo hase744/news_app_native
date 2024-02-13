@@ -251,7 +251,7 @@ class _HomePageState extends State<HomePage>  {
     _homeLayoutController.setHeightForVideoCells();
   }
 
-  void openYoutube(Video video) async {
+  void openYoutube(VideoForm video) async {
     String youtubeId = video.youtubeId;
     _homeLayoutController.displayYoutube();
     _homeLayoutController.setHeightForVideoCells();
@@ -330,7 +330,8 @@ class _HomePageState extends State<HomePage>  {
         MaterialPageRoute(builder: (context) => const DownLoaderPage(
           path: 'video',
           target: null,
-          mode: Mode.play
+          downloadList: [],
+          mode: Mode.play,
         )),
       );
         break;
@@ -451,7 +452,7 @@ class _HomePageState extends State<HomePage>  {
     );
   }
 
-  Widget videoCell(BuildContext context, Video video, int videoIndex) {
+  Widget videoCell(BuildContext context, VideoForm video, int videoIndex) {
     int cellId = video.id;
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth! /2 /16 *9;
@@ -521,7 +522,7 @@ class _HomePageState extends State<HomePage>  {
     }
   }
 
-  launchWebView (Video video){
+  launchWebView (VideoForm video){
     final Uri toLaunch = Uri(
       scheme: 'https',
       host: 'www.youtube.com',
@@ -600,7 +601,7 @@ class _HomePageState extends State<HomePage>  {
     FocusScope.of(context).unfocus();
   }
 
-  List<MenuButton> videoButtons(BuildContext context, Video video){
+  List<MenuButton> videoButtons(BuildContext context, VideoForm video){
     bool isFavorite = _pageController.isFavoritePage();
     bool isHistory = _pageController.isHistoryPage();
     return [
@@ -645,6 +646,21 @@ class _HomePageState extends State<HomePage>  {
         },
         isDestractive: true,
         name: "ー履歴から削除"
+      ),
+      MenuButton(
+        onPressed: () async {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => DownLoaderPage(
+              path: 'video',
+              target: null,
+              downloadList: [video],
+              mode: Mode.select,
+            )),
+          );
+        },
+        isDestractive: false,
+        name: "ダウンロード"
       ),
     ];
   }

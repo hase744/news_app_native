@@ -28,7 +28,7 @@ class DownLoaderCell extends StatelessWidget {
             child: Text(
               "video.title",
               style: TextStyle(
-                fontSize: cellHeight/5
+                fontSize: cellHeight/20
               ),
             ),
           ),

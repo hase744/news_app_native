@@ -17,23 +17,27 @@ import 'package:video_news/views/bottom_menu_bar.dart';
 import 'package:video_news/views/bottom_navigation_bar.dart';
 import 'package:video_news/views/home_page.dart';
 import 'package:video_news/models/downloader/mode.dart';
+import 'package:video_news/models/video.dart';
 import 'package:video_news/models/downloader/folder.dart';
 import 'package:video_news/models/downloader/video_data.dart';
 import 'package:video_news/models/downloader/file_type.dart';
 import 'package:video_news/models/downloader/file_form.dart';
 import 'package:video_news/models/downloader/path_form.dart';
 import 'package:video_news/models/menu_button.dart';
+import 'package:video_news/models/downloader/downloading_data.dart';
 import 'package:http/http.dart' as http;
 
 class DownLoaderPage extends StatefulWidget {
   final String? path;
   final VideoData? target;
   final Mode mode;
+  final List<VideoForm> downloadList;
   const DownLoaderPage({
     super.key,
     required this.path, 
     required this.target, 
     required this.mode, 
+    required this.downloadList,
   });
 
   @override
@@ -49,13 +53,13 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
   late DirectoryController _directoryController = DirectoryController(currentPath: _currentPath);
   late final DownloaderController _downloaderController = DownloaderController(
     downloadPath: _currentPath, 
-    progress: _progress,
     onProcessed: (p)=>{
       setState((){
         _progress = p;
       })
     }
   );
+
   late ChewieController _chewieController;
   List<VideoData> _videoDatas = [];
   List<Folder> _folders = [];
@@ -66,6 +70,10 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
   double? _deviceWidth;
   double? _deviceHeight;
   double _progress = 0.0;
+  List<double> progresses = [];
+  List<DownloaderController> downloaderControllers = [];
+  //List<Map<String, Map<String, dynamic>>> downloadingList = [];
+  List<DownloadingData> downloadingList = [];
 
   @override
   void initState() {
@@ -90,6 +98,32 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
         _chewieController = _getChewieController();
       });
       dbController.initDatabase();
+      if(widget.mode == Mode.download){
+        for(var i=0; i <widget.downloadList.length; i++){
+          downloadingList.add(
+            DownloadingData(
+              progress: 0.0,
+              form: widget.downloadList[i],
+              controller: 
+               DownloaderController(
+                 downloadPath: _currentPath, 
+                 onProcessed: (p)=>{
+                    print(p),
+                    setState((){
+                      downloadingList[i].progress = p;
+                    })
+                 }
+               )
+            )
+          );
+        }
+      }
+      for(var elemnt in downloadingList){
+        elemnt.controller.download(
+          elemnt.form.youtubeId, 
+          FileType.video
+        );
+      }
     });
     await _directoryController.updateDirectories();
     await dbController.initDatabase();
@@ -162,13 +196,17 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
       context: context,
       builder: (context) {
         return TextEditingDialog(
-          text: "",
+          title: "フォルダを新規作成",
+          name: '',
           onEntered: (string) async {
             print(string);
             final newDirectory = Directory('${_currentPath}/$string/');
             await newDirectory.create(recursive: true);
-            _directoryController.updateDirectories();
+            setState(() {
+              _directoryController.updateDirectories();
+            });
             Navigator.of(context).pop();
+            print("アップデート");
           },
         );
       },
@@ -183,7 +221,8 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
       context: context,
       builder: (context) {
         return TextEditingDialog(
-          text: '',
+          title: "フォルダ名を変更",
+          name: name,
           onEntered: (string) async {
             var oldPath = '$_currentPath/$name/';
             var newPath = '$_currentPath/$string/';
@@ -214,7 +253,14 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
           });
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => DownLoaderPage(path: 'video', mode: Mode.transfer, target: data))
+            MaterialPageRoute(
+              builder: (context) => DownLoaderPage(
+                path: 'video', 
+                mode: Mode.transfer, 
+                target: data, 
+                downloadList: [],
+                )
+              )
           );
         },
         isDestractive: false,
@@ -250,6 +296,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
       ),
       MenuButton(
         onPressed: () async {
+          Navigator.of(context).pop();
           showRenamingDialog(context, folder.name);
         },
         isDestractive: false,  
@@ -333,12 +380,18 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
     );
   }
 
+  String folderTitle(String path){
+      return path == 'video'?
+      'フォルダ':
+      path;
+  }
+
   @override
   Widget build(BuildContext context) {
     buildInit();
     return Scaffold(
       appBar: AppBar(
-        leadingWidth: 85,
+        leadingWidth: _deviceWidth!/3,
         leading: 
         widget.path! == 'video'?
         const Spacer():
@@ -346,30 +399,33 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
           child:
           Row(
             children: [
-              Icon(
-                Icons.arrow_back_ios,
-                size: _deviceWidth!/15
+              Padding(
+                padding: EdgeInsets.only(left: _deviceWidth!/60), // Adjust the left margin as needed
+                child: Icon(
+                  Icons.arrow_back_ios,
+                  size: _deviceWidth!/20,
+                ),
               ),
-              Text(
-                widget.path!.split('/')[widget.path!.split('/').length-2],
+              Text(folderTitle(widget.path!.split('/')[widget.path!.split('/').length-2]),
                 style: TextStyle(
                   color: Colors.black87,
                   fontWeight: FontWeight.bold,
-                  fontSize: _deviceWidth!/20,
+                  fontSize: _deviceWidth!/25,
                 )
               )
             ]
           ),
-            onTap: () async {
-              backPage(DownLoaderPage(
-                path: await Folder(path: _currentPath).parentRelativePath, 
-                mode: widget.mode, 
-                target: widget.target,
-                )
-              );
-            }
-          ),
-        title: Text(widget.path!.split('/').last),
+          onTap: () async {
+            backPage(DownLoaderPage(
+              path: await Folder(path: _currentPath).parentRelativePath, 
+              mode: widget.mode, 
+              target: widget.target,
+              downloadList: [],
+              )
+            );
+          }
+        ),
+        title: Text(folderTitle(widget.path!.split('/').last)),
         actions: [
           IconButton(
             onPressed: () {
@@ -385,35 +441,52 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            SizedBox(
-              width: _deviceWidth!,
-              height: _deviceHeight!/10,
-            ),
-            if(widget.mode == Mode.play)
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                TextField(
-                  decoration: const InputDecoration(
-                    hintText: 'Youtubeのid',
-                  ),
-                  onChanged: (text) {
-                    setState(() {
-                      youtubeId = text;
-                    });
-                  },
-                ),
-                Text(widget.path!.split('/').sublist(1).join('/')),
-                Text('https://www.youtube.com/watch?v=$youtubeId'),
-                TextButton(
-                  onPressed: (){
-                    setState(() {
-                     _downloaderController.download(youtubeId, FileType.video);
-                    });
-                  },
-                  child: const Text("動画ダウンロード")
-                ),
-              ]
+            //SizedBox(
+            //  width: _deviceWidth!,
+            //  height: _deviceHeight!/10,
+            //),
+            //if(widget.mode == Mode.play)
+            //Column(
+            //  mainAxisAlignment: MainAxisAlignment.center,
+            //  children: <Widget>[
+            //    TextField(
+            //      decoration: const InputDecoration(
+            //        hintText: 'Youtubeのid',
+            //      ),
+            //      onChanged: (text) {
+            //        setState(() {
+            //          youtubeId = text;
+            //        });
+            //      },
+            //    ),
+            //    Text(widget.path!.split('/').sublist(1).join('/')),
+            //    Text('https://www.youtube.com/watch?v=$youtubeId'),
+            //    TextButton(
+            //      onPressed: (){
+            //        setState(() {
+            //         _downloaderController.download(youtubeId, FileType.video);
+            //        });
+            //      },
+            //      child: const Text("動画ダウンロード")
+            //    ),
+            //  ]
+            //),
+            if(widget.mode == Mode.select)
+            TextButton(
+              onPressed: (){
+                setState(() {
+                 _downloaderController.download(youtubeId, FileType.video);
+                  movePage(
+                    DownLoaderPage(
+                      path: "${widget.path!}", 
+                      mode: Mode.download,
+                      target: null,
+                      downloadList: widget.downloadList,
+                    )
+                  );
+                });
+              },
+              child: const Text("ここにダウンロード")
             ),
             if(widget.mode == Mode.transfer)
             Column(
@@ -421,12 +494,6 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
               children: <Widget>[
                 Text(widget.target!.videoPath),
               ]
-            ),
-            DownLoaderCell(
-              cellHeight: _deviceHeight!/5,
-              cellWidth: _deviceWidth!,
-              //downloaderController: _downloaderController,
-              progress: _progress,
             ),
             _videoPlayerController.value.isInitialized
             ? AspectRatio(
@@ -441,6 +508,14 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                 shrinkWrap: true,
                 padding: const EdgeInsets.all(0.0),
                 children: <Widget>[
+                  if(widget.mode == Mode.download)
+                  for(var video in downloadingList)
+                  DownLoaderCell(
+                    cellHeight: _deviceHeight!/5,
+                    cellWidth: _deviceWidth!,
+                    //downloaderController: _downloaderController,
+                    progress: video.progress,
+                  ),
                   for(var folder in _folders)
                   Container(
                     width: _deviceWidth!/10,
@@ -471,7 +546,13 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                       ),
                       onTap: () {
                         _videoPlayerController.pause();
-                        movePage(DownLoaderPage(path: "${widget.path!}/${folder.name}", mode: widget.mode, target: widget.target,));
+                        movePage(
+                          DownLoaderPage(
+                            path: "${widget.path!}/${folder.name}", 
+                            mode: widget.mode, target: widget.target,
+                            downloadList: widget.downloadList
+                          )
+                        );
                       },
                     ),
                   ),
@@ -531,7 +612,13 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
           switch(i){
           case 0:
             String path = await _directoryController.getFolderByVideo(widget.target!);
-            backPage(DownLoaderPage(path: path, mode: Mode.play, target: null));
+            backPage(
+              DownLoaderPage(
+                path: path, 
+                mode: Mode.play, 
+                target: null,
+                downloadList: [],
+              ));
           case 1:
             FileForm form = widget.target!.videoPathForm.fileForm;
             var videoTitle = widget.target!.videoPathForm.titleWithoutExtension;
@@ -549,7 +636,13 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
             newVideo.thumbnailPath = thumbnailDestination;
             dbController.updateVideo(widget.target!.id!, newVideo);
             print('ファイルが移動されました。');
-            movePage(DownLoaderPage(path: widget.path, mode: Mode.play, target: null));
+            movePage(
+              DownLoaderPage(
+              path: widget.path, 
+              mode: Mode.play, 
+              target: null,
+              downloadList: [],
+            ));
           }
         },
       ):
