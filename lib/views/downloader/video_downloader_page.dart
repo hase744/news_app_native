@@ -163,6 +163,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
 
   updateFolders() async {
     List<FileSystemEntity> folders = await _directoryController.getDirectoriesOf(null);
+    folders.sort((a,b) => Folder(path: a.path).name.compareTo(Folder(path: b.path).name));//ソート
     setState(() {
       _folders = [];
       for(var folder in folders){
@@ -173,7 +174,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
 
   updateVideoDatas() async {
     List directories = await _directoryController.getDirectoriesOf(_videoForm.extension!);
-    List dataPaths = directories.map((video) => video.path).toList();
+    List dataPaths = directories.map((video) => video.path).toList(); 
     _videoDatas = [];
     for(var data in await dbController.getVideosByPaths(dataPaths)){
       setState(() {
@@ -188,7 +189,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
     return 
     ChewieController(
       videoPlayerController: _videoPlayerController,
-      aspectRatio: 16 / 9,  //アスペクト比
+      aspectRatio: 9 / 9,  //アスペクト比
       autoPlay: false,  //自動再生
       looping: true,  //繰り返し再生
       showControls: true,  //コントロールバーの表示（デフォルトではtrue）
@@ -219,12 +220,10 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
           title: "フォルダを新規作成",
           name: '',
           onEntered: (string) async {
-            print(string);
-            final newDirectory = Directory('${_currentPath}/$string/');
+            final newDirectory = Directory('$_currentPath/$string/');
             await newDirectory.create(recursive: true);
             updateFolders();
             Navigator.of(context).pop();
-            print("アップデート");
           },
         );
       },
@@ -384,8 +383,6 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
       'フォルダ':
       path;
   }
-  
-  videoInitialized(){}
 
   @override
   Widget build(BuildContext context) {
@@ -446,7 +443,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
               showEditingDialog(context, "aa");
             },
             icon: const Icon(
-              Icons.add,
+              Icons.create_new_folder,
               color: Colors.grey,
             ),
           ),
@@ -508,7 +505,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                             Container(
                               height: _deviceWidth!/10,
                               width: _deviceWidth!/10,
-                              child: const Icon(Icons.more_vert),
+                              child: const Icon(Icons.tune),
                             ),
                             onTap: () => openFolderMenu(folder),
                           )

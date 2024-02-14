@@ -41,24 +41,39 @@ class _TextEditingDialogState extends State<TextEditingDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return 
+    AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
       title: Text(widget.title),
       content: TextFormField(
-        autofocus: true, // ダイアログが開いたときに自動でフォーカスを当てる
-        focusNode: focusNode,
+        autofocus: true,
+        cursorColor: Colors.blue,
         controller: controller,
         onFieldSubmitted: widget.onEntered,
+        decoration: const InputDecoration(
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.blue),
+          ),
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () {
             Navigator.of(context).pop(controller.text);
           },
-          child: const Text('キャンセル'),
+          child: const Text(
+            'キャンセル',
+            style: TextStyle(color: Colors.blue)
+            ),
         ),
         TextButton(
           onPressed: () => widget.onEntered(controller.text),
-          child: const Text('OK'),
+          child: const Text(
+            'OK',
+            style: TextStyle(color: Colors.blue)
+            ),
         ),
       ],
     );
