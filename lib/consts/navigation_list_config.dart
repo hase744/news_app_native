@@ -9,6 +9,10 @@ class NavigationListConfig{
     NavigationItem(
       name:"favorite", 
       item: const BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'お気に入りに追加')
+      ),
+    NavigationItem(
+      name:"download", 
+      item: const BottomNavigationBarItem(icon: Icon(Icons.download), label: 'ダウンロード')
       )
   ];
 

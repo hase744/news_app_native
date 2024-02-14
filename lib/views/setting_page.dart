@@ -161,7 +161,7 @@ class _SettingPageState extends State<SettingPage> {
         ),
       ),
       bottomNavigationBar: HomeBottomNavigationBar(
-        initialIndex: 3,
+        initialIndex: 4,
         onTap: (int index) {
           Navigator.pushReplacement(
             context,

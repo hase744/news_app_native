@@ -389,6 +389,17 @@ class _HomePageState extends State<HomePage>  {
               }else{
                 displayAlert("選択されてません");
               }
+            case 'download':
+              print("ダウンロード");
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => DownLoaderPage(
+                  path: 'video',
+                  target: null,
+                  downloadList: _videoController.selection,
+                  mode: Mode.select,
+                )),
+              );
             case 'close':
               setState(() {
                 _videoController.disableSelectMode();

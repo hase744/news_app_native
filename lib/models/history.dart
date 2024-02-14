@@ -14,7 +14,7 @@ class History{
           CREATE TABLE Histories (
             id INTEGER PRIMARY KEY,
             youtube_id TEXT,
-            title TEXT,
+            title TEXT,z
             channel_name TEXT,
             channel_id TEXT,
             second INTEGER

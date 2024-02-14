@@ -16,6 +16,7 @@ class DirectoryController{
     Directory dir = Directory(currentPath);
     List<FileSystemEntity> directories = dir.listSync();
     if(extension == null){
+      print(directories.where((dir) => dir is Directory ).toList());
       return directories.where((dir) => dir is Directory ).toList();
     }else{
       return directories.where((dir) => dir is File && dir.path.endsWith(extension)).toList();

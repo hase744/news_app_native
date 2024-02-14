@@ -26,9 +26,11 @@ class DownloaderController{
     required this.downloadPath,
     required this.onProcessed
   });
+  
   Future<void> download(youtubeId, type) async{
     final yt = YoutubeExplode();
     final video = await yt.videos.get("https://www.youtube.com/watch?v=$youtubeId");
+    var duration = video.duration;
 
     var videoTitle = await getUniqueFileName(video.title, type);
     var imageTitle = await getUniqueFileName(youtubeId, FileType.image);

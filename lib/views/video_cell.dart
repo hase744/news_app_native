@@ -119,7 +119,7 @@ class VideoCell extends StatelessWidget {
                                       style: TextStyle(
                                         fontSize: innerHeight / 10,
                                         color: Colors.white
-                                      ),
+                                      )
                                     )
                                   ),
                                 )

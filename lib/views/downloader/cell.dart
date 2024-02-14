@@ -3,38 +3,51 @@ import 'package:video_news/models/video.dart';
 import 'package:video_news/controllers/downloader/downloader_controller.dart';
 class DownLoaderCell extends StatelessWidget {
   double progress;
-  double cellHeight;
   double cellWidth;
+  VideoForm video;
   //DownloaderController downloaderController;
   //Video video;
 
   DownLoaderCell({
     required this.progress,
     //required this.downloaderController,
-    required this.cellHeight,
     required this.cellWidth,
-    //required this.video
+    required this.video
   });
   @override
   Widget build(BuildContext context) {
     return Container(
       width: cellWidth,
-      height: cellHeight,
       child:
         Column(children: [
           Container(
             width: cellWidth,
-            height: cellHeight/3,
+            padding: EdgeInsets.symmetric(horizontal: cellWidth/30),
             child: Text(
-              "video.title",
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              video.title,
               style: TextStyle(
-                fontSize: cellHeight/20
+                fontSize: cellWidth/4/6
               ),
             ),
           ),
-          LinearProgressIndicator(
-            value: progress,
-          ),
+          Container(
+            padding: EdgeInsets.all(cellWidth/4/5),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.grey.shade400, //枠線の色
+                  width: 1, //枠線の太さ
+                ),
+              ),
+            ),
+            child: 
+            LinearProgressIndicator(
+              value: progress,
+              color: Colors.blue,
+            ),
+          )
         ],
       )
     );

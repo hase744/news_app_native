@@ -55,6 +55,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
     downloadPath: _currentPath, 
     onProcessed: (p)=>{
       setState((){
+        //_progress = 0.5;
         _progress = p;
       })
     }
@@ -98,40 +99,51 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
         _chewieController = _getChewieController();
       });
       dbController.initDatabase();
-      if(widget.mode == Mode.download){
-        for(var i=0; i <widget.downloadList.length; i++){
-          downloadingList.add(
-            DownloadingData(
-              progress: 0.0,
-              form: widget.downloadList[i],
-              controller: 
-               DownloaderController(
-                 downloadPath: _currentPath, 
-                 onProcessed: (p)=>{
-                    print(p),
-                    setState((){
-                      downloadingList[i].progress = p;
-                    })
-                 }
-               )
-            )
-          );
-        }
+    });
+    if(widget.mode == Mode.download){
+      for(var i=0; i <widget.downloadList.length; i++){
+        downloadingList.add(
+          DownloadingData(
+            progress: 0.0,
+            form: widget.downloadList[i],
+            controller: 
+             DownloaderController(
+               downloadPath: _currentPath, 
+               onProcessed: (p)=>{
+                  print(p),
+                  setState((){
+                    downloadingList[i].progress = p;
+                  })
+               }
+             )
+          )
+        );
       }
       for(var elemnt in downloadingList){
-        elemnt.controller.download(
+        await elemnt.controller.download(
           elemnt.form.youtubeId, 
           FileType.video
         );
       }
-    });
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DownLoaderPage(
+            path: widget.path, 
+            mode: Mode.play, 
+            target: null, 
+            downloadList: [],
+            )
+          )
+      );
+    }
     await _directoryController.updateDirectories();
     await dbController.initDatabase();
-    //print("サムネ");
-    //for(var data in await dbController.all()){
-    //  print(data['path']);
-    //  print(data['thumbnail']);
-    //}
+    print("サムネ");
+    for(var data in await dbController.all()){
+      print(data['video_path']);
+      print(data['thumbnail_path']);
+    }
     await updateVideoDatas();
     await updateFolders();
   }
@@ -202,9 +214,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
             print(string);
             final newDirectory = Directory('${_currentPath}/$string/');
             await newDirectory.create(recursive: true);
-            setState(() {
-              _directoryController.updateDirectories();
-            });
+            updateFolders();
             Navigator.of(context).pop();
             print("アップデート");
           },
@@ -234,7 +244,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
               data.replaceFolder(oldPath, newPath);
               dbController.updateVideo(data.id!, data);
             }
-            await _directoryController.updateDirectories();
+            updateFolders();
             setState(() {
               Navigator.of(context).pop(string);
             });
@@ -397,23 +407,36 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
         const Spacer():
         InkWell(
           child:
-          Row(
-            children: [
-              Padding(
-                padding: EdgeInsets.only(left: _deviceWidth!/60), // Adjust the left margin as needed
-                child: Icon(
-                  Icons.arrow_back_ios,
-                  size: _deviceWidth!/20,
+          Container(
+            color: Colors.white,
+            child: 
+            Row(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(left: _deviceWidth!/60), // Adjust the left margin as needed
+                  child: Icon(
+                    Icons.arrow_back_ios,
+                    size: _deviceWidth!/20,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
-              Text(folderTitle(widget.path!.split('/')[widget.path!.split('/').length-2]),
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontWeight: FontWeight.bold,
-                  fontSize: _deviceWidth!/25,
+                Expanded(
+                  child: 
+                  Container(
+                  padding: new EdgeInsets.only(right: 10.0),
+                  child:
+                    Text(folderTitle(widget.path!.split('/')[widget.path!.split('/').length-2]),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: _deviceWidth!/25,
+                      )
+                    )
+                  )
                 )
-              )
-            ]
+              ]
+            ),
           ),
           onTap: () async {
             backPage(DownLoaderPage(
@@ -431,8 +454,9 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
             onPressed: () {
               showEditingDialog(context, "aa");
             },
-            icon: Icon(
-              Icons.add
+            icon: const Icon(
+              Icons.add,
+              color: Colors.grey,
             ),
           ),
         ],
@@ -441,41 +465,11 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            //SizedBox(
-            //  width: _deviceWidth!,
-            //  height: _deviceHeight!/10,
-            //),
-            //if(widget.mode == Mode.play)
-            //Column(
-            //  mainAxisAlignment: MainAxisAlignment.center,
-            //  children: <Widget>[
-            //    TextField(
-            //      decoration: const InputDecoration(
-            //        hintText: 'Youtubeのid',
-            //      ),
-            //      onChanged: (text) {
-            //        setState(() {
-            //          youtubeId = text;
-            //        });
-            //      },
-            //    ),
-            //    Text(widget.path!.split('/').sublist(1).join('/')),
-            //    Text('https://www.youtube.com/watch?v=$youtubeId'),
-            //    TextButton(
-            //      onPressed: (){
-            //        setState(() {
-            //         _downloaderController.download(youtubeId, FileType.video);
-            //        });
-            //      },
-            //      child: const Text("動画ダウンロード")
-            //    ),
-            //  ]
-            //),
             if(widget.mode == Mode.select)
             TextButton(
               onPressed: (){
                 setState(() {
-                 _downloaderController.download(youtubeId, FileType.video);
+                  _downloaderController.download(youtubeId, FileType.video);
                   movePage(
                     DownLoaderPage(
                       path: "${widget.path!}", 
@@ -502,8 +496,6 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
               )
             : const SizedBox.shrink(),
             Expanded(
-              //height: _deviceHeight!/5*2,
-              //width: _deviceHeight!,
               child: ListView(
                 shrinkWrap: true,
                 padding: const EdgeInsets.all(0.0),
@@ -511,8 +503,8 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                   if(widget.mode == Mode.download)
                   for(var video in downloadingList)
                   DownLoaderCell(
-                    cellHeight: _deviceHeight!/5,
                     cellWidth: _deviceWidth!,
+                    video: video.form,
                     //downloaderController: _downloaderController,
                     progress: video.progress,
                   ),
@@ -530,7 +522,11 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                             child:
                             Container(
                               width: _deviceWidth!*8/10,
-                              child: Text(folder.name)
+                              child: Text(
+                                folder.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                )
                             )
                           ),
                           InkWell(
@@ -559,29 +555,55 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                   if(widget.mode == Mode.play)
                   for(var data in _videoDatas)
                   ListTile(
-                    contentPadding: const EdgeInsets.only(left: 0.0, right: 0.0),
+                    contentPadding: const EdgeInsets.all(0.0),
                     title: Row (
                       children: [
                         Container(
+                          padding: EdgeInsets.symmetric(vertical: 0, horizontal: _deviceWidth!/60),
                           margin: const EdgeInsets.all(0),
                           height: _deviceWidth!/32*9,
                           width: _deviceWidth!/2,
-                          child: Image.file(File(data.thumbnailPath))
+                          child: 
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(_deviceWidth!/30),
+                            child: Image.file(
+                              File(data.thumbnailPath),
+                              fit: BoxFit.cover,
+                              )
+                          )
                         ),
                         Container(
-                          margin: const EdgeInsets.all(0),
                           height: _deviceWidth!/32*9,
-                          width: _deviceWidth!/3,
-                          child: Text(data.videoPathForm.title)
-                        ),
-                        InkWell(
+                          width: _deviceWidth!/2,
                           child: 
-                          Container(
-                            height: _deviceWidth!/32*9,
-                            width: _deviceWidth!/6,
-                            child: const Icon(Icons.more_vert),
-                          ),
-                          onTap: () => openMenu(data),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(_deviceWidth!/60),
+                                margin: const EdgeInsets.all(0),
+                                height: _deviceWidth!/32*6,
+                                width: _deviceWidth!/2,
+                                child: Text(
+                                  data.videoPathForm.title,
+                                  maxLines: 3,
+                                  style: TextStyle(
+                                    fontSize: _deviceWidth!/30,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )
+                              ),
+                              InkWell(
+                                child: 
+                                Container(
+                                  height: _deviceWidth!/32*3,
+                                  width: _deviceWidth!/32*3,
+                                  child: const Icon(Icons.more_horiz),
+                                ),
+                                onTap: () => openMenu(data),
+                              )
+                            ],
+                          )
                         )
                       ],
                     ),
