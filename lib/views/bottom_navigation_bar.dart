@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:video_news/helpers/page_transition.dart';
 import 'package:video_news/models/navigation_item.dart';
+import 'package:video_news/models/direction.dart';
 import 'package:video_news/consts/navigation_list_config.dart';
 
 class HomeBottomNavigationBar extends StatelessWidget {
@@ -7,7 +9,7 @@ class HomeBottomNavigationBar extends StatelessWidget {
   final Function(int) onTap;
   final GlobalKey _bottomNavigationKey = GlobalKey();
   bool isSelectMode;
-  List<NavigationItem> list = NavigationListConfig.pageList;
+  List<NavigationItem> navigationList = NavigationListConfig.pageList;
 
   HomeBottomNavigationBar({
     required this.initialIndex,
@@ -16,7 +18,7 @@ class HomeBottomNavigationBar extends StatelessWidget {
   });
 
   String getButtonName(index){
-      return list[index].name;
+      return navigationList[index].name;
    }
 
   double getBottomNavigationBarHeight() {
@@ -30,8 +32,27 @@ class HomeBottomNavigationBar extends StatelessWidget {
     BottomNavigationBar(
       selectedItemColor: Colors.blue,
       currentIndex: initialIndex,
-      onTap: onTap,
-      items: list.map((navItem) => navItem.item).toList(),
+      onTap: (i){
+        if(
+          navigationList[i].page == null || //ページ遷移じゃない
+          (initialIndex < 3 && i < 3)//HomePage内移動
+        ){
+          onTap(i);
+        }else{
+          PageTransition.move(
+            navigationList[i].page,
+            context,
+            initialIndex < i ? Direction.right :Direction.left
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => navigationList[i].page
+            ),
+          );
+        }
+      },
+      items: navigationList.map((navItem) => navItem.item).toList(),
       type: BottomNavigationBarType.fixed,
       key: _bottomNavigationKey,
     );

@@ -39,7 +39,7 @@ class HomePage extends StatefulWidget {
   final int initialIndex;
 
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage>  {
@@ -66,7 +66,7 @@ class _HomePageState extends State<HomePage>  {
   late YoutubePlayerController _youtubeController;
   final List<BannerAd> _bannerAds = [];
   late Future<void> _initializeVideoPlayerFuture;
-  late VideoPlayerController _videoPlayerController;
+  late VideoPlayerController _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(''));
   late CategoryBarController _categoryBarController;
   @override
   void initState() {
@@ -817,6 +817,13 @@ class _HomePageState extends State<HomePage>  {
   }
   @override
   Widget build(BuildContext context) {
+      _deviceWidth = MediaQuery.of(context).size.width;
+      _deviceHeight = MediaQuery.of(context).size.height;
+      _categoryBarController = CategoryBarController(
+        width: _deviceWidth!, 
+        categoryController: _categoryController
+      );
+        _initializeVideoPlayerFuture = _videoPlayerController.initialize();
     //_videoController.videosList = json.decode(_videoController.videosListJson!);
     return 
     Scaffold(

@@ -85,7 +85,7 @@ class HomeLayoutController  {
       if(youtubeDisplayWidth > 0){ //ディスプレイが開いている
         return deviceWidth;
       }else{
-        return 0;
+        return 0.0;
       }
     }{//画面が横向きである
       //return (deviceWidth *(1 - youtubePadding*2))/youtubeDisplayRatio;
@@ -103,7 +103,7 @@ class HomeLayoutController  {
       if(youtubeDisplayWidth > 0){ //ディスプレイが開いている
         return deviceWidth*youtubeDisplayRatio;
       }else{
-        return 0;
+        return 0.0;
       }
     }{//画面が横向きである
       //return deviceWidth *(1 - youtubePadding*2);

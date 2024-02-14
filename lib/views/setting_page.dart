@@ -6,6 +6,7 @@ import 'home_page.dart';
 import '../helpers/page_transition.dart';
 import 'package:video_news/views/bottom_navigation_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:video_news/models/direction.dart';
 import 'package:video_news/views/pdf_page.dart';
 import 'package:video_news/views/html_page.dart';
 import 'package:video_news/consts/config.dart';
@@ -21,7 +22,6 @@ class _SettingPageState extends State<SettingPage> {
   double? _deviceHeight;
   final ButtonStyle style =
       ElevatedButton.styleFrom(textStyle: const TextStyle(fontSize: 20));
-  final PageTransition _pageTransition = PageTransition();
   String remotePDFpath = "";
   String domain = Config.domain;
 
@@ -70,6 +70,7 @@ class _SettingPageState extends State<SettingPage> {
     launchUrl(toLaunch, mode: LaunchMode.inAppWebView);
   }
 
+
   SettingsTile settingTile(String title, Icon? icon, StatefulWidget widget) {
     return 
     icon == null ?
@@ -87,8 +88,8 @@ class _SettingPageState extends State<SettingPage> {
         ),
         child: Text(title),
       ),
-      onPressed: (context) => _pageTransition.movePage(
-        widget, context, true
+      onPressed: (context) => PageTransition.move(
+        widget, context, Direction.right
       )
     )
     :SettingsTile.navigation(
@@ -106,8 +107,8 @@ class _SettingPageState extends State<SettingPage> {
         ),
         child: Text(title),
       ),
-      onPressed: (context) => _pageTransition.movePage(
-        widget, context, true
+      onPressed: (context) => PageTransition.move(
+        widget, context, Direction.right
       )
     );
   }
@@ -162,16 +163,7 @@ class _SettingPageState extends State<SettingPage> {
       ),
       bottomNavigationBar: HomeBottomNavigationBar(
         initialIndex: 4,
-        onTap: (int index) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => HomePage(
-                initialIndex: index,
-              )
-            ),
-          );
-        },
+        onTap: (int index) {},
         isSelectMode: false),
     );
   }

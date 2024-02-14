@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:video_news/helpers/page_transition.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
@@ -25,6 +26,8 @@ import 'package:video_news/models/downloader/file_form.dart';
 import 'package:video_news/models/downloader/path_form.dart';
 import 'package:video_news/models/menu_button.dart';
 import 'package:video_news/models/downloader/downloading_data.dart';
+import 'package:video_news/models/direction.dart';
+import 'package:video_news/consts/navigation_list_config.dart';
 import 'package:http/http.dart' as http;
 
 class DownLoaderPage extends StatefulWidget {
@@ -48,7 +51,9 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
   final yt = YoutubeExplode();
   final _videoForm = FileForm(type: FileType.video);
   final _imageForm = FileForm(type: FileType.image);
-  late VideoPlayerController _videoPlayerController;
+  VideoPlayerController _videoPlayerController = VideoPlayerController.file(
+        File(''),
+      );
   final PageControllerClass _pageController = PageControllerClass();
   late DirectoryController _directoryController = DirectoryController(currentPath: _currentPath);
   late final DownloaderController _downloaderController = DownloaderController(
@@ -101,49 +106,15 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
       dbController.initDatabase();
     });
     if(widget.mode == Mode.download){
-      for(var i=0; i <widget.downloadList.length; i++){
-        downloadingList.add(
-          DownloadingData(
-            progress: 0.0,
-            form: widget.downloadList[i],
-            controller: 
-             DownloaderController(
-               downloadPath: _currentPath, 
-               onProcessed: (p)=>{
-                  print(p),
-                  setState((){
-                    downloadingList[i].progress = p;
-                  })
-               }
-             )
-          )
-        );
-      }
-      for(var elemnt in downloadingList){
-        await elemnt.controller.download(
-          elemnt.form.youtubeId, 
-          FileType.video
-        );
-      }
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DownLoaderPage(
-            path: widget.path, 
-            mode: Mode.play, 
-            target: null, 
-            downloadList: [],
-            )
-          )
-      );
+      await downoloadAndTransit();
     }
     await _directoryController.updateDirectories();
     await dbController.initDatabase();
-    print("サムネ");
-    for(var data in await dbController.all()){
-      print(data['video_path']);
-      print(data['thumbnail_path']);
-    }
+    //print("サムネ");
+    //for(var data in await dbController.all()){
+    //  print(data['video_path']);
+    //  print(data['thumbnail_path']);
+    //}
     await updateVideoDatas();
     await updateFolders();
   }
@@ -151,6 +122,43 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
   buildInit(){
     _deviceWidth = MediaQuery.of(context).size.width;
     _deviceHeight = MediaQuery.of(context).size.height;
+  }
+
+  downoloadAndTransit() async{
+    for(var i=0; i <widget.downloadList.length; i++){
+      downloadingList.add(
+        DownloadingData(
+          progress: 0.0,
+          form: widget.downloadList[i],
+          controller: 
+           DownloaderController(
+             downloadPath: _currentPath, 
+             onProcessed: (p)=>{
+                setState((){
+                  downloadingList[i].progress = p;
+                })
+             }
+           )
+        )
+      );
+    }
+    for(var elemnt in downloadingList){
+      await elemnt.controller.download(
+        elemnt.form.youtubeId, 
+        FileType.video
+      );
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DownLoaderPage(
+          path: widget.path, 
+          mode: Mode.play, 
+          target: null, 
+          downloadList: const [],
+          )
+        )
+    );
   }
 
   updateFolders() async {
@@ -268,7 +276,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                 path: 'video', 
                 mode: Mode.transfer, 
                 target: data, 
-                downloadList: [],
+                downloadList: const [],
                 )
               )
           );
@@ -364,30 +372,11 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
   }
 
   backPage(StatefulWidget page){
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => page,
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-           Offset begin = const Offset(-1.0, 0.0);
-          const Offset end = Offset.zero;
-          final Animatable<Offset> tween = Tween(begin: begin, end: end)
-              .chain(CurveTween(curve: Curves.easeInOut));
-          final Animation<Offset> offsetAnimation = animation.drive(tween);
-          return SlideTransition(
-            position: offsetAnimation,
-            child: child,
-          );
-        },
-      ),
-    );
+    PageTransition.move(page, context, Direction.left);
   }
 
   movePage(StatefulWidget page){
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => page)
-    );
+    PageTransition.move(page, context, Direction.right);
   }
 
   String folderTitle(String path){
@@ -395,6 +384,8 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
       'フォルダ':
       path;
   }
+  
+  videoInitialized(){}
 
   @override
   Widget build(BuildContext context) {
@@ -404,7 +395,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
         leadingWidth: _deviceWidth!/3,
         leading: 
         widget.path! == 'video'?
-        const Spacer():
+        const SizedBox():
         InkWell(
           child:
           Container(
@@ -443,7 +434,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
               path: await Folder(path: _currentPath).parentRelativePath, 
               mode: widget.mode, 
               target: widget.target,
-              downloadList: [],
+              downloadList: const [],
               )
             );
           }
@@ -465,23 +456,6 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            if(widget.mode == Mode.select)
-            TextButton(
-              onPressed: (){
-                setState(() {
-                  _downloaderController.download(youtubeId, FileType.video);
-                  movePage(
-                    DownLoaderPage(
-                      path: "${widget.path!}", 
-                      mode: Mode.download,
-                      target: null,
-                      downloadList: widget.downloadList,
-                    )
-                  );
-                });
-              },
-              child: const Text("ここにダウンロード")
-            ),
             if(widget.mode == Mode.transfer)
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -621,7 +595,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                   ),
                 ],
               )
-            )
+            ),
           ],
         ),
       ),
@@ -631,17 +605,17 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
         initialIndex: 0,
         list: NavigationListConfig.downloaderMenuList,
         onTap: (i) async {
-          switch(i){
-          case 0:
+          switch(NavigationListConfig.downloaderMenuList[i].name){
+          case 'close':
             String path = await _directoryController.getFolderByVideo(widget.target!);
             backPage(
               DownLoaderPage(
                 path: path, 
                 mode: Mode.play, 
                 target: null,
-                downloadList: [],
+                downloadList: const [],
               ));
-          case 1:
+          case 'transit':
             FileForm form = widget.target!.videoPathForm.fileForm;
             var videoTitle = widget.target!.videoPathForm.titleWithoutExtension;
             var thumbnailTitle = widget.target!.thumbnailPathForm.titleWithoutExtension;
@@ -663,25 +637,44 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
               path: widget.path, 
               mode: Mode.play, 
               target: null,
-              downloadList: [],
+              downloadList: const [],
             ));
           }
         },
       ):
-      HomeBottomNavigationBar(
-        initialIndex: 3,
-        onTap: (int index) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => HomePage(
-                initialIndex: index,
+      widget.mode == Mode.select?
+      BottomMenuNavigationBar(
+        initialIndex: 1,
+        list: NavigationListConfig.selectaModeMenuList,
+        onTap: (i) async {
+          switch(NavigationListConfig.selectaModeMenuList[i].name){
+          case 'close':
+            movePage(
+              DownLoaderPage(
+                path: widget.path!, 
+                mode: Mode.play,
+                target: null,
+                downloadList: const [],
               )
-            ),
-          );
+            );
+          case 'download':
+            movePage(
+              DownLoaderPage(
+                path: widget.path!, 
+                mode: Mode.download,
+                target: null,
+                downloadList: widget.downloadList,
+              )
+            );
+          }
         },
+      )
+      :HomeBottomNavigationBar(
+        initialIndex: 3,
+        onTap: (int index) {},
         isSelectMode: false
       ),
+
     );
   }
   @override
