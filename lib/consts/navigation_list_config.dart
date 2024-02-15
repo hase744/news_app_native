@@ -68,8 +68,8 @@ class NavigationListConfig{
     NavigationItem(
       name: 'downloader',
       item: const BottomNavigationBarItem(icon: Icon(Icons.download), label: 'オフライン'),
-      page: DownLoaderPage(
-          path: 'video',
+      page: const DownLoaderPage(
+          path: '/video',
           target: null,
           downloadList: [],
           mode: Mode.play,

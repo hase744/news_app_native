@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 class DownloaderController{
   String downloadPath;
   double progress = 0.0;
+  String relativeDownloadPath;
   late final Function(double) onProcessed;
   final _videoForm = FileForm(type: FileType.video);
   final _imageForm = FileForm(type: FileType.image);
@@ -24,6 +25,7 @@ class DownloaderController{
 
   DownloaderController({
     required this.downloadPath,
+    required this.relativeDownloadPath,
     required this.onProcessed
   });
   
@@ -33,15 +35,13 @@ class DownloaderController{
     var duration = video.duration;
 
     var videoTitle = await getUniqueFileName(video.title, type);
-    var imageTitle = await getUniqueFileName(youtubeId, FileType.image);
-
+    var imageTitle = await getUniqueFileName(video.title, FileType.image);
     final directory = Directory('$downloadPath/');
     await directory.create(recursive: true);
     
     String videoPath = await downloadVideo(youtubeId, videoTitle, yt, type);
     String imagePath = await downloadImage(youtubeId, imageTitle);
-    
-    print(videoPath);
+  
     await dbController.initDatabase();
     VideoData data = VideoData(
       videoPath: videoPath,
@@ -92,23 +92,15 @@ class DownloaderController{
     final audiostream = yt.videos.streamsClient.get(audio);
     stdout.writeln(msg);
     await for (final data in audiostream){
-      //setState(() {
-        count += data.length;
-        progress = count / len;
-        output.add(data);
-          onProcessed(progress);
-        if(progress == 1){
-          //progress = null;
-          print("完了");
-        }
-        
-        //print(progress);
-      //});
+      count += data.length;
+      progress = count / len;
+      output.add(data);
+      onProcessed(progress);
     }
     await output.flush();
     await output.close();
     print("完了");
-    return ('$downloadPath/$filename');
+    return ('$relativeDownloadPath/$filename');
   }
 
   downloadImage(String youtubeId, String title) async {
@@ -118,7 +110,7 @@ class DownloaderController{
     await directory.create(recursive: true);
     final imageFile = File('$downloadPath/$imageFileName');
     imageFile.writeAsBytesSync(response.bodyBytes);
-    return('$downloadPath/$imageFileName');
+    return('$relativeDownloadPath/$imageFileName');
   }
 
 }

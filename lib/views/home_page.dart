@@ -311,7 +311,7 @@ class _HomePageState extends State<HomePage>  {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const DownLoaderPage(
-          path: 'video',
+          path: '/video',
           target: null,
           downloadList: [],
           mode: Mode.play,
@@ -377,7 +377,7 @@ class _HomePageState extends State<HomePage>  {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => DownLoaderPage(
-                  path: 'video',
+                  path: '/video',
                   target: null,
                   downloadList: _videoController.selection,
                   mode: Mode.select,
@@ -646,7 +646,7 @@ class _HomePageState extends State<HomePage>  {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => DownLoaderPage(
-              path: 'video',
+              path: '/video',
               target: null,
               downloadList: [video],
               mode: Mode.select,

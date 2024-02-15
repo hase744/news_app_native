@@ -61,6 +61,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
   late DirectoryController _directoryController = DirectoryController(currentPath: _currentPath);
   late final DownloaderController _downloaderController = DownloaderController(
     downloadPath: _currentPath, 
+    relativeDownloadPath: widget.path!,
     onProcessed: (p)=>{
       setState((){
         //_progress = 0.5;
@@ -70,6 +71,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
   );
 
   late ChewieController _chewieController;
+  late String _appDirPath;
   List<VideoData> _videoDatas = [];
   List<Folder> _folders = [];
   DbController dbController = DbController();
@@ -102,6 +104,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
       _pageController.pageIndex = 2;
       _deviceWidth = MediaQuery.of(context).size.width;
       _deviceHeight = MediaQuery.of(context).size.height;
+      _appDirPath = dir.path;
       _videoPlayerController = VideoPlayerController.file(
         File(''),
       )..initialize().then((_) {
@@ -123,9 +126,11 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
     updateVideoDatas();
   }
 
-  buildInit(){
+  buildInit() async {
     _deviceWidth = MediaQuery.of(context).size.width;
     _deviceHeight = MediaQuery.of(context).size.height;
+    final dir = await getApplicationDocumentsDirectory();
+    _appDirPath = dir.path;
   }
 
   downoloadAndTransit() async{
@@ -136,6 +141,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
           form: widget.downloadList[i],
           controller: 
            DownloaderController(
+            relativeDownloadPath: widget.path!,
              downloadPath: _currentPath, 
              onProcessed: (p)=>{
                 setState((){
@@ -176,11 +182,14 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
   updateVideoDatas() async {
     List directories = await _directoryController.getDirectoriesOf(_videoForm.extension!);
     List dataPaths = directories.map((video) => video.path).toList(); 
+    dataPaths = dataPaths.map((element) {
+      return element.replaceFirst('$_appDirPath/', '');
+    }).toList();
     _videoDatas = [];
     for(var data in await dbController.getVideosByPaths(dataPaths)){
       VideoData videoData = VideoData.fromDb(data);
       //print(await (await FFmpegKit.execute('-i ${VideoData.fromDb(data).videoPath}')).getOutput());
-      await FFprobeKit.getMediaInformation(VideoData.fromDb(data).videoPath).then((session) async {
+      await FFprobeKit.getMediaInformation('$_appDirPath${VideoData.fromDb(data).videoPath}').then((session) async {
         final information = session.getMediaInformation();
         final stream = information!.getStreams()[0];
         videoData.duration = await Duration(seconds: double.parse(information.getDuration()!).toInt());
@@ -281,7 +290,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
             context,
             MaterialPageRoute(
               builder: (context) => DownLoaderPage(
-                path: 'video', 
+                path: '/video', 
                 mode: Mode.transfer, 
                 target: data, 
                 downloadList: const [],
@@ -295,7 +304,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
       MenuButton(
         onPressed: () async {
           await dbController.delete(data.id!);
-          Directory(data.videoPath).delete(recursive: true);
+          Directory('$_appDirPath${data.videoPath}').delete(recursive: true);
           setState(() {
             updateVideoDatas();
             Navigator.of(context).pop();
@@ -318,7 +327,8 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
       ),
       MenuButton(
         onPressed: () async {
-          await dbController.deleteByPartialPath("${folder.path}/");
+          String relativePath = folder.path.replaceAll('$_appDirPath/', '');
+          await dbController.deleteByPartialPath("$relativePath/");
           await Directory(folder.path).delete(recursive: true);
           setState(() {
             updateFolders();
@@ -400,7 +410,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
       appBar: AppBar(
         leadingWidth: _deviceWidth!/3,
         leading: 
-        widget.path! == 'video'?
+        widget.path! == '/video'?
         const SizedBox():
         InkWell(
           child:
@@ -464,12 +474,6 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             if(widget.mode == Mode.transfer)
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text(widget.target!.videoPath),
-              ]
-            ),
             _videoPlayerController.value.isInitialized?
             AspectRatio(
               aspectRatio: 16/9,
@@ -548,7 +552,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(_deviceWidth!/30),
                             child: Image.file(
-                              File(data.thumbnailPath),
+                              File(_appDirPath+data.thumbnailPath),
                               fit: BoxFit.cover,
                               )
                           )
@@ -608,7 +612,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                     onTap: () {
                       _videoPlayerController.pause();
                       _videoPlayerController = VideoPlayerController.file(
-                          File(data.videoPath),
+                          File(_appDirPath+'/'+data.videoPath),
                         )..initialize().then((_) {
                         setState(() {
                           _videoPlayerController = _videoPlayerController;
@@ -640,14 +644,15 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
         onTap: (i) async {
           switch(NavigationListConfig.downloaderMenuList[i].name){
           case 'close':
-            String path = await _directoryController.getFolderByVideo(widget.target!);
+            //String path = await _directoryController.getFolderByVideo(widget.target!);
             backPage(
               DownLoaderPage(
-                path: path, 
+                path: widget.path, 
                 mode: Mode.play, 
                 target: null,
                 downloadList: const [],
-              ));
+              )
+            );
           case 'transit':
             FileForm form = widget.target!.videoPathForm.fileForm;
             var videoTitle = widget.target!.videoPathForm.titleWithoutExtension;
@@ -656,11 +661,11 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
             thumbnailTitle = await getUniqueFileName(videoTitle, FileType.image);
             var pathDestination = "$_currentPath/$videoTitle${_videoForm.extension!}";
             var thumbnailDestination = "$_currentPath/$thumbnailTitle${_imageForm.extension!}";
-            await File(widget.target!.videoPath).rename(pathDestination);
-            await File(widget.target!.thumbnailPath).rename(thumbnailDestination);
+            await File('$_appDirPath${widget.target!.videoPath}').rename(pathDestination);
+            await File('$_appDirPath${widget.target!.thumbnailPath}').rename(thumbnailDestination);
             VideoData newVideo = widget.target!;
-            newVideo.videoPath = pathDestination;
-            newVideo.thumbnailPath = thumbnailDestination;
+            newVideo.videoPath = pathDestination.replaceFirst('$_appDirPath/', '');
+            newVideo.thumbnailPath = thumbnailDestination.replaceFirst('$_appDirPath/', '');
             dbController.updateVideo(widget.target!.id!, newVideo);
             movePage(
               DownLoaderPage(
