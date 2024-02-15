@@ -4,9 +4,13 @@ class VideoData{
   String videoPath;
   String youtubeId;
   String thumbnailPath;
+  Duration? duration;
+  double? aspect;
   int? get fileId => id;
   String get getVideoPath => videoPath;
   String get getThumbnailPath => thumbnailPath;
+  String get durationString => 
+  '${duration!.inHours}:${(duration!.inMinutes % 60).toString().padLeft(2, '0')}:${(duration!.inSeconds % 60).toString().padLeft(2, '0')}';
   PathForm get videoPathForm => PathForm.fromPath(videoPath);
   PathForm get thumbnailPathForm => PathForm.fromPath(thumbnailPath);
 
@@ -14,6 +18,7 @@ class VideoData{
     required this.videoPath,
     required this.thumbnailPath,
     required this.youtubeId,
+    required this.duration
   });
 
   replaceFolder(String oldPath, String newPath){
@@ -25,7 +30,9 @@ class VideoData{
     : id = map['id'],
       videoPath = map['video_path'],
       thumbnailPath = map['thumbnail_path'],
-      youtubeId = map['youtube_id'];
+      youtubeId = map['youtube_id'],
+      duration = null;
+
 
   Map<String, dynamic> toMap() {
     return {

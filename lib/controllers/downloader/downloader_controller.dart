@@ -46,7 +46,8 @@ class DownloaderController{
     VideoData data = VideoData(
       videoPath: videoPath,
       thumbnailPath: imagePath,
-      youtubeId: youtubeId
+      youtubeId: youtubeId,
+      duration: video.duration
     );
     dbController.create(data);
     print('saving in $videoPath');

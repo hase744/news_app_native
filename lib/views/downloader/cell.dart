@@ -14,6 +14,13 @@ class DownLoaderCell extends StatelessWidget {
     required this.cellWidth,
     required this.video
   });
+
+  String getPercent(){
+    int percent = (progress*100).toInt();
+    String percentTwoDegit = percent.toString().padLeft(2, '');
+    return '$percentTwoDegit%';
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -43,10 +50,39 @@ class DownLoaderCell extends StatelessWidget {
               ),
             ),
             child: 
-            LinearProgressIndicator(
-              value: progress,
-              color: Colors.blue,
-            ),
+            Row(
+              children: [
+                if(progress >= 1.0)
+                Text(
+                  "完了",
+                  style: TextStyle(
+                    fontSize: cellWidth/30,
+                      color: Colors.black87
+                  ),
+                ),
+                if(progress < 1.0)
+                Container(
+                  margin: EdgeInsets.only(right: cellWidth/30),
+                  width: cellWidth/30*23,
+                  child:
+                  LinearProgressIndicator(
+                    value: progress,
+                    color: Colors.blue,
+                  )
+                ),
+                if(progress < 1.0)
+                Expanded(
+                  child: 
+                  Text(
+                    getPercent(),
+                    style: TextStyle(
+                      fontSize: cellWidth/30,
+                      color: Colors.black87
+                    ),
+                  ),
+                )
+              ],
+            )
           )
         ],
       )

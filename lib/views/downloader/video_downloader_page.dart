@@ -30,6 +30,34 @@ import 'package:video_news/models/direction.dart';
 import 'package:video_news/consts/navigation_list_config.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter/abstract_session.dart';
+import 'package:ffmpeg_kit_flutter/arch_detect.dart';
+import 'package:ffmpeg_kit_flutter/chapter.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit_config.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_session.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_session_complete_callback.dart';
+import 'package:ffmpeg_kit_flutter/ffprobe_kit.dart';
+import 'package:ffmpeg_kit_flutter/ffprobe_session.dart';
+import 'package:ffmpeg_kit_flutter/ffprobe_session_complete_callback.dart';
+import 'package:ffmpeg_kit_flutter/level.dart';
+import 'package:ffmpeg_kit_flutter/log.dart';
+import 'package:ffmpeg_kit_flutter/log_callback.dart';
+import 'package:ffmpeg_kit_flutter/log_redirection_strategy.dart';
+import 'package:ffmpeg_kit_flutter/media_information.dart';
+import 'package:ffmpeg_kit_flutter/media_information_json_parser.dart';
+import 'package:ffmpeg_kit_flutter/media_information_session.dart';
+import 'package:ffmpeg_kit_flutter/media_information_session_complete_callback.dart';
+import 'package:ffmpeg_kit_flutter/packages.dart';
+import 'package:ffmpeg_kit_flutter/return_code.dart';
+import 'package:ffmpeg_kit_flutter/session.dart';
+import 'package:ffmpeg_kit_flutter/session_state.dart';
+import 'package:ffmpeg_kit_flutter/signal.dart';
+import 'package:ffmpeg_kit_flutter/statistics.dart';
+import 'package:ffmpeg_kit_flutter/statistics_callback.dart';
+import 'package:ffmpeg_kit_flutter/stream_information.dart';
+
 class DownLoaderPage extends StatefulWidget {
   final String? path;
   final VideoData? target;
@@ -101,7 +129,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
       _videoPlayerController = VideoPlayerController.file(
         File(''),
       )..initialize().then((_) {
-        _chewieController = _getChewieController();
+        _chewieController = _getChewieController(16/9);
       });
       dbController.initDatabase();
     });
@@ -115,8 +143,8 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
     //  print(data['video_path']);
     //  print(data['thumbnail_path']);
     //}
-    await updateVideoDatas();
-    await updateFolders();
+    updateFolders();
+    updateVideoDatas();
   }
 
   buildInit(){
@@ -177,19 +205,27 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
     List dataPaths = directories.map((video) => video.path).toList(); 
     _videoDatas = [];
     for(var data in await dbController.getVideosByPaths(dataPaths)){
+      VideoData videoData = VideoData.fromDb(data);
+      //print(await (await FFmpegKit.execute('-i ${VideoData.fromDb(data).videoPath}')).getOutput());
+      await FFprobeKit.getMediaInformation(VideoData.fromDb(data).videoPath).then((session) async {
+        final information = session.getMediaInformation();
+        final stream = information!.getStreams()[0];
+        videoData.duration = await Duration(seconds: double.parse(information.getDuration()!).toInt());
+        videoData.aspect = stream.getWidth()!/stream.getHeight()!;
+      });
       setState(() {
         _videoDatas.add(
-          VideoData.fromDb(data)
+          videoData
         );
       });
     }
   }
 
-  _getChewieController(){
+  _getChewieController(double aspect){
     return 
     ChewieController(
       videoPlayerController: _videoPlayerController,
-      aspectRatio: 9 / 9,  //アスペクト比
+      aspectRatio: aspect,  //アスペクト比
       autoPlay: false,  //自動再生
       looping: true,  //繰り返し再生
       showControls: true,  //コントロールバーの表示（デフォルトではtrue）
@@ -301,6 +337,14 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
     return [
       MenuButton(
         onPressed: () async {
+          Navigator.of(context).pop();
+          showRenamingDialog(context, folder.name);
+        },
+        isDestractive: false,  
+        name: "名前を変更"
+      ),
+      MenuButton(
+        onPressed: () async {
           await dbController.deleteByPartialPath("${folder.path}/");
           await Directory(folder.path).delete(recursive: true);
           setState(() {
@@ -310,14 +354,6 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
         },
         isDestractive: true,  
         name: "削除"
-      ),
-      MenuButton(
-        onPressed: () async {
-          Navigator.of(context).pop();
-          showRenamingDialog(context, folder.name);
-        },
-        isDestractive: false,  
-        name: "名前を変更"
       ),
     ];
   }
@@ -380,7 +416,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
 
   String folderTitle(String path){
       return path == 'video'?
-      'フォルダ':
+      'オフライン':
       path;
   }
 
@@ -396,7 +432,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
         InkWell(
           child:
           Container(
-            color: Colors.white,
+            //color: Colors.white,
             child: 
             Row(
               children: [
@@ -427,6 +463,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
             ),
           ),
           onTap: () async {
+            _videoPlayerController.pause();
             backPage(DownLoaderPage(
               path: await Folder(path: _currentPath).parentRelativePath, 
               mode: widget.mode, 
@@ -444,7 +481,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
             },
             icon: const Icon(
               Icons.create_new_folder,
-              color: Colors.grey,
+              color: Colors.black54,
             ),
           ),
         ],
@@ -564,14 +601,31 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                                   ),
                                 )
                               ),
-                              InkWell(
+                              Container(
+                                padding: EdgeInsets.only(left: _deviceWidth!/60),
                                 child: 
-                                Container(
-                                  height: _deviceWidth!/32*3,
-                                  width: _deviceWidth!/32*3,
-                                  child: const Icon(Icons.more_horiz),
-                                ),
-                                onTap: () => openMenu(data),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      data.durationString,
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: _deviceWidth!/30,
+                                      ),
+                                    ),
+                                    Expanded(child: SizedBox()),
+                                    InkWell(
+                                      child: 
+                                      Container(
+                                        height: _deviceWidth!/32*3,
+                                        width: _deviceWidth!/32*3,
+                                        child: const Icon(Icons.more_horiz),
+                                      ),
+                                      onTap: () => openMenu(data),
+                                    )
+                                  ],
+                                )
                               )
                             ],
                           )
@@ -585,7 +639,8 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                         )..initialize().then((_) {
                         setState(() {
                           _videoPlayerController = _videoPlayerController;
-                          _chewieController = _getChewieController();
+                          _chewieController = _getChewieController(data.aspect!);
+                          _videoPlayerController.play();
                         });
                       });
                     },
@@ -668,7 +723,9 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
       )
       :HomeBottomNavigationBar(
         initialIndex: 3,
-        onTap: (int index) {},
+        onTap: (int index) {
+          _videoPlayerController.pause();
+        },
         isSelectMode: false
       ),
 
