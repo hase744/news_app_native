@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:video_news/helpers/page_transition.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,6 +11,7 @@ import 'package:chewie/chewie.dart';
 import 'package:video_news/consts/navigation_list_config.dart';
 import 'package:video_news/controllers/video_db_controller.dart';
 import 'package:video_news/controllers/page_controller.dart';
+import 'package:video_news/controllers/banner_adds_controller.dart';
 import 'package:video_news/controllers/directory/directory_ontroller.dart';
 import 'package:video_news/controllers/downloader/downloader_controller.dart';
 import 'package:video_news/views/downloader/text_editing_dialog.dart';
@@ -29,34 +31,7 @@ import 'package:video_news/models/downloader/downloading_data.dart';
 import 'package:video_news/models/direction.dart';
 import 'package:video_news/consts/navigation_list_config.dart';
 import 'package:http/http.dart' as http;
-
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter/abstract_session.dart';
-import 'package:ffmpeg_kit_flutter/arch_detect.dart';
-import 'package:ffmpeg_kit_flutter/chapter.dart';
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit_config.dart';
-import 'package:ffmpeg_kit_flutter/ffmpeg_session.dart';
-import 'package:ffmpeg_kit_flutter/ffmpeg_session_complete_callback.dart';
 import 'package:ffmpeg_kit_flutter/ffprobe_kit.dart';
-import 'package:ffmpeg_kit_flutter/ffprobe_session.dart';
-import 'package:ffmpeg_kit_flutter/ffprobe_session_complete_callback.dart';
-import 'package:ffmpeg_kit_flutter/level.dart';
-import 'package:ffmpeg_kit_flutter/log.dart';
-import 'package:ffmpeg_kit_flutter/log_callback.dart';
-import 'package:ffmpeg_kit_flutter/log_redirection_strategy.dart';
-import 'package:ffmpeg_kit_flutter/media_information.dart';
-import 'package:ffmpeg_kit_flutter/media_information_json_parser.dart';
-import 'package:ffmpeg_kit_flutter/media_information_session.dart';
-import 'package:ffmpeg_kit_flutter/media_information_session_complete_callback.dart';
-import 'package:ffmpeg_kit_flutter/packages.dart';
-import 'package:ffmpeg_kit_flutter/return_code.dart';
-import 'package:ffmpeg_kit_flutter/session.dart';
-import 'package:ffmpeg_kit_flutter/session_state.dart';
-import 'package:ffmpeg_kit_flutter/signal.dart';
-import 'package:ffmpeg_kit_flutter/statistics.dart';
-import 'package:ffmpeg_kit_flutter/statistics_callback.dart';
-import 'package:ffmpeg_kit_flutter/stream_information.dart';
 
 class DownLoaderPage extends StatefulWidget {
   final String? path;
@@ -98,6 +73,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
   List<VideoData> _videoDatas = [];
   List<Folder> _folders = [];
   DbController dbController = DbController();
+  BannerAddsController _bannerAddsController = BannerAddsController(bannerAdCount: 1);
   String youtubeId = "";
   String fileDirectory = '';
   String _currentPath = '';
@@ -176,16 +152,13 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
         FileType.video
       );
     }
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DownLoaderPage(
-          path: widget.path, 
-          mode: Mode.play, 
-          target: null, 
-          downloadList: const [],
-          )
-        )
+    movePage( 
+      DownLoaderPage(
+        path: widget.path, 
+        mode: Mode.play, 
+        target: null, 
+        downloadList: const [],
+      )
     );
   }
 
@@ -497,12 +470,12 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                 Text(widget.target!.videoPath),
               ]
             ),
-            _videoPlayerController.value.isInitialized
-            ? AspectRatio(
-                aspectRatio: 16/9,
-                child: Chewie(controller: _chewieController),
-              )
-            : const SizedBox.shrink(),
+            _videoPlayerController.value.isInitialized?
+            AspectRatio(
+              aspectRatio: 16/9,
+              child: Chewie(controller: _chewieController),
+            ): 
+            const SizedBox.shrink(),
             Expanded(
               child: ListView(
                 shrinkWrap: true,
@@ -517,7 +490,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                     progress: video.progress,
                   ),
                   for(var folder in _folders)
-                  Container(
+                  SizedBox(
                     width: _deviceWidth!/10,
                     child:
                     ListTile(
@@ -528,7 +501,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                         children: [
                           Expanded(
                             child:
-                            Container(
+                            SizedBox(
                               width: _deviceWidth!*8/10,
                               child: Text(
                                 folder.name,
@@ -539,7 +512,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                           ),
                           InkWell(
                             child: 
-                            Container(
+                            SizedBox(
                               height: _deviceWidth!/10,
                               width: _deviceWidth!/10,
                               child: const Icon(Icons.tune),
@@ -580,7 +553,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                               )
                           )
                         ),
-                        Container(
+                        SizedBox(
                           height: _deviceWidth!/32*9,
                           width: _deviceWidth!/2,
                           child: 
@@ -614,10 +587,10 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                                         fontSize: _deviceWidth!/30,
                                       ),
                                     ),
-                                    Expanded(child: SizedBox()),
+                                    const Expanded(child: SizedBox()),
                                     InkWell(
                                       child: 
-                                      Container(
+                                      SizedBox(
                                         height: _deviceWidth!/32*3,
                                         width: _deviceWidth!/32*3,
                                         child: const Icon(Icons.more_horiz),
@@ -648,12 +621,20 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                 ],
               )
             ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: _bannerAddsController.bannerAds[0].size.width.toDouble(),
+                height: _bannerAddsController.bannerAds[0].size.height.toDouble(),
+                child: AdWidget(ad: _bannerAddsController.bannerAds[0]),
+              ),
+            ),
           ],
         ),
       ),
       bottomNavigationBar: 
-      widget.mode == Mode.transfer
-      ?BottomMenuNavigationBar(
+      widget.mode == Mode.transfer?
+      BottomMenuNavigationBar(
         initialIndex: 0,
         list: NavigationListConfig.downloaderMenuList,
         onTap: (i) async {
@@ -675,15 +656,12 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
             thumbnailTitle = await getUniqueFileName(videoTitle, FileType.image);
             var pathDestination = "$_currentPath/$videoTitle${_videoForm.extension!}";
             var thumbnailDestination = "$_currentPath/$thumbnailTitle${_imageForm.extension!}";
-            print(pathDestination);
-            print(thumbnailDestination);
             await File(widget.target!.videoPath).rename(pathDestination);
             await File(widget.target!.thumbnailPath).rename(thumbnailDestination);
             VideoData newVideo = widget.target!;
             newVideo.videoPath = pathDestination;
             newVideo.thumbnailPath = thumbnailDestination;
             dbController.updateVideo(widget.target!.id!, newVideo);
-            print('ファイルが移動されました。');
             movePage(
               DownLoaderPage(
               path: widget.path, 
@@ -720,8 +698,8 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
             );
           }
         },
-      )
-      :HomeBottomNavigationBar(
+      ):
+      HomeBottomNavigationBar(
         initialIndex: 3,
         onTap: (int index) {
           _videoPlayerController.pause();

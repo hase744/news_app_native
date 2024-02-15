@@ -33,10 +33,10 @@ class HomeBottomNavigationBar extends StatelessWidget {
       selectedItemColor: Colors.blue,
       currentIndex: initialIndex,
       onTap: (i){
-        if(initialIndex >2  || i > 2){//HomePage内移動じゃない
-          onTap(i);
-        }
-        if(navigationList[i].page != null){ //ページ遷移
+        onTap(i);
+        if(
+          navigationList[i].page != null &&  //ページ遷移
+          (initialIndex >2  || i > 2)){ //homePage内遷移
           PageTransition.move(
             navigationList[i].page,
             context,

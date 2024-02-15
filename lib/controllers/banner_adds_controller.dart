@@ -6,9 +6,12 @@ class BannerAddsController {
   List<BannerAd> bannerAds = [];
   List<AdDisplay> adDisplays = [];
   List<BannerAdListener> bannerAdListeners = [];
-  int bannerAdCount = 4;
+  int bannerAdCount;
   
-  BannerAddsController() {
+  
+  BannerAddsController({
+    required this.bannerAdCount
+  }) {
     for (int i = 0; i < bannerAdCount; i++) {
       BannerAd bannerAd = BannerAd(
         adUnitId: AdHelper.bannerAdUnitId,

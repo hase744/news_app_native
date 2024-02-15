@@ -55,7 +55,7 @@ class _HomePageState extends State<HomePage>  {
   VideoController _videoController = VideoController();
   ScrollController _scrollController = ScrollController();
   VersionController _versionController = VersionController();
-  BannerAddsController _bannerAddsController = BannerAddsController();
+  BannerAddsController _bannerAddsController = BannerAddsController(bannerAdCount: 4);
   final ScrollController _categoryScrollController = ScrollController();
   final CategoryController _categoryController = CategoryController();
   final LoadController _loadController = LoadController();
@@ -64,7 +64,6 @@ class _HomePageState extends State<HomePage>  {
   
   final TextEditingController _controller = TextEditingController();
   late YoutubePlayerController _youtubeController;
-  final List<BannerAd> _bannerAds = [];
   late Future<void> _initializeVideoPlayerFuture;
   late VideoPlayerController _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(''));
   late CategoryBarController _categoryBarController;
@@ -85,22 +84,6 @@ class _HomePageState extends State<HomePage>  {
     setState(() {
       FocusScope.of(context).unfocus();
       MobileAds.instance.initialize();
-      for(var i =0; i<3; i++){
-        _bannerAds.add(BannerAd(
-          size: AdSize.banner,
-          adUnitId: AdHelper.bannerAdUnitId,
-          listener: BannerAdListener(
-            onAdFailedToLoad: (Ad ad, LoadAdError error) {
-              ad.dispose();
-            },
-          ),
-          request: const AdRequest()
-        )
-        );
-      }
-      for(var bannerAd in _bannerAds){
-        bannerAd.load();
-      }
       _deviceWidth = MediaQuery.of(context).size.width;
       _deviceHeight = MediaQuery.of(context).size.height;
       if(_versionController.isReleased){
@@ -123,7 +106,7 @@ class _HomePageState extends State<HomePage>  {
       _scrollController = ScrollController(
         initialScrollOffset: (_deviceWidth!*_homeLayoutController.topMenuRatio),
       );
-      _bannerAddsController = BannerAddsController();
+      _bannerAddsController = BannerAddsController(bannerAdCount: 4);
       _scrollController.addListener(_onScroll);
       _pageController.pageIndex = widget.initialIndex;
       _homeLayoutController.updateCellsTop(0);
@@ -760,9 +743,6 @@ class _HomePageState extends State<HomePage>  {
   @override
   void dispose() {
     _scrollController.dispose();
-    for(var ad in _bannerAds){
-      ad.dispose();
-    }
     super.dispose();
   }
   
@@ -877,6 +857,15 @@ class _HomePageState extends State<HomePage>  {
                             return true;
                           },
                           child: 
+                          _videoController.displayingVideos?
+                          ListView(
+                            controller: _scrollController,
+                            physics: const ClampingScrollPhysics(),
+                            children: [
+                              for(var i=0; i<_videoController.videos.length; i++)
+                                    videoCell(context, _videoController.videos[i], i),
+                            ]
+                          ):
                           PageView(
                             controller: _pressPageController,
                             children: 
@@ -920,9 +909,6 @@ class _HomePageState extends State<HomePage>  {
                                   if(_videoController.displayingAllVideos && _videoController.displayingVideoList)
                                   for(var i=0; i<_videoController.videosList[j].length; i++)
                                     videoCell(context, _videoController.videosList[j][i], i),
-                                  if(_videoController.displayingAllVideos && _videoController.displayingVideos)
-                                  for(var i=0; i<_videoController.videos.length; i++)
-                                    videoCell(context, _videoController.videos[i], i),
                                   if(_videoController.displayingLoadingScreen)
                                   Container(
                                     alignment: Alignment.center,
