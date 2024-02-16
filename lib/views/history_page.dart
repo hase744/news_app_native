@@ -34,15 +34,15 @@ import 'package:video_news/consts/device.dart';
 import 'package:video_news/helpers/ad_helper.dart';
 import 'package:video_player/video_player.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.initialIndex});
+class HistoryPage extends StatefulWidget {
+  const HistoryPage({super.key, required this.initialIndex});
   final int initialIndex;
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HistoryPage> createState() => _HistoryPageState();
 }
 
-class _HomePageState extends State<HomePage>  {
+class _HistoryPageState extends State<HistoryPage>  {
   double? _deviceWidth;
   double? _deviceHeight;
   String? _alert;
@@ -54,7 +54,6 @@ class _HomePageState extends State<HomePage>  {
   Future<void>? _launched;
   VideoController _videoController = VideoController();
   ScrollController _scrollController = ScrollController();
-  List<ScrollController> _scrollControllers = [];
   VersionController _versionController = VersionController();
   BannerAddsController _bannerAddsController = BannerAddsController(bannerAdCount: 4);
   final ScrollController _categoryScrollController = ScrollController();
@@ -82,7 +81,6 @@ class _HomePageState extends State<HomePage>  {
     //await prefs.remove('version');
     await _versionController.initialize();
     await updateVersion();
-
     setState(() {
       FocusScope.of(context).unfocus();
       MobileAds.instance.initialize();
@@ -95,7 +93,7 @@ class _HomePageState extends State<HomePage>  {
             autoPlay: false,  // 自動再生しない
           ),
         );
-        _youtubeController.addListener(_onChangeYoutube);
+        //_youtubeController.addListener(_onChangeYoutube);
       }else{
         _videoPlayerController = VideoPlayerController.networkUrl(
           Uri.parse(
@@ -105,21 +103,14 @@ class _HomePageState extends State<HomePage>  {
         _videoPlayerController.setLooping(true);
         _initializeVideoPlayerFuture = _videoPlayerController.initialize();
       }
-      for(var i =0; i< _categoryController.categories.length; i++){
-        ScrollController scrollController = ScrollController(
-          initialScrollOffset: (_deviceWidth!*_homeLayoutController.topMenuRatio),
-        );
-        _scrollControllers.add(scrollController);
-        scrollController.addListener(_onScrolls);
-      }
       _scrollController = ScrollController(
         initialScrollOffset: (_deviceWidth!*_homeLayoutController.topMenuRatio),
       );
       _bannerAddsController = BannerAddsController(bannerAdCount: 4);
-      _scrollController.addListener(_onScroll);
+      //_scrollController.addListener(_onScroll);
       _pageController.pageIndex = widget.initialIndex;
       _homeLayoutController.updateCellsTop(0);
-      _pressPageController.addListener(() => changeCategory(_pressPageController.page!));
+     //_pressPageController.addListener(() => changeCategory(_pressPageController.page!));
       _categoryController.insertAllChildCategories();
       _categoryBarController = CategoryBarController(
         width: _deviceWidth!, 
@@ -129,6 +120,8 @@ class _HomePageState extends State<HomePage>  {
       //_history.deleteTable();
       //_favorite.deleteTable();
     });
+    print("プロダクト");
+    print(const bool.fromEnvironment('dart.vm.product'));
     setDefauldLayout();
     updateScreen();
   }
@@ -145,10 +138,7 @@ class _HomePageState extends State<HomePage>  {
       setState(() {
         _categoryController.categoryIndex = i.toInt();
         _videoController.displayVideoList();
-        ScrollController scrollController = _scrollControllers[_categoryController.categoryIndex];
-        if(scrollController.hasClients){
-          scrollController.jumpTo(_homeLayoutController.getTopMenuHeight());
-        }
+        _scrollController.jumpTo(_homeLayoutController.getTopMenuHeight());
         selectCategory(_categoryController.categoryIndex);
       });
     }
@@ -383,6 +373,7 @@ class _HomePageState extends State<HomePage>  {
                 displayAlert("選択されてません");
               }
             case 'download':
+              print("ダウンロード");
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => DownLoaderPage(
@@ -497,13 +488,13 @@ class _HomePageState extends State<HomePage>  {
           },
           onPressedTitle: () => openYoutube(video),
         ),
-        //adDisplay(videoIndex),
+        adDisplay(videoIndex),
       ],
     );
   }
 
   Widget adDisplay(int index){
-    if (!_pageController.isHomePage()) {
+    if (!_pageController.isHistoryPage()) {
       return const SizedBox();
     } else if (index % 5 != 2) {
       return const SizedBox();
@@ -537,7 +528,7 @@ class _HomePageState extends State<HomePage>  {
 
   scrollToPoint(double offset){
     Future.delayed(const Duration(seconds: 0), () {
-      _scrollControllers[_categoryController.categoryIndex].animateTo(
+      _scrollController.animateTo(
         offset,
         duration: const Duration(milliseconds: 500),
         curve: Curves.ease,
@@ -575,61 +566,38 @@ class _HomePageState extends State<HomePage>  {
     }
   }
 
-  _onScrolls() {
-    if(_scrollControllers.length <= _categoryController.categoryIndex){
-      return;
-    }
-    ScrollController scrollController =  _scrollControllers[_categoryController.categoryIndex];
-    if(!scrollController.hasClients){
-      return;
-    }
-    final before = scrollController.position.pixels;
-    final end = scrollController.position.maxScrollExtent;
-    if (before == end) {
-      setState(() {
-      _videoController.displayingLoadingScreen = true;
-      });
-    }
-    if (_loadController.loadCount > 0 && before > 0) {
-      setState(() {
-      _loadController.loadCount = 0;
-      _timer?.cancel();
-      });
-    }
-    if(_loadController.isLoading && before >= _homeLayoutController.loadAreaHeight){
-      setState(() {
-      _loadController.isLoading = false;
-      });
-    }
-    if(before <= 0 && !_loadController.loadCounting){
-      if(_pageController.isHomePage()){
-        setState(() {
-        _loadController.loadCounting = true;
-        countLoad();
-        });
-      }
-    }
-    if(_loadController.loadCounting && (before > 0 || _loadController.loadCount >= _loadController.maxLoadCount)){
-      setState(() {
-      _loadController.loadCounting = false;
-      _loadController.loadCount = 1;
-      });
-    }
-    if(scrollController.offset < _homeLayoutController.getTopMenuHeight()){
-      setState(() {
-      _homeLayoutController.updateCellsTop(scrollController.offset);
-      });
-    }
-    //FocusScope.of(context).unfocus();
-  }
-
   void _onScroll() {
     final before = _scrollController.position.pixels;
     final end = _scrollController.position.maxScrollExtent;
       if (before == end) {
-    setState(() {
-        _videoController.displayingLoadingScreen = true;
-    });
+        setState(() {
+          _videoController.displayingLoadingScreen = true;
+        });
+      }
+      if (before > 0) {
+        setState(() {
+          _loadController.loadCount = 0;
+          _timer?.cancel();
+        });
+      }
+      if(before >= _homeLayoutController.loadAreaHeight){
+        setState(() {
+          _loadController.isLoading = false;
+        });
+      }
+      if(before <= 0 && !_loadController.loadCounting){
+        if(_pageController.isHistoryPage()){
+          setState(() {
+            _loadController.loadCounting = true;
+            countLoad();
+          });
+        }
+      }
+      if(before > 0 || _loadController.loadCount >= _loadController.maxLoadCount){
+        setState(() {
+          _loadController.loadCounting = false;
+          _loadController.loadCount = 1;
+        });
       }
     _homeLayoutController.updateCellsTop(_scrollController.offset);
     FocusScope.of(context).unfocus();
@@ -800,6 +768,7 @@ class _HomePageState extends State<HomePage>  {
     setState(() {
       _videoController.coverVideoAndVideoList();
     });
+    print(await _videoController.searchCategory(name));
     setState(() {
       _videoController.displayingLoadingScreen = false;
       _videoController.videos = _videoController.videos;
@@ -881,7 +850,7 @@ class _HomePageState extends State<HomePage>  {
                               // The ListView has stopped scrolling
                               final before = scrollNotification.metrics.extentBefore;
                               final max = scrollNotification.metrics.maxScrollExtent;
-                              if(_pageController.isHomePage()){
+                              if(_pageController.isHistoryPage()){
                                 scrollForMenu(before);
                               }
                               if (before == max) {
@@ -896,6 +865,16 @@ class _HomePageState extends State<HomePage>  {
                             return true;
                           },
                           child: 
+                          _videoController.displayingVideos?
+                          ListView(
+                            addAutomaticKeepAlives: true,
+                            controller: _scrollController,
+                            physics: const ClampingScrollPhysics(),
+                            children: [
+                              for(var i=0; i<_videoController.videos.length; i++)
+                                    videoCell(context, _videoController.videos[i], i),
+                            ]
+                          ):
                           PageView(
                             controller: _pressPageController,
                             children: 
@@ -903,7 +882,7 @@ class _HomePageState extends State<HomePage>  {
                               for (var j = 0; j < _videoController.videosList.length; j++)
                               ListView(
                                 addAutomaticKeepAlives: true,
-                                controller: _scrollControllers[j],
+                                controller: _scrollController,
                                 physics: const ClampingScrollPhysics(),
                                 children: [
                                   SizedBox(
@@ -914,7 +893,6 @@ class _HomePageState extends State<HomePage>  {
                                   Container(
                                     height: _homeLayoutController.categoryBarHeight, // Set the height of the button row
                                     child: ListView.builder(
-                                      addAutomaticKeepAlives: true,
                                       scrollDirection: Axis.horizontal,
                                       itemCount: _categoryController.childCategoriesList[j].length,
                                       itemBuilder: (context, index) {
@@ -941,6 +919,12 @@ class _HomePageState extends State<HomePage>  {
                                   if(_videoController.displayingAllVideos && _videoController.displayingVideoList)
                                   for(var i=0; i<_videoController.videosList[j].length; i++)
                                     videoCell(context, _videoController.videosList[j][i], i),
+                                    //Container(
+                                    //  height: _deviceWidth!/16*9,
+                                    //  width: _deviceWidth,
+                                    //  color: Colors.red,
+                                    //    child: Text("aa"),
+                                    //),
                                   if(_videoController.displayingLoadingScreen)
                                   Container(
                                     alignment: Alignment.center,
@@ -1114,6 +1098,7 @@ class _HomePageState extends State<HomePage>  {
                       height: _deviceWidth!/16*9,
                     ),
                     onTap: (){
+                      print(_homeLayoutController.displayingVideoButton);
                       setState(() {
                         _homeLayoutController.displayingVideoButton = !_homeLayoutController.displayingVideoButton;
                       });

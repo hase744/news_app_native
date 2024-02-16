@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:video_news/consts/config.dart';
 import 'package:video_news/models/video.dart';
 import 'package:video_news/controllers/version_controller.dart';
-class VideoCell extends StatelessWidget {
+class VideoCell extends StatefulWidget {
   final VersionController versionController = VersionController();
-  late final domain = Config.domain;
+  final domain = Config.domain;
   final VideoForm video;
   final double cellWidth;
   final double cellHeight;
@@ -17,6 +17,7 @@ class VideoCell extends StatelessWidget {
   final VoidCallback onPressedOptions;
   final VoidCallback onPressedTitle;
   final VoidCallback onSelected;
+  @override
 
   VideoCell({
     required this.video,
@@ -32,21 +33,29 @@ class VideoCell extends StatelessWidget {
   });
 
   @override
+  State<VideoCell> createState() => _VideoCellState();
+}
+class _VideoCellState extends State<VideoCell>  with AutomaticKeepAliveClientMixin {
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
-    String youtube_id = video.youtubeId;
+    String youtube_id = widget.video.youtubeId;
     //String dateString = "2023-10-16 14:30:00";
-    double horizontalPadding = cellHeight*0.1;
-    double verticalPadding = cellWidth*0.015;
-    double innerWidth = cellWidth - horizontalPadding*2;
+    double horizontalPadding = widget.cellHeight*0.1;
+    double verticalPadding = widget.cellWidth*0.015;
+    double innerWidth = widget.cellWidth - horizontalPadding*2;
     double centerThreadWidth = innerWidth /30;
     double leftSideWidth = (innerWidth / 2) - centerThreadWidth;
     double rightSideWidth = innerWidth - leftSideWidth - centerThreadWidth;
     double innerHeight = leftSideWidth /16 *9;
     //String differenceStr = "${difference.inDays}日 ${difference.inHours} 時間 ${difference.inMinutes.remainder(60)} 分";
-    //double cellWidth = _deviceWidth!;
-    //double cellHeight = _deviceWidth! / 2 / 16 * 9;
+    //double widget.cellWidth = _deviceWidth!;
+    //double widget.cellHeight = _deviceWidth! / 2 / 16 * 9;
     return Container(
-      color: isSelected ?Colors.grey.shade300 :Colors.white,
+      color: widget.isSelected ?Colors.grey.shade300 :Colors.white,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
@@ -68,16 +77,16 @@ class VideoCell extends StatelessWidget {
                         ),
                         //color: Colors.red,
                         margin: EdgeInsets.only(right: centerThreadWidth),
-                        //margin: EdgeInsets.symmetric(horizontal:cellWidth/2*0.05, vertical: cellHeight*0.05),
+                        //margin: EdgeInsets.symmetric(horizontal:widget.cellWidth/2*0.05, vertical: widget.cellHeight*0.05),
                         child: InkWell(
-                          onTap: onPressedYoutube,
+                          onTap: widget.onPressedYoutube,
                           child: Stack(
                             children: [
                               Positioned.fill(
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8.0),
                                   child:Image.network(
-                                    isReleased ? "http://img.youtube.com/vi/$youtube_id/sddefault.jpg" : '$domain/images/${youtube_id}.jpg',
+                                    widget.isReleased ? "http://img.youtube.com/vi/$youtube_id/sddefault.jpg" : '${widget.domain}/images/${youtube_id}.jpg',
                                     fit: BoxFit.cover,
                                     errorBuilder: (c, o, s) {
                                       return  Image.asset(
@@ -95,11 +104,11 @@ class VideoCell extends StatelessWidget {
                               Positioned.fill(
                                 child: Center(
                                   child: Opacity(
-                                    opacity: isSelectMode ? 1 : 0.3,
+                                    opacity: widget.isSelectMode ? 1 : 0.3,
                                     child: Icon(
-                                      isSelectMode ? (isSelected ? Icons.check_circle_sharp : Icons.check_circle_outline)  : Icons.play_arrow,
+                                      widget.isSelectMode ? (widget.isSelected ? Icons.check_circle_sharp : Icons.check_circle_outline)  : Icons.play_arrow,
                                       size: 50,
-                                      color: isSelected ?Colors.blue :Colors.white,
+                                      color: widget.isSelected ?Colors.blue :Colors.white,
                                     ),
                                   ),
                                 ),
@@ -114,7 +123,7 @@ class VideoCell extends StatelessWidget {
                                   Container(
                                     color: Colors.black,
                                     child: Text(
-                                      video.getReadableDuration(),
+                                      widget.video.getReadableDuration(),
                                       maxLines: 1,
                                       style: TextStyle(
                                         fontSize: innerHeight / 10,
@@ -137,7 +146,7 @@ class VideoCell extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             InkWell(
-                              onTap: onPressedTitle,
+                              onTap: widget.onPressedTitle,
                               child: 
                               Column(
                                 children: [
@@ -145,7 +154,7 @@ class VideoCell extends StatelessWidget {
                                     width: rightSideWidth,
                                     height: innerHeight / 5 * 3,
                                     child: Text(
-                                      video.title,
+                                      widget.video.title,
                                       style: TextStyle(
                                           fontSize: innerHeight /14 *2,
                                         fontWeight: FontWeight.bold,
@@ -157,7 +166,7 @@ class VideoCell extends StatelessWidget {
                                     width: rightSideWidth,
                                     height: innerHeight / 5,
                                     child: Text(
-                                      video.getFromNow(),
+                                      widget.video.getFromNow(),
                                       style: TextStyle(
                                         fontSize: innerHeight /10,
                                         fontWeight: FontWeight.bold,
@@ -178,7 +187,7 @@ class VideoCell extends StatelessWidget {
                                   Container(
                                     width: rightSideWidth - innerHeight/3,
                                     child: Text(
-                                      video.channelName,
+                                      widget.video.channelName,
                                       maxLines: 1,
                                       style: TextStyle(
                                           fontSize: innerHeight / 4 / 2,
@@ -186,7 +195,7 @@ class VideoCell extends StatelessWidget {
                                     )
                                   ),
                                   InkWell(
-                                    onTap: onPressedOptions,
+                                    onTap: widget.onPressedOptions,
                                     child: Container(
                                       height: innerHeight/2,
                                       width: innerHeight/3,
@@ -210,9 +219,9 @@ class VideoCell extends StatelessWidget {
                     ],
                   ),
                 ),
-                if(isSelectMode)
+                if(widget.isSelectMode)
                 InkWell(
-                  onTap: onSelected,
+                  onTap: widget.onSelected,
                   child: 
                   SizedBox(
                     height: innerHeight,
