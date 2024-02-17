@@ -6,8 +6,10 @@ import 'package:flutter/services.dart';
 import 'package:video_news/controllers/video_controller.dart';
 import 'package:video_news/controllers/version_controller.dart';
 import 'package:video_news/views/home_page.dart';
+import 'package:video_news/models/downloader/mode.dart';
 import 'package:video_news/views/category_default_page.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
+import 'package:video_news/views/downloader/video_downloader_page.dart';
 
 class FirstPage extends StatefulWidget {
   const FirstPage({super.key});
@@ -124,9 +126,18 @@ class _FirstPageState extends State<FirstPage> {
           actions: [
             Builder(builder: (context) {
               return TextButton(
-                child: const Text("キャンセル"),
+                child: const Text("オフラインに移動"),
                 onPressed: (){
                   Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const DownLoaderPage(
+                      path: '/video',
+                      target: null,
+                      downloadList: [],
+                      mode: Mode.play,
+                    )),
+                  );
                 }
               );
             }),

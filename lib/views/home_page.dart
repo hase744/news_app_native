@@ -264,7 +264,11 @@ class _HomePageState extends State<HomePage>  {
           });
         });
       }
-      _homeLayoutController.updateCellsTop(_scrollController.offset);
+      if(_scrollController.hasClients){
+        _homeLayoutController.updateCellsTop(_scrollController.offset);
+      }else{
+        _homeLayoutController.updateCellsTop(_scrollControllers[_categoryController.categoryIndex].offset);
+      }
     });
     await prefs.setString('default_youtube_id', youtubeId);
     _videoController.createHistory(video);
@@ -285,8 +289,23 @@ class _HomePageState extends State<HomePage>  {
     });
   }
 
+  onTappedCategory(int i) async {
+    if(_videoController.displayingVideos){
+      print(_categoryController.categoryIndex);
+      selectCategory(_categoryController.categoryIndex);
+      await _videoController.displayVideoList();
+      setState(() {
+
+        _videoController = _videoController;
+      });
+    }else{
+      _pressPageController.jumpToPage(i);
+    }
+  }
+
   Future<void> selectCategory(int categoryNum) async {
     setState(() {
+      _videoController.displayVideoList();
       _homeLayoutController.displayingTextField = false;
       _videoController.searchingCategory = null;
       _videoController.videos = [];
@@ -455,7 +474,7 @@ class _HomePageState extends State<HomePage>  {
     );
   }
 
-  Widget videoCell(BuildContext context, VideoForm video, int videoIndex) {
+  Widget videoCell(BuildContext context, VideoForm video, int videoIndex, int? categoryIndex) {
     int cellId = video.id;
     double cellWidth = _deviceWidth!;
     double cellHeight = _deviceWidth! /2 /16 *9;
@@ -497,7 +516,8 @@ class _HomePageState extends State<HomePage>  {
           },
           onPressedTitle: () => openYoutube(video),
         ),
-        //adDisplay(videoIndex),
+        if(categoryIndex == null || categoryIndex == _categoryController.categoryIndex)
+        adDisplay(videoIndex),
       ],
     );
   }
@@ -615,7 +635,8 @@ class _HomePageState extends State<HomePage>  {
       _loadController.loadCount = 1;
       });
     }
-    if(scrollController.offset < _homeLayoutController.getTopMenuHeight()){
+    if(_homeLayoutController.videoCellsTop <= _homeLayoutController.getTopMenuHeight()-1 || 
+    scrollController.offset < _homeLayoutController.getTopMenuHeight()){
       setState(() {
       _homeLayoutController.updateCellsTop(scrollController.offset);
       });
@@ -624,6 +645,9 @@ class _HomePageState extends State<HomePage>  {
   }
 
   void _onScroll() {
+    if(!_scrollController.hasClients){
+      return;
+    }
     final before = _scrollController.position.pixels;
     final end = _scrollController.position.maxScrollExtent;
       if (before == end) {
@@ -799,6 +823,7 @@ class _HomePageState extends State<HomePage>  {
   selectChildCategory(String name) async {
     setState(() {
       _videoController.coverVideoAndVideoList();
+      _videoController.searchCategory(name);
     });
     setState(() {
       _videoController.displayingLoadingScreen = false;
@@ -896,6 +921,19 @@ class _HomePageState extends State<HomePage>  {
                             return true;
                           },
                           child: 
+                          _videoController.displayingVideos?
+                          ListView(
+                            controller: _scrollController,
+                            physics: const ClampingScrollPhysics(),
+                            children: [
+                              SizedBox(
+                                width: _deviceWidth!,
+                                height: _homeLayoutController.getTopMenuHeight(),
+                              ),
+                              for(var i=0; i<_videoController.videos.length; i++)
+                                videoCell(context, _videoController.videos[i], i, null),
+                            ]
+                          ):
                           PageView(
                             controller: _pressPageController,
                             children: 
@@ -910,37 +948,37 @@ class _HomePageState extends State<HomePage>  {
                                     width: _deviceWidth!,
                                     height: _homeLayoutController.getTopMenuHeight(),
                                   ),
-                                  if(_categoryController.childCategoriesList.isNotEmpty && _categoryController.childCategoriesList[j].isNotEmpty)
-                                  Container(
-                                    height: _homeLayoutController.categoryBarHeight, // Set the height of the button row
-                                    child: ListView.builder(
-                                      addAutomaticKeepAlives: true,
-                                      scrollDirection: Axis.horizontal,
-                                      itemCount: _categoryController.childCategoriesList[j].length,
-                                      itemBuilder: (context, index) {
-                                        return Padding(
-                                          padding: EdgeInsets.all(_homeLayoutController.categoryBarHeight/8),
-                                          child: ElevatedButton(
-                                            onPressed: () => selectChildCategory(_categoryController.childCategoriesList[j][index].name),
-                                            style: ElevatedButton.styleFrom(
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_homeLayoutController.categoryBarHeight/8),),
-                                              elevation: 0,
-                                              backgroundColor: Colors.blueGrey[50],
-                                            ),
-                                            child: Text(
-                                              _categoryController.childCategoriesList[j][index].japaneseName,
-                                              style: const TextStyle(
-                                                color: Colors.black, // Adjust the value as needed
-                                              )
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
+                                  //if(_categoryController.childCategoriesList.isNotEmpty && _categoryController.childCategoriesList[j].isNotEmpty)
+                                  //Container(
+                                  //  height: _homeLayoutController.categoryBarHeight, // Set the height of the button row
+                                  //  child: ListView.builder(
+                                  //    addAutomaticKeepAlives: true,
+                                  //    scrollDirection: Axis.horizontal,
+                                  //    itemCount: _categoryController.childCategoriesList[j].length,
+                                  //    itemBuilder: (context, index) {
+                                  //      return Padding(
+                                  //        padding: EdgeInsets.all(_homeLayoutController.categoryBarHeight/8),
+                                  //        child: ElevatedButton(
+                                  //          onPressed: () => selectChildCategory(_categoryController.childCategoriesList[j][index].name),
+                                  //          style: ElevatedButton.styleFrom(
+                                  //            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_homeLayoutController.categoryBarHeight/8),),
+                                  //            elevation: 0,
+                                  //            backgroundColor: Colors.blueGrey[50],
+                                  //          ),
+                                  //          child: Text(
+                                  //            _categoryController.childCategoriesList[j][index].japaneseName,
+                                  //            style: const TextStyle(
+                                  //              color: Colors.black, // Adjust the value as needed
+                                  //            )
+                                  //          ),
+                                  //        ),
+                                  //      );
+                                  //    },
+                                  //  ),
+                                  //),
                                   if(_videoController.displayingAllVideos && _videoController.displayingVideoList)
                                   for(var i=0; i<_videoController.videosList[j].length; i++)
-                                    videoCell(context, _videoController.videosList[j][i], i),
+                                    videoCell(context, _videoController.videosList[j][i], i, j),
                                   if(_videoController.displayingLoadingScreen)
                                   Container(
                                     alignment: Alignment.center,
@@ -981,9 +1019,7 @@ class _HomePageState extends State<HomePage>  {
                           categoryBarController: _categoryBarController,
                           width: _deviceWidth!,
                           categoryController: _categoryController,
-                          onSelected: (int i){
-                            _pressPageController.jumpToPage(i);
-                          },
+                          onSelected: (int i) => onTappedCategory(i),
                         )
                       ),
                       if(_alert != null)

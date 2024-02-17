@@ -33,21 +33,15 @@ class HomeBottomNavigationBar extends StatelessWidget {
       selectedItemColor: Colors.blue,
       currentIndex: initialIndex,
       onTap: (i){
-        onTap(i);
         if(
-          navigationList[i].page != null &&  //ページ遷移
-          (initialIndex >2  || i > 2)){ //homePage内遷移
+          navigationList[i].page != null){
           PageTransition.move(
             navigationList[i].page,
             context,
             initialIndex < i ? Direction.right :Direction.left
           );
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => navigationList[i].page
-            ),
-          );
+        }else{
+          onTap(i);
         }
       },
       items: navigationList.map((navItem) => navItem.item).toList(),

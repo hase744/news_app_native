@@ -473,7 +473,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            if(widget.mode == Mode.transfer)
+            if(widget.mode == Mode.play)
             _videoPlayerController.value.isInitialized?
             AspectRatio(
               aspectRatio: 16/9,
