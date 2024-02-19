@@ -55,5 +55,9 @@
 	<dict>  
 	    <key>NSAllowsArbitraryLoads</key><true/>  
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>$(PRODUCT_NAME) needs camera access.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>$(PRODUCT_NAME) needs photo library access.</string>
 </dict>
 </plist>

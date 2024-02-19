@@ -44,6 +44,7 @@ class DownloaderController{
   
     await dbController.initDatabase();
     VideoData data = VideoData(
+      createdAt: DateTime.now().millisecondsSinceEpoch,
       videoPath: videoPath,
       thumbnailPath: imagePath,
       youtubeId: youtubeId,

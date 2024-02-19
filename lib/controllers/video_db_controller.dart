@@ -10,14 +10,15 @@ class DbController{
 
   Future<void> initDatabase() async {
     _database = await openDatabase(
-      p.join(await getDatabasesPath(), 'my_database3.db'),
+      p.join(await getDatabasesPath(), 'video.db'),
       onCreate: (db, version) {
         return db.execute('''
           CREATE TABLE Videos (
             id INTEGER PRIMARY KEY,
             youtube_id TEXT,
             thumbnail_path TEXT,
-            video_path TEXT
+            video_path TEXT,
+            created_at INTEGER
           )
         ''');
       },
@@ -27,7 +28,7 @@ class DbController{
   }
 
   Future<void> deleteTable() async {
-    final dbPath = p.join(await getDatabasesPath(), 'my_database.db');
+    final dbPath = p.join(await getDatabasesPath(), 'video.db');
     await deleteDatabase(dbPath);
   }
 

@@ -1,12 +1,16 @@
 import 'package:video_news/models/downloader/path_form.dart';
+import 'package:intl/intl.dart';
 class VideoData{
   int? id;
   String videoPath;
   String youtubeId;
   String thumbnailPath;
   Duration? duration;
+  int createdAt;
   double? aspect;
   int? get fileId => id;
+  DateTime get createdAtDateTime => DateTime.fromMillisecondsSinceEpoch(createdAt);
+  String get createdAtString => DateFormat('yyyy-MM-dd-HH:mm').format(createdAtDateTime);
   String get getVideoPath => videoPath;
   String get getThumbnailPath => thumbnailPath;
   String get durationString => 
@@ -18,7 +22,8 @@ class VideoData{
     required this.videoPath,
     required this.thumbnailPath,
     required this.youtubeId,
-    required this.duration
+    required this.duration,
+    required this.createdAt
   });
 
   replaceFolder(String oldPath, String newPath){
@@ -31,6 +36,7 @@ class VideoData{
       videoPath = map['video_path'],
       thumbnailPath = map['thumbnail_path'],
       youtubeId = map['youtube_id'],
+      createdAt = map['created_at'],
       duration = null;
 
 
@@ -46,6 +52,7 @@ class VideoData{
       'video_path': videoPath,
       'thumbnail_path': thumbnailPath,
       'youtube_id': youtubeId,
+      'created_at': DateTime.now().millisecondsSinceEpoch
     };
   }
 }

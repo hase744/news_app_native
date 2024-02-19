@@ -121,6 +121,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
     //for(var data in await dbController.all()){
     //  print(data['video_path']);
     //  print(data['thumbnail_path']);
+    //  print(data['youtube_id']);
     //}
     updateFolders();
     updateVideoDatas();
@@ -586,6 +587,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
                                   children: [
                                     Text(
                                       data.durationString,
+                                      //data.createdAtString,
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontSize: _deviceWidth!/30,

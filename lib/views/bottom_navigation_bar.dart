@@ -33,15 +33,14 @@ class HomeBottomNavigationBar extends StatelessWidget {
       selectedItemColor: Colors.blue,
       currentIndex: initialIndex,
       onTap: (i){
-        if(
-          navigationList[i].page != null){
-          PageTransition.move(
-            navigationList[i].page,
+        onTap(i);
+        if(navigationList[i].page != null){
+          Navigator.push(
             context,
-            initialIndex < i ? Direction.right :Direction.left
+            MaterialPageRoute(
+              builder: (context) => navigationList[i].page
+            ),
           );
-        }else{
-          onTap(i);
         }
       },
       items: navigationList.map((navItem) => navItem.item).toList(),

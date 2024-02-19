@@ -257,7 +257,7 @@ class _HomePageState extends State<HomePage>  {
       }else{
         _initializeVideoPlayerFuture = _videoPlayerController.initialize();
         _videoPlayerController.pause();
-        _videoPlayerController = VideoPlayerController.network('${Config.domain}/videos/${youtubeId}.mp4')
+        _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse('${Config.domain}/videos/${youtubeId}.mp4'))
         ..initialize().then((_) {
           setState(() {
             _videoPlayerController.play();
@@ -424,6 +424,12 @@ class _HomePageState extends State<HomePage>  {
       return HomeBottomNavigationBar(
         initialIndex: _pageController.pageIndex, 
         onTap: (int index){
+                        print("ストップ");
+          if(_versionController.isReleased){
+            _youtubeController.pause();
+          }else{
+            _videoPlayerController.pause();
+          }
           _pageController.updatePage(index);
           updateScreen();
         }, 
@@ -867,7 +873,7 @@ class _HomePageState extends State<HomePage>  {
         width: _deviceWidth!, 
         categoryController: _categoryController
       );
-        _initializeVideoPlayerFuture = _videoPlayerController.initialize();
+      //_initializeVideoPlayerFuture = _videoPlayerController.initialize();
     //_videoController.videosList = json.decode(_videoController.videosListJson!);
     return 
     Scaffold(
