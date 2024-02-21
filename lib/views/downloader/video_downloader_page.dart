@@ -155,11 +155,11 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
     }
     for(var elemnt in downloadingList){
       await elemnt.controller.download(
-        elemnt.form.youtubeId, 
-        FileType.video
+        FileType.video,
+        elemnt.form
       );
     }
-    movePage( 
+    movePage(
       DownLoaderPage(
         path: widget.path, 
         mode: Mode.play, 

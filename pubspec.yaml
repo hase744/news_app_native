@@ -57,6 +57,7 @@ dependencies:
   youtube_explode_dart: ^2.1.0
   chewie: ^1.7.5
   ffmpeg_kit_flutter: ^6.0.3
+  dio: ^5.4.1
 
 dev_dependencies:
   flutter_test:

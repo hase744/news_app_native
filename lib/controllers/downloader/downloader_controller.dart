@@ -1,3 +1,4 @@
+import 'package:video_news/models/video.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import 'package:video_news/models/downloader/mode.dart';
 import 'package:video_news/models/downloader/folder.dart';
@@ -6,10 +7,13 @@ import 'package:video_news/models/downloader/file_type.dart';
 import 'package:video_news/models/downloader/file_form.dart';
 import 'package:video_news/models/downloader/path_form.dart';
 import 'package:video_news/controllers/video_db_controller.dart';
+import 'package:video_news/controllers/version_controller.dart';
 import 'package:video_news/controllers/directory/directory_ontroller.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:video_news/consts/config.dart';
 
 class DownloaderController{
   String downloadPath;
@@ -18,8 +22,8 @@ class DownloaderController{
   late final Function(double) onProcessed;
   final _videoForm = FileForm(type: FileType.video);
   final _imageForm = FileForm(type: FileType.image);
+  VersionController _versionController = VersionController();
 
-  final yt = YoutubeExplode();
   late DirectoryController _directoryController = DirectoryController(currentPath: downloadPath);
   DbController dbController = DbController();
 
@@ -29,29 +33,47 @@ class DownloaderController{
     required this.onProcessed
   });
   
-  Future<void> download(youtubeId, type) async{
-    final yt = YoutubeExplode();
-    final video = await yt.videos.get("https://www.youtube.com/watch?v=$youtubeId");
-    var duration = video.duration;
-
+  Future<void> download(FileType type, VideoForm video) async{
     var videoTitle = await getUniqueFileName(video.title, type);
     var imageTitle = await getUniqueFileName(video.title, FileType.image);
     final directory = Directory('$downloadPath/');
     await directory.create(recursive: true);
     
-    String videoPath = await downloadVideo(youtubeId, videoTitle, yt, type);
-    String imagePath = await downloadImage(youtubeId, imageTitle);
+    await _versionController.initialize();
+    var videoPath = _versionController.isReleased?
+      await downloadVideo(video.youtubeId, videoTitle, type):
+      await downloadFake(video.youtubeId, videoTitle, type);
+    
+    var imagePath = await downloadImage(video.youtubeId, imageTitle);
   
     await dbController.initDatabase();
     VideoData data = VideoData(
       createdAt: DateTime.now().millisecondsSinceEpoch,
       videoPath: videoPath,
       thumbnailPath: imagePath,
-      youtubeId: youtubeId,
-      duration: video.duration
+      youtubeId: video.youtubeId,
+      duration: Duration(seconds: video.totalSeconds)
     );
     dbController.create(data);
     print('saving in $videoPath');
+  }
+
+  Future downloadFake(String youtubeId, String videoTitle, FileType type) async {
+    print('${Config.domain}/videos/$youtubeId.mp4');
+    var fileId = '${Config.domain}/videos/$youtubeId.mp4';
+    final dio = Dio();
+     var filename = '$videoTitle.mp4';
+    final filePath = '$downloadPath/$filename';
+    await dio.download(
+      fileId,
+      filePath,
+      onReceiveProgress: (count, total) {
+        final progress = count / total;
+        onProcessed(progress);
+      },
+    );
+    print("完了");
+    return ('$relativeDownloadPath/$filename');
   }
 
   Future<String> getArrangedFileName(String name) async {
@@ -78,7 +100,8 @@ class DownloaderController{
     return newTitle.split('.').first;
   }
 
-  downloadVideo(String youtubeId, String videoTitle, YoutubeExplode yt, FileType type) async {
+  downloadVideo(String youtubeId, String videoTitle, FileType type) async {
+    final yt = YoutubeExplode();
     final manifest = await yt.videos.streamsClient.getManifest("https://www.youtube.com/watch?v=$youtubeId");
     //final streams = type == FileType.video ? manifest.muxed : manifest.audioOnly;
     final streams = manifest.muxed;
