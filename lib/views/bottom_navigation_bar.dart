@@ -3,18 +3,22 @@ import 'package:video_news/helpers/page_transition.dart';
 import 'package:video_news/models/navigation_item.dart';
 import 'package:video_news/models/direction.dart';
 import 'package:video_news/consts/navigation_list_config.dart';
+import 'package:video_news/controllers/version_controller.dart';
+
 
 class HomeBottomNavigationBar extends StatelessWidget {
   final int initialIndex;
   final Function(int) onTap;
   final GlobalKey _bottomNavigationKey = GlobalKey();
   bool isSelectMode;
-  List<NavigationItem> navigationList = NavigationListConfig.pageList;
-
+  bool isReleased;
+  VersionController _versionController = VersionController();
+  late List<NavigationItem> navigationList = isReleased ? NavigationListConfig.pageList: NavigationListConfig.fakePageList;
   HomeBottomNavigationBar({
     required this.initialIndex,
     required this.onTap,
-    required this.isSelectMode
+    required this.isSelectMode,
+    required this.isReleased
   });
 
   String getButtonName(index){

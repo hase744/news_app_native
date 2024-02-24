@@ -707,6 +707,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
         },
       ):
       HomeBottomNavigationBar(
+        isReleased: true,
         initialIndex: 3,
         onTap: (int index) {
           _videoPlayerController.pause();

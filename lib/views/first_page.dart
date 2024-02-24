@@ -21,6 +21,7 @@ class _FirstPageState extends State<FirstPage> {
   double? _deviceWidth;
   String _authStatus = 'Unknown';
   String uuid = '';
+  VersionController _versionController = VersionController();
   @override
   void initState() {
     super.initState();
@@ -36,6 +37,7 @@ class _FirstPageState extends State<FirstPage> {
   }
 
   init() async {
+    await _versionController.initialize();
     await initPlugin(context);
     fetchData();
   }
@@ -124,6 +126,7 @@ class _FirstPageState extends State<FirstPage> {
             ),
             ),
           actions: [
+            if(_versionController.isReleased)
             Builder(builder: (context) {
               return TextButton(
                 child: const Text("オフラインに移動"),

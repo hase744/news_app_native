@@ -394,6 +394,7 @@ class _HistoryPageState extends State<HistoryPage>  {
       );
     }else{
       return HomeBottomNavigationBar(
+        isReleased: _versionController.isReleased,
         initialIndex: _pageController.pageIndex, 
         onTap: (int index){
           _pageController.updatePage(index);

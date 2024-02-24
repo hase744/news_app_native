@@ -10,9 +10,14 @@ import 'package:video_news/models/direction.dart';
 import 'package:video_news/views/pdf_page.dart';
 import 'package:video_news/views/html_page.dart';
 import 'package:video_news/consts/config.dart';
+import 'package:video_news/controllers/version_controller.dart';
 import 'dart:io';
 
 class SettingPage extends StatefulWidget {
+  VersionController versionController = VersionController();
+  SettingPage(){
+    versionController.initialize();
+  }
   @override
   _SettingPageState createState() => _SettingPageState();
 }
@@ -20,8 +25,7 @@ class SettingPage extends StatefulWidget {
 class _SettingPageState extends State<SettingPage> {
   final categorySetting = CategoryOrder();
   double? _deviceHeight;
-  final ButtonStyle style =
-      ElevatedButton.styleFrom(textStyle: const TextStyle(fontSize: 20));
+  final ButtonStyle style = ElevatedButton.styleFrom(textStyle: const TextStyle(fontSize: 20));
   String remotePDFpath = "";
   String domain = Config.domain;
 
@@ -162,7 +166,8 @@ class _SettingPageState extends State<SettingPage> {
         ),
       ),
       bottomNavigationBar: HomeBottomNavigationBar(
-        initialIndex: 4,
+        isReleased: widget.versionController.isReleased,
+        initialIndex: widget.versionController.isReleased? 4:3,
         onTap: (int index) {},
         isSelectMode: false),
     );
