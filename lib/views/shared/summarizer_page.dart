@@ -24,12 +24,14 @@ class _SummarizerPage extends State<SummarizerPage> {
   bool _isLoading = false;
   List _summaries = [];
   int _summaryIndex = 0;
+  bool get isMaxSummary => _summaryIndex+1 >= _summaries.length;
+  bool get isMiniSummary => _summaryIndex <= 0;
 
   
   @override
   void initState() {
     super.initState();
-    getSummary();
+    getSummaries();
   }
 
   @override
@@ -57,7 +59,7 @@ class _SummarizerPage extends State<SummarizerPage> {
                   controller: _controller,
                   cursorColor: Colors.blue,
                   decoration: InputDecoration(
-                    labelText: 'AIプロンプト',
+                    labelText: '入力プロンプト',
                     labelStyle: const TextStyle(
                       color: Colors.grey
                     ),
@@ -137,6 +139,51 @@ class _SummarizerPage extends State<SummarizerPage> {
                     )
                   ),
                   Container(
+                    height: widget.width/20,
+                    child:
+                  Row(
+                    children: [
+                      IconButton(
+                        color: isMiniSummary? Colors.grey : Colors.black54,
+                        padding: EdgeInsets.zero, 
+                        iconSize: widget.width/20,
+                        onPressed: (){
+                            if(!isMiniSummary){
+                              setState(() {
+                                _summaryIndex-=1;
+                              });
+                            }
+                          }, 
+                        icon: Icon(
+                          Icons.arrow_back_ios,
+                          )
+                        ),
+                      Text(
+                        "${_summaryIndex+1}/${_summaries.length}",
+                        style: TextStyle(
+                          color: Colors.black54,
+                        ),
+                      ),
+                      IconButton(
+                        color: isMaxSummary? Colors.grey : Colors.black54,
+                        padding: EdgeInsets.zero, 
+                        iconSize: widget.width/20,
+                        onPressed: (){
+                            if(!isMaxSummary){
+                              setState(() {
+                                _summaryIndex+=1;
+                              });
+                            }
+                          }, 
+                        icon: Icon(
+                          Icons.arrow_forward_ios,
+                          size: widget.width/20,
+                          )
+                        )
+                    ],
+                  ) ,
+                  ),
+                  Container(
                     alignment: Alignment.centerLeft,
                     child:
                     RichText(
@@ -153,12 +200,13 @@ class _SummarizerPage extends State<SummarizerPage> {
       ),
     );
   }
+  
 
-  void getSummary() async {
+  void getSummaries() async {
     setState(() {
       _isLoading = true;
     });
-    final url = '${Config.domain}/user/summaries/1.json';
+    final url = '${Config.domain}/user/summaries.json';
 
     Map<String, dynamic> parameters = {
         'uuid': await uuidController.getUuid(),
@@ -174,7 +222,8 @@ class _SummarizerPage extends State<SummarizerPage> {
       setState(() {
         _isLoading = false;
         Map summaries = json.decode(response.body);
-        _summaries = summaries['summary'];
+        _summaries = summaries['summaries'];
+        _summaryIndex = _summaries.length-1;
       });
     }
   }
@@ -206,18 +255,18 @@ class _SummarizerPage extends State<SummarizerPage> {
     if (response.statusCode == 200) {
       setState(() {
         _isLoading = false;
-        print(response.body);
         var answer = json.decode(response.body)['summary'];
-        _summaryIndex = _summaries.length -1;
         _summaries.add({
           'order': _controller.text,
           'answer': answer
         });
+        _summaryIndex = _summaries.length -1;
       });
     }
   }
 
-  List<TextSpan> getHighLightedText(String text){
+  List<TextSpan> getHighLightedText(String? text){
+    text = text == null ? '' : text;
     List<TextSpan> children = [];
     List<String> parts = text.replaceAll('* ', '・').split('**');
     for (int i = 0; i < parts.length; i++) {

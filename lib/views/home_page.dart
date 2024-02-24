@@ -714,8 +714,8 @@ class _HomePageState extends State<HomePage>  {
               );
           });
         },
-        isDestractive: true,
-        name: "要約を生成"
+        isDestractive: false,
+        name: "AIで要約を生成"
       ),
       if(isHistory)
       MenuButton(
