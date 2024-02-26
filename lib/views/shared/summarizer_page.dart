@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:video_news/consts/config.dart';
@@ -8,11 +9,13 @@ class SummarizerPage extends StatefulWidget {
   double width;
   double height;
   VideoForm video;
+  VoidCallback onClosed;
    
   SummarizerPage({
     required this.width,
     required this.height,
-    required this.video
+    required this.video,
+    required this.onClosed
   });
   @override
   State<SummarizerPage> createState() => _SummarizerPage();
@@ -40,162 +43,196 @@ class _SummarizerPage extends State<SummarizerPage> {
       height: widget.height * 0.8,
       child: 
       Padding(
-        padding: const EdgeInsets.all(5.0),
+        padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 5.0),
         child: 
-        SingleChildScrollView(
-          child:
-          Column(
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(20.0),
-                child: 
-                Text(
-                  'AIで要約を生成',
-                  style: TextStyle(fontSize: 24.0),
-                ),
-              ),
-              TextField(
-                  //focusNode: _focusUserId,
-                  controller: _controller,
-                  cursorColor: Colors.blue,
-                  decoration: InputDecoration(
-                    labelText: '入力プロンプト',
-                    labelStyle: const TextStyle(
-                      color: Colors.grey
-                    ),
-                    enabledBorder: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                      borderSide: BorderSide(
-                          color: Colors.blue,
-                      ),
-                    ),
-                    focusedBorder: const UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.blue),
-                    ),  
-                    suffixIcon: IconButton(
-                      onPressed: () => createSummary(_controller.text),
-                      icon: Icon(
-                        Icons.arrow_circle_up,
-                        size: widget.width/10,
-                        ),
-                    ),
-                  ),
-                  onSubmitted: (String? value) => createSummary(value!),
-                ),
-              //Align(
-              //  alignment: Alignment.centerRight,
-              //  child: 
-              //  OutlinedButton(
-              //    style: OutlinedButton.styleFrom(
-              //      backgroundColor: Colors.white,
-              //      shape: RoundedRectangleBorder(
-              //        borderRadius: BorderRadius.circular(10),
-              //      ),
-              //      side: const BorderSide(
-              //        color: Colors.blue
-              //      ),
-              //    ),
-              //    onPressed: () {
-              //      createSummary();
-              //    },
-              //    child: const Text(
-              //      '生成',
-              //      style: TextStyle(
-              //        color: Colors.grey
-              //      ),
-              //      ),
-              //  ),
-              //),
-              if(_isLoading)
-              Padding(
-                padding: EdgeInsets.all(20.0),
-                child:
-                Container(
-                  alignment: Alignment.center,
-                  width: widget.width,
-                  child: 
-                  const SizedBox(
-                    height: 50,
-                    width: 50,
-                    child: 
-                    CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue)
-                    ),
-                  ),
-                )
-              ),
-              if(_summaries.length > 0 && !_isLoading)
-              Column(
+        Column(
+          children: [  
+            Container(
+              height: widget.width/10,
+              child: 
+              Row(
                 children: [
-                  Container(
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child:
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 5.0),
+                      child: 
+                      Icon(
+                        Icons.summarize,
+                        size: widget.width/20,
+                        color: Colors.black87
+                      ),
+                    )
+                  ),
+                  Align(
                     alignment: Alignment.centerLeft,
                     child:
                     Text(
-                      _summaries[_summaryIndex]['order'],
+                      'AIの内容要約',
                       style: TextStyle(
+                        fontSize: widget.width/20,
                         fontWeight: FontWeight.bold,
-                        fontSize: widget.width/15
-                        ),
+                        color: Colors.black87
+                      ),
                     )
                   ),
-                  Container(
-                    height: widget.width/20,
+                  const Expanded(child: SizedBox()),
+                  Align(
+                    alignment: Alignment.centerRight,
                     child:
-                  Row(
-                    children: [
-                      IconButton(
-                        color: isMiniSummary? Colors.grey : Colors.black54,
-                        padding: EdgeInsets.zero, 
-                        iconSize: widget.width/20,
-                        onPressed: (){
-                            if(!isMiniSummary){
-                              setState(() {
-                                _summaryIndex-=1;
-                              });
-                            }
-                          }, 
-                        icon: Icon(
-                          Icons.arrow_back_ios,
-                          )
+                    IconButton(
+                      onPressed: widget.onClosed,
+                      icon: Icon(
+                        Icons.clear,
+                        size: widget.width/15,
                         ),
-                      Text(
-                        "${_summaryIndex+1}/${_summaries.length}",
-                        style: TextStyle(
-                          color: Colors.black54,
-                        ),
-                      ),
-                      IconButton(
-                        color: isMaxSummary? Colors.grey : Colors.black54,
-                        padding: EdgeInsets.zero, 
-                        iconSize: widget.width/20,
-                        onPressed: (){
-                            if(!isMaxSummary){
-                              setState(() {
-                                _summaryIndex+=1;
-                              });
-                            }
-                          }, 
-                        icon: Icon(
-                          Icons.arrow_forward_ios,
-                          size: widget.width/20,
-                          )
-                        )
-                    ],
-                  ) ,
-                  ),
-                  Container(
-                    alignment: Alignment.centerLeft,
-                    child:
-                    RichText(
-                      text: TextSpan(
-                        children: getHighLightedText(_summaries[_summaryIndex]['answer']),
-                      ),
                     ),
-                  ),
-                ],
+                  )
+                ]
               )
-            ],
-          )
+            ),
+            Container(
+              height: widget.height * 0.7,
+              child: 
+              SingleChildScrollView(
+                physics: ClampingScrollPhysics(),
+                child:
+                Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10.0),
+                      child: 
+                      Text(
+                        widget.video.title,
+                        style: const TextStyle(color: Colors.black54),
+                      )
+                    ), 
+                    TextField(
+                      //focusNode: _focusUserId,
+                      controller: _controller,
+                      cursorColor: Colors.blue,
+                      decoration: InputDecoration(
+                        labelText: '入力プロンプト',
+                        labelStyle: const TextStyle(
+                          color: Colors.black54
+                        ),
+                        enabledBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                          borderSide: BorderSide(
+                              color: Colors.blue,
+                          ),
+                        ),
+                        focusedBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue),
+                        ),  
+                        suffixIcon: IconButton(
+                          onPressed: () => createSummary(_controller.text),
+                          icon: Icon(
+                            Icons.publish,
+                            size: widget.width/10,
+                          ),
+                        ),
+                      ),
+                      onSubmitted: (String? value) => createSummary(value!),
+                    ),
+                    if(_isLoading)
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child:
+                      Container(
+                        alignment: Alignment.center,
+                        width: widget.width,
+                        child: 
+                        const SizedBox(
+                          height: 50,
+                          width: 50,
+                          child: 
+                          CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue)
+                          ),
+                        ),
+                      )
+                    ),
+                    if(_summaries.isNotEmpty && !_isLoading)
+                    Column(
+                      children: [
+                        Container(
+                          alignment: Alignment.centerLeft,
+                          child:
+                          Text(
+                            _summaries[_summaryIndex]['order'],
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: widget.width/20,
+                              ),
+                          )
+                        ),
+                        SizedBox(
+                          height: widget.width/20,
+                          child:
+                          Row(
+                            children: [
+                              IconButton(
+                                color: isMiniSummary? Colors.grey : Colors.black54,
+                                padding: EdgeInsets.zero, 
+                                iconSize: widget.width/20,
+                                onPressed: (){
+                                  if(!isMiniSummary){
+                                    setState(() {
+                                      _summaryIndex-=1;
+                                    });
+                                  }
+                                }, 
+                                icon: const Icon(
+                                  Icons.arrow_back_ios,
+                                )
+                              ),
+                              Text(
+                                "${_summaryIndex+1}/${_summaries.length}",
+                                style: const TextStyle(
+                                  color: Colors.black54,
+                                ),
+                              ),
+                              IconButton(
+                                color: isMaxSummary? Colors.grey : Colors.black54,
+                                padding: EdgeInsets.zero, 
+                                iconSize: widget.width/20,
+                                onPressed: (){
+                                  if(!isMaxSummary){
+                                    setState(() {
+                                      _summaryIndex+=1;
+                                    });
+                                  }
+                                }, 
+                                icon: Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: widget.width/20,
+                                )
+                              )
+                            ],
+                          ) ,
+                        ),
+                        Container(
+                          alignment: Alignment.centerLeft,
+                          child:
+                          RichText(
+                            text: TextSpan(
+                              children: getHighLightedText(_summaries[_summaryIndex]['answer']),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: widget.width/10,
+                          width: widget.width,
+                        )
+                      ],
+                    )
+                  ]
+                )
+              )
+            )
+          ]
         ),
       ),
     );
@@ -262,11 +299,21 @@ class _SummarizerPage extends State<SummarizerPage> {
         });
         _summaryIndex = _summaries.length -1;
       });
+    }else{
+      setState(() {
+        _isLoading = false;
+        var answer = json.decode(response.body)['summary'];
+        _summaries.add({
+          'order': _controller.text,
+          'answer': "エラー"
+        });
+        _summaryIndex = _summaries.length -1;
+      });
     }
   }
 
   List<TextSpan> getHighLightedText(String? text){
-    text = text == null ? '' : text;
+    text ??= '';
     List<TextSpan> children = [];
     List<String> parts = text.replaceAll('* ', '・').split('**');
     for (int i = 0; i < parts.length; i++) {

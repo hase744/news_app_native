@@ -704,18 +704,25 @@ class _HomePageState extends State<HomePage>  {
           setState(() {
             Navigator.of(context).pop();
             showModalBottomSheet(
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                ),
               isScrollControlled: true,
+              isDismissible: true,
               context: context, 
               builder: (context) => SummarizerPage(
                 video: video,
                 height: _deviceHeight!,
                 width: _deviceWidth!,
+                onClosed:() {
+                  Navigator.of(context).pop();
+                },
               )
               );
           });
         },
         isDestractive: false,
-        name: "AIで要約を生成"
+        name: "AIの内容要約"
       ),
       if(isHistory)
       MenuButton(
