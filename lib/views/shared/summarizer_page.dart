@@ -5,6 +5,22 @@ import 'package:http/http.dart' as http;
 import 'package:video_news/consts/config.dart';
 import 'package:video_news/models/video.dart';
 import 'package:video_news/controllers/uuid_controller.dart';
+class Summary {
+  String? order;
+  String? answer;
+  bool isSuccess;
+
+  Summary({
+    required this.order,
+    required this.answer,
+    required this.isSuccess
+  });
+
+  Summary.fromMap(Map<String, dynamic> map)
+      :order = map['order'],
+      isSuccess = map['is_success'],
+      answer = map['answer'];
+}
 class SummarizerPage extends StatefulWidget {
   double width;
   double height;
@@ -22,7 +38,7 @@ class SummarizerPage extends StatefulWidget {
 }
 
 class _SummarizerPage extends State<SummarizerPage> {
-  UuidController uuidController = UuidController();
+  UuidController _uuidController = UuidController();
   final TextEditingController _controller = TextEditingController(text: "内容を要約して");
   bool _isLoading = false;
   List _summaries = [];
@@ -41,6 +57,7 @@ class _SummarizerPage extends State<SummarizerPage> {
   Widget build(BuildContext context) {
     return SizedBox(
       height: widget.height * 0.8,
+      width: widget.width,
       child: 
       Padding(
         padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 5.0),
@@ -96,6 +113,7 @@ class _SummarizerPage extends State<SummarizerPage> {
               height: widget.height * 0.7,
               child: 
               SingleChildScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 physics: ClampingScrollPhysics(),
                 child:
                 Column(
@@ -105,17 +123,24 @@ class _SummarizerPage extends State<SummarizerPage> {
                       child: 
                       Text(
                         widget.video.title,
-                        style: const TextStyle(color: Colors.black54),
+                        style: TextStyle(
+                          color: Colors.black54,
+                          fontSize: widget.width/25,
+                        ),
                       )
                     ), 
                     TextField(
                       //focusNode: _focusUserId,
+                      style: TextStyle(
+                        fontSize: widget.width/20,
+                      ),
                       controller: _controller,
                       cursorColor: Colors.blue,
                       decoration: InputDecoration(
                         labelText: '入力プロンプト',
-                        labelStyle: const TextStyle(
-                          color: Colors.black54
+                        labelStyle: TextStyle(
+                          color: Colors.black54,
+                          fontSize: widget.width/30,
                         ),
                         enabledBorder: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(10.0)),
@@ -161,7 +186,7 @@ class _SummarizerPage extends State<SummarizerPage> {
                           alignment: Alignment.centerLeft,
                           child:
                           Text(
-                            _summaries[_summaryIndex]['order'],
+                            _summaries[_summaryIndex].order,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: widget.width/20,
@@ -190,8 +215,9 @@ class _SummarizerPage extends State<SummarizerPage> {
                               ),
                               Text(
                                 "${_summaryIndex+1}/${_summaries.length}",
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.black54,
+                                  fontSize: widget.width/20,
                                 ),
                               ),
                               IconButton(
@@ -213,12 +239,24 @@ class _SummarizerPage extends State<SummarizerPage> {
                             ],
                           ) ,
                         ),
+                        if(!_summaries[_summaryIndex].isSuccess)
+                        Container(
+                          alignment: Alignment.centerLeft,
+                          child:
+                          Text(
+                            "エラー",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: widget.width/20,
+                            ),
+                          )
+                        ),
                         Container(
                           alignment: Alignment.centerLeft,
                           child:
                           RichText(
                             text: TextSpan(
-                              children: getHighLightedText(_summaries[_summaryIndex]['answer']),
+                              children: getHighLightedText(_summaries[_summaryIndex].answer),
                             ),
                           ),
                         ),
@@ -246,7 +284,7 @@ class _SummarizerPage extends State<SummarizerPage> {
     final url = '${Config.domain}/user/summaries.json';
 
     Map<String, dynamic> parameters = {
-        'uuid': await uuidController.getUuid(),
+        'uuid': await _uuidController.getUuid(),
         'youtube_id': widget.video.youtubeId,
     };
 
@@ -259,7 +297,9 @@ class _SummarizerPage extends State<SummarizerPage> {
       setState(() {
         _isLoading = false;
         Map summaries = json.decode(response.body);
-        _summaries = summaries['summaries'];
+        for(var summary in summaries['summaries']){
+          _summaries.add(Summary.fromMap(summary));
+        }
         _summaryIndex = _summaries.length-1;
       });
     }
@@ -268,12 +308,13 @@ class _SummarizerPage extends State<SummarizerPage> {
   void createSummary(String value) async {
       setState(() {
         _isLoading = true;
+        FocusScope.of(context).unfocus();
       });
     final url = '${Config.domain}/user/summaries.json';
 
     Map<String, dynamic> data = {
       'summary': {
-        'uuid': await uuidController.getUuid(),
+        'uuid': await _uuidController.getUuid(),
         'youtube_id': widget.video.youtubeId,
         'order': value,
       }
@@ -288,56 +329,38 @@ class _SummarizerPage extends State<SummarizerPage> {
       },
       body: jsonData,
     );
-
-    if (response.statusCode == 200) {
-      setState(() {
-        _isLoading = false;
-        var answer = json.decode(response.body)['summary'];
-        _summaries.add({
-          'order': _controller.text,
-          'answer': answer
-        });
-        _summaryIndex = _summaries.length -1;
-      });
-    }else{
-      setState(() {
-        _isLoading = false;
-        var answer = json.decode(response.body)['summary'];
-        _summaries.add({
-          'order': _controller.text,
-          'answer': "エラー"
-        });
-        _summaryIndex = _summaries.length -1;
-      });
-    }
+    setState(() {
+      _isLoading = false;
+      var jsonParam = json.decode(response.body);
+      _summaries.add(
+        Summary.fromMap(jsonParam)
+      );
+      _summaryIndex = _summaries.length -1;
+    });
   }
 
   List<TextSpan> getHighLightedText(String? text){
     text ??= '';
-    List<TextSpan> children = [];
-    List<String> parts = text.replaceAll('* ', '・').split('**');
+    List<TextSpan> spans = [];
+    List<String> parts = text.split('**');
     for (int i = 0; i < parts.length; i++) {
-      if (i % 2 == 0) {
-        children.add(
-          TextSpan(
-            text: parts[i],
-            style: TextStyle(
-              color: Colors.black, 
-              fontSize: widget.width/20),
+      spans.add(
+        TextSpan(
+          text: parts[i].replaceAll('* ', '・'),
+          style: 
+          i % 2 == 0 ?
+          TextStyle(
+            color: Colors.black, 
+            fontSize: widget.width/20
+          ):
+          TextStyle(
+            color: Colors.black, 
+            fontSize: widget.width/20,
+            fontWeight: FontWeight.bold
           ),
-        ); 
-      } else {
-        children.add(
-          TextSpan(
-            text: parts[i],
-            style: TextStyle(
-              color: Colors.black, fontSize: widget.width/20,
-              fontWeight: FontWeight.bold
-              ),
-          ),
-        ); 
-      }
+        ),
+      ); 
     }
-    return children;
+    return spans;
   }
 }
