@@ -166,8 +166,8 @@ class _SettingPageState extends State<SettingPage> {
         ),
       ),
       bottomNavigationBar: HomeBottomNavigationBar(
-        isReleased: widget.versionController.isReleased,
-        initialIndex: widget.versionController.isReleased? 4:3,
+        isReleased: true,
+        initialIndex: true? 4:3,
         onTap: (int index) {},
         isSelectMode: false),
     );

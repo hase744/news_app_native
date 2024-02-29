@@ -712,7 +712,6 @@ class _HomePageState extends State<HomePage>  {
         isDestractive: true,
         name: "ー履歴から削除"
       ),
-      if(_versionController.isReleased)
       MenuButton(
         onPressed: () async {
           Navigator.pushReplacement(

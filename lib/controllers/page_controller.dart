@@ -19,11 +19,7 @@ class PageControllerClass{
       case 'history':
         return historyMenuList;
       default:
-        if(_versionController.isReleased){
-          return homeMenuList;
-        }else{
-          return fakeHomeMenuList;
-        }
+        return homeMenuList;
       }
   }
 

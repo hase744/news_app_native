@@ -13,7 +13,7 @@ class HomeBottomNavigationBar extends StatelessWidget {
   bool isSelectMode;
   bool isReleased;
   VersionController _versionController = VersionController();
-  late List<NavigationItem> navigationList = isReleased ? NavigationListConfig.pageList: NavigationListConfig.fakePageList;
+  late List<NavigationItem> navigationList = NavigationListConfig.pageList;
   HomeBottomNavigationBar({
     required this.initialIndex,
     required this.onTap,
