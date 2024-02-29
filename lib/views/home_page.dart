@@ -20,6 +20,7 @@ import 'package:video_news/views/downloader/video_downloader_page.dart';
 import 'package:video_news/views/top_navigation.dart';
 import 'package:video_news/views/bottom_menu_bar.dart';
 import 'package:video_news/views/bottom_navigation_bar.dart';
+import 'package:video_news/views/shared/summarizer_page.dart';
 import 'package:video_news/controllers/home_layout_controller.dart';
 import 'package:video_news/controllers/default_values_controller.dart';
 import 'package:video_news/controllers/video_controller.dart';
@@ -698,6 +699,31 @@ class _HomePageState extends State<HomePage>  {
         },
         isDestractive: isFavorite,
         name:isFavorite ? "ーお気に入りから削除" : "＋お気に入りに追加"
+      ),
+      MenuButton(
+        onPressed: () async {
+          setState(() {
+            Navigator.of(context).pop();
+            showModalBottomSheet(
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                ),
+              isScrollControlled: true,
+              isDismissible: true,
+              context: context, 
+              builder: (context) => SummarizerPage(
+                video: video,
+                height: _deviceHeight!,
+                width: _deviceWidth!,
+                onClosed:() {
+                  Navigator.of(context).pop();
+                },
+              )
+              );
+          });
+        },
+        isDestractive: false,
+        name: "AIの内容要約"
       ),
       if(isHistory)
       MenuButton(
