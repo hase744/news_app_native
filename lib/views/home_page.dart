@@ -57,7 +57,6 @@ class _HomePageState extends State<HomePage>  {
   ScrollController _scrollController = ScrollController();
   List<ScrollController> _scrollControllers = [];
   VersionController _versionController = VersionController();
-  BannerAddsController _bannerAddsController = BannerAddsController(bannerAdCount: 4);
   final ScrollController _categoryScrollController = ScrollController();
   final CategoryController _categoryController = CategoryController();
   final LoadController _loadController = LoadController();
@@ -69,6 +68,7 @@ class _HomePageState extends State<HomePage>  {
   late Future<void> _initializeVideoPlayerFuture;
   late VideoPlayerController _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(''));
   late CategoryBarController _categoryBarController;
+  late BannerAddsController _bannerAddsController;
   @override
   void initState() {
     super.initState();

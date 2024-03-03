@@ -8,7 +8,6 @@ class BannerAddsController {
   List<BannerAdListener> bannerAdListeners = [];
   int bannerAdCount;
   
-  
   BannerAddsController({
     required this.bannerAdCount
   }) {
@@ -28,5 +27,23 @@ class BannerAddsController {
       bannerAds.add(bannerAd);
       //adDisplays.add(AdDisplay(bannerAd: bannerAd));
     }
+  }
+
+  static BannerAd createBannerAd() {
+    return BannerAd(
+      adUnitId: AdHelper.bannerAdUnitId,
+      size: AdSize.fullBanner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) => print('バナー広告がロードされました'),
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          ad.dispose();
+          print('バナー広告の読み込みが次の理由で失敗しました: $error');
+        },
+        onAdOpened: (Ad ad) => print('バナー広告が開かれました'),
+        onAdClosed: (Ad ad) => print('バナー広告が閉じられました'),
+        onAdImpression: (Ad ad) => print('次のバナー広告が表示されました: $ad'),
+      ),
+    );
   }
 }

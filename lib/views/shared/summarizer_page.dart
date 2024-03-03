@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:video_news/consts/config.dart';
 import 'package:video_news/models/video.dart';
 import 'package:video_news/controllers/uuid_controller.dart';
+import 'package:video_news/controllers/interstitial_add_controller.dart';
 class Summary {
   String? order;
   String? answer;
@@ -17,9 +18,9 @@ class Summary {
   });
 
   Summary.fromMap(Map<String, dynamic> map)
-      :order = map['order'],
-      isSuccess = map['is_success'],
-      answer = map['answer'];
+    :order = map['order'],
+    isSuccess = map['is_success'],
+    answer = map['answer'];
 }
 class SummarizerPage extends StatefulWidget {
   double width;
@@ -40,17 +41,26 @@ class SummarizerPage extends StatefulWidget {
 class _SummarizerPage extends State<SummarizerPage> {
   UuidController _uuidController = UuidController();
   final TextEditingController _controller = TextEditingController(text: "内容を要約して");
+  InterstitialAddController _interstitialAddController = new InterstitialAddController();
   bool _isLoading = false;
   List _summaries = [];
   int _summaryIndex = 0;
   bool get isMaxSummary => _summaryIndex+1 >= _summaries.length;
   bool get isMiniSummary => _summaryIndex <= 0;
-
   
   @override
   void initState() {
     super.initState();
     getSummaries();
+    setState(() {
+      _interstitialAddController.createAd();
+      //ロード前に要約ボタンが押されたら、広告が表示されないため、その時はロードが完了した時に広告を表示
+      _interstitialAddController.onAdLoadedCallback = (){
+        if(_interstitialAddController.canShowAd && _isLoading){
+          _interstitialAddController.showAd();
+        }
+      };
+    });
   }
 
   @override
@@ -276,7 +286,6 @@ class _SummarizerPage extends State<SummarizerPage> {
     );
   }
   
-
   void getSummaries() async {
     setState(() {
       _isLoading = true;
@@ -284,8 +293,8 @@ class _SummarizerPage extends State<SummarizerPage> {
     final url = '${Config.domain}/user/summaries.json';
 
     Map<String, dynamic> parameters = {
-        'uuid': await _uuidController.getUuid(),
-        'youtube_id': widget.video.youtubeId,
+      'uuid': await _uuidController.getUuid(),
+      'youtube_id': widget.video.youtubeId,
     };
 
     String queryString = Uri(queryParameters: parameters).query;
@@ -306,10 +315,11 @@ class _SummarizerPage extends State<SummarizerPage> {
   }
 
   void createSummary(String value) async {
-      setState(() {
-        _isLoading = true;
-        FocusScope.of(context).unfocus();
-      });
+    setState(() {
+      _isLoading = true;
+      FocusScope.of(context).unfocus();
+      _interstitialAddController.showAd();
+    });
     final url = '${Config.domain}/user/summaries.json';
 
     Map<String, dynamic> data = {
@@ -336,6 +346,7 @@ class _SummarizerPage extends State<SummarizerPage> {
         Summary.fromMap(jsonParam)
       );
       _summaryIndex = _summaries.length -1;
+      _interstitialAddController.showCount = 0;
     });
   }
 
