@@ -23,7 +23,7 @@ class HomeLayoutController  {
   double searchAreaRatio = 1/10;
   double loadAreaRatio = 1/5;
   double youtubeDisplayRatio = 9/16;
-  double youtubeCloseButtonRatio = 1/15;
+  double youtubeCloseButtonRatio = 1/10;
 
   double appBarHeight = 40;
   late double topMenuRatio = searchAreaRatio + loadAreaRatio;
@@ -132,18 +132,6 @@ class HomeLayoutController  {
       youtubeDisplayTop = 0;
       youtubeDisplayLeft = 0;
       return Offset(youtubeDisplayLeft,  youtubeDisplayTop);
-    }
-  }
-
-  Offset youtubeCloseOffset(context){
-    if(MediaQuery.of(context).orientation == Orientation.portrait){//縦向き
-      youtubeDisplayTop = appBarHeight + getTopMenuHeight() + categoryBarHeight + categoryBarLineHeight - videoCellsTop + youtubeDisplayHeight;
-      if(youtubeDisplayLeft != deviceWidth){//youtubeが開いている
-        youtubeDisplayLeft = deviceWidth - youtubeCloseButtonSize;
-      }
-      return Offset(youtubeDisplayLeft,  youtubeDisplayTop);
-    }{
-      return Offset(deviceHeight,  deviceWidth);
     }
   }
 

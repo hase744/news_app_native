@@ -1093,7 +1093,7 @@ class _HomePageState extends State<HomePage>  {
                         ],
                       );
                     },
-                  ), 
+                  ),
                   if(_homeLayoutController.displayingYoutubeControl)
                   InkWell(
                     child: 
@@ -1156,6 +1156,25 @@ class _HomePageState extends State<HomePage>  {
                       },
                     )
                   ),
+                  if(_homeLayoutController.displayingYoutubeControl && MediaQuery.of(context).orientation == Orientation.portrait)
+                  Align( // 赤のコンテナだけを右下に配置する
+                    alignment: Alignment.topRight,
+                    child: 
+                    InkWell(
+                      child: Container(
+                        width: _homeLayoutController.youtubeCloseButtonSize,
+                        height: _homeLayoutController.youtubeCloseButtonSize,
+                        //color: Colors.white,
+                        child: 
+                        Icon(
+                          Icons.clear, 
+                          size: _homeLayoutController.youtubeCloseButtonSize,
+                          color: Colors.white,
+                        )
+                      ),
+                      onTap: () => closeYoutube(),
+                    ),
+                  ), 
                   if(!_versionController.isReleased)
                   FutureBuilder(
                     future: _initializeVideoPlayerFuture,
@@ -1225,19 +1244,6 @@ class _HomePageState extends State<HomePage>  {
                     )
                   ),
                 ])
-              ),
-            ),
-            Transform.translate(
-              offset: _homeLayoutController.youtubeCloseOffset(context),//Offset(0, 0),
-              child:
-              InkWell(
-                child: Container(
-                  width: _homeLayoutController.youtubeCloseButtonSize,
-                  height: _homeLayoutController.youtubeCloseButtonSize,
-                  color: Colors.white,
-                  child: Icon(Icons.clear, size: _homeLayoutController.youtubeCloseButtonSize,)
-                ),
-                onTap: () => closeYoutube(),
               ),
             ),
             Positioned(//safeareaのroadAreaが見えないようにする
