@@ -164,6 +164,7 @@ class _SummarizerPage extends State<SummarizerPage> {
                         suffixIcon: IconButton(
                           onPressed: () => createSummary(_controller.text),
                           icon: Icon(
+                            color: _isLoading? Colors.grey: Colors.black87,
                             Icons.publish,
                             size: widget.width/10,
                           ),
@@ -302,19 +303,28 @@ class _SummarizerPage extends State<SummarizerPage> {
     
     final response = await http.get(Uri.parse(requestUrl));
 
-    if (response.statusCode == 200) {
-      setState(() {
-        _isLoading = false;
+    setState(() {
+      _isLoading = false;
+      if (response.statusCode == 200) {
         Map summaries = json.decode(response.body);
         for(var summary in summaries['summaries']){
           _summaries.add(Summary.fromMap(summary));
         }
-        _summaryIndex = _summaries.length-1;
-      });
-    }
+      }else{
+        _summaries.add(Summary(
+          order: '',
+          isSuccess: false,
+          answer: ''
+        ));
+      }
+      _summaryIndex = _summaries.length-1;
+    });
   }
 
   void createSummary(String value) async {
+    if(_isLoading){
+      return;
+    }
     setState(() {
       _isLoading = true;
       FocusScope.of(context).unfocus();

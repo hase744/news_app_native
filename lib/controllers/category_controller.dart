@@ -13,6 +13,7 @@ class CategoryController {
   List<Category> selection = [];
   List<Category> unusedCategories = [];
   int categoryIndex = 0;
+  int changedCount = 0;
   late Category currentCategory = categories[categoryIndex];
 
   CategoryController() {

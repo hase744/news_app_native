@@ -21,6 +21,7 @@ import 'package:video_news/views/top_navigation.dart';
 import 'package:video_news/views/bottom_menu_bar.dart';
 import 'package:video_news/views/bottom_navigation_bar.dart';
 import 'package:video_news/views/shared/summarizer_page.dart';
+import 'package:video_news/views/shared/display_buttom_button.dart';
 import 'package:video_news/controllers/home_layout_controller.dart';
 import 'package:video_news/controllers/default_values_controller.dart';
 import 'package:video_news/controllers/video_controller.dart';
@@ -53,6 +54,7 @@ class _HomePageState extends State<HomePage>  {
   HomeLayoutController _homeLayoutController = HomeLayoutController(deviceWidth:0, deviceHeight: 0, barHeight:0, innerHeight: 0, appBarHeight:0);
   DefaultValue defaultValue = DefaultValue();
   Future<void>? _launched;
+  VideoForm? _currentVideo;
   VideoController _videoController = VideoController();
   ScrollController _scrollController = ScrollController();
   List<ScrollController> _scrollControllers = [];
@@ -116,7 +118,7 @@ class _HomePageState extends State<HomePage>  {
       _scrollController = ScrollController(
         initialScrollOffset: (_deviceWidth!*_homeLayoutController.topMenuRatio),
       );
-      _bannerAddsController = BannerAddsController(bannerAdCount: 4);
+      _bannerAddsController = BannerAddsController(bannerAdCount: 8);
       _scrollController.addListener(_onScroll);
       _pageController.pageIndex = widget.initialIndex;
       _homeLayoutController.updateCellsTop(0);
@@ -144,6 +146,9 @@ class _HomePageState extends State<HomePage>  {
     });
     if(i % 1 == 0){
       setState(() {
+        if(_categoryController.categoryIndex != i){
+          _categoryController.changedCount += 1;
+        }
         _categoryController.categoryIndex = i.toInt();
         _videoController.displayVideoList();
         ScrollController scrollController = _scrollControllers[_categoryController.categoryIndex];
@@ -253,6 +258,7 @@ class _HomePageState extends State<HomePage>  {
     final prefs = await SharedPreferences.getInstance();
     await Future.delayed(Duration.zero);
     setState(() {
+      _currentVideo = video;
       if(_versionController.isReleased){
         _youtubeController.load( youtubeId,startAt:0);
       }else{
@@ -280,6 +286,7 @@ class _HomePageState extends State<HomePage>  {
 
   void closeYoutube(){
     setState(() {
+      _currentVideo = null;
       _homeLayoutController.hideYoutube();
       _homeLayoutController.setHeightForVideoCells();
       if(_versionController.isReleased){
@@ -365,6 +372,39 @@ class _HomePageState extends State<HomePage>  {
       });
     });
   }
+  
+  openSummarizer(VideoForm video){
+    setState(() {
+      showModalBottomSheet(
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+          ),
+        isScrollControlled: true,
+        isDismissible: true,
+        context: context, 
+        builder: (context) => SummarizerPage(
+          video: video,
+          height: _deviceHeight!,
+          width: _deviceWidth!,
+          onClosed:() {
+            Navigator.of(context).pop();
+          },
+        )
+      );
+    });
+  }
+
+  moveToDownloaderPage(){
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => DownLoaderPage(
+        path: '/video',
+        target: null,
+        downloadList: _videoController.selection,
+        mode: Mode.select,
+      )),
+    );
+  }
 
   Widget bottomBar(){
     if(_videoController.isSelectMode){
@@ -403,15 +443,7 @@ class _HomePageState extends State<HomePage>  {
                 displayAlert("選択されてません");
               }
             case 'download':
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => DownLoaderPage(
-                  path: '/video',
-                  target: null,
-                  downloadList: _videoController.selection,
-                  mode: Mode.select,
-                )),
-              );
+              moveToDownloaderPage();
             case 'close':
               setState(() {
                 _videoController.disableSelectMode();
@@ -531,16 +563,22 @@ class _HomePageState extends State<HomePage>  {
   }
 
   Widget adDisplay(int index){
+    int addLength = _bannerAddsController.bannerAds.length;
+    int halfAddLength = (addLength/2).toInt();
+    int interval = 5;
     if (!_pageController.isHomePage()) {
       return const SizedBox();
-    } else if (index % 5 != 2) {
+    } else if (index % interval != 2) {
       return const SizedBox();
-    } else if ((index ~/ 5) > (_bannerAddsController.bannerAds.length -1)) {
+    } else if ((index ~/ interval) > (addLength/2 -1)) {
       return const SizedBox();
     } else if (!_versionController.isReleased) {
       return const SizedBox();
     } else {
-      BannerAd bannerAd = _bannerAddsController.bannerAds[index~/5];
+      int adNumber = index~/interval +1;
+      int groupCount = _categoryController.changedCount%2;
+      int adCount = adNumber+(groupCount*halfAddLength)-1;
+      BannerAd bannerAd = _bannerAddsController.bannerAds[adCount];
       bannerAd.load();
       return Align(
         alignment: Alignment.topCenter,
@@ -704,23 +742,8 @@ class _HomePageState extends State<HomePage>  {
         onPressed: () async {
           setState(() {
             Navigator.of(context).pop();
-            showModalBottomSheet(
-              shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                ),
-              isScrollControlled: true,
-              isDismissible: true,
-              context: context, 
-              builder: (context) => SummarizerPage(
-                video: video,
-                height: _deviceHeight!,
-                width: _deviceWidth!,
-                onClosed:() {
-                  Navigator.of(context).pop();
-                },
-              )
-              );
           });
+          openSummarizer(video);
         },
         isDestractive: false,
         name: "AIの内容要約"
@@ -892,6 +915,53 @@ class _HomePageState extends State<HomePage>  {
       ),
     );
   }
+
+  Widget buttonsArea(BuildContext context){
+    return 
+    Container(
+      width: _deviceWidth,
+      height: _deviceWidth!/10,
+      child:
+      SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            DisplayButtomButton(
+              height: _deviceWidth!/10,
+              icon: Icons.summarize,
+              label: 'AI要約',
+              onPushed: () => openSummarizer(_currentVideo!)
+            ),
+            DisplayButtomButton(
+              height: _deviceWidth!/10,
+              icon: Icons.download,
+              label: 'ダウンロード',
+              onPushed: () => moveToDownloaderPage()
+            ),
+            DisplayButtomButton(
+              height: _deviceWidth!/10,
+              icon: Icons.favorite,
+              label: 'お気に入り',
+              onPushed: () async {
+                if(await _videoController.createFavorite(_currentVideo!)){
+                  displayAlert('追加しました');
+                }else{
+                  displayAlert('追加に失敗しました');
+                }
+              }
+            ),
+            DisplayButtomButton(
+              height: _deviceWidth!/10,
+              icon: Icons.clear,
+              label: '閉じる',
+              onPushed: () => closeYoutube(),
+            ),
+          ],
+        ),
+      )
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
       _deviceWidth = MediaQuery.of(context).size.width;
@@ -981,6 +1051,8 @@ class _HomePageState extends State<HomePage>  {
                                     width: _deviceWidth!,
                                     height: _homeLayoutController.getTopMenuHeight(),
                                   ),
+                                  if(_currentVideo != null)
+                                  buttonsArea(context),
                                   //if(_categoryController.childCategoriesList.isNotEmpty && _categoryController.childCategoriesList[j].isNotEmpty)
                                   //Container(
                                   //  height: _homeLayoutController.categoryBarHeight, // Set the height of the button row
@@ -1157,7 +1229,7 @@ class _HomePageState extends State<HomePage>  {
                     )
                   ),
                   if(_homeLayoutController.displayingYoutubeControl && MediaQuery.of(context).orientation == Orientation.portrait)
-                  Align( // 赤のコンテナだけを右下に配置する
+                  Align(
                     alignment: Alignment.topRight,
                     child: 
                     InkWell(
