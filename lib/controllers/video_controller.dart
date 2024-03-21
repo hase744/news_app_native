@@ -129,6 +129,8 @@ class VideoController{
 
   accessVideos() async {
     await versionController.initialize();
+    print("リリース");
+    print(versionController.isReleased);
     String url = versionController.isReleased ? '$domain/presses.json' : '$domain/fakes/presses.json' ;
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {

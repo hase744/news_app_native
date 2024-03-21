@@ -394,13 +394,13 @@ class _HomePageState extends State<HomePage>  {
     });
   }
 
-  moveToDownloaderPage(){
+  moveToDownloaderPage(List<VideoForm> videos){
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => DownLoaderPage(
         path: '/video',
         target: null,
-        downloadList: _videoController.selection,
+        downloadList: videos,
         mode: Mode.select,
       )),
     );
@@ -443,7 +443,7 @@ class _HomePageState extends State<HomePage>  {
                 displayAlert("選択されてません");
               }
             case 'download':
-              moveToDownloaderPage();
+              moveToDownloaderPage(_videoController.selection);
             case 'close':
               setState(() {
                 _videoController.disableSelectMode();
@@ -936,7 +936,7 @@ class _HomePageState extends State<HomePage>  {
               height: _deviceWidth!/10,
               icon: Icons.download,
               label: 'ダウンロード',
-              onPushed: () => moveToDownloaderPage()
+              onPushed: () => moveToDownloaderPage([_currentVideo!])
             ),
             DisplayButtomButton(
               height: _deviceWidth!/10,

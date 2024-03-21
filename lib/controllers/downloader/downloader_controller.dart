@@ -128,7 +128,13 @@ class DownloaderController{
   }
 
   downloadImage(String youtubeId, String title) async {
-    final http.Response response = await http.get(Uri.parse("http://img.youtube.com/vi/$youtubeId/mqdefault.jpg"));
+    String? url;
+    if (_versionController.isReleased){
+      url = "http://img.youtube.com/vi/$youtubeId/mqdefault.jpg";
+    }else{
+      url = "${Config.domain}/images/${youtubeId}.jpg";
+    }
+    final http.Response response = await http.get(Uri.parse(url));
     var imageFileName = '$title${_imageForm.extension!}';
     final directory = Directory('$downloadPath/');
     await directory.create(recursive: true);
