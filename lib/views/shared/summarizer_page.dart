@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:video_news/consts/config.dart';
@@ -22,17 +23,20 @@ class Summary {
     isSuccess = map['is_success'],
     answer = map['answer'];
 }
+
 class SummarizerPage extends StatefulWidget {
   double width;
   double height;
   VideoForm video;
   VoidCallback onClosed;
+  InterstitialAd? interstitialAd;
    
   SummarizerPage({
     required this.width,
     required this.height,
     required this.video,
-    required this.onClosed
+    required this.onClosed,
+    required this.interstitialAd
   });
   @override
   State<SummarizerPage> createState() => _SummarizerPage();
@@ -41,7 +45,7 @@ class SummarizerPage extends StatefulWidget {
 class _SummarizerPage extends State<SummarizerPage> {
   UuidController _uuidController = UuidController();
   final TextEditingController _controller = TextEditingController(text: "内容を要約して");
-  InterstitialAddController _interstitialAddController = new InterstitialAddController();
+  InterstitialAdController _interstitialAdController = new InterstitialAdController();
   bool _isLoading = false;
   List _summaries = [];
   int _summaryIndex = 0;
@@ -53,13 +57,12 @@ class _SummarizerPage extends State<SummarizerPage> {
     super.initState();
     getSummaries();
     setState(() {
-      _interstitialAddController.createAd();
+      _interstitialAdController.setAd(widget.interstitialAd);
+      _interstitialAdController.createAd();
       //ロード前に要約ボタンが押されたら、広告が表示されないため、その時はロードが完了した時に広告を表示
-      _interstitialAddController.onAdLoadedCallback = (){
-        print(_interstitialAddController.canShowAd);
-        print(_isLoading);
-        if(_interstitialAddController.canShowAd && _isLoading){
-          _interstitialAddController.showAd();
+      _interstitialAdController.onAdLoadedCallback = (){
+        if(_interstitialAdController.canShowAdOnLoaded){
+          _interstitialAdController.showAd();
         }
       };
     });
@@ -330,7 +333,7 @@ class _SummarizerPage extends State<SummarizerPage> {
     setState(() {
       _isLoading = true;
       FocusScope.of(context).unfocus();
-      _interstitialAddController.showAd();
+      _interstitialAdController.showAd();
     });
     final url = '${Config.domain}/user/summaries.json';
 
@@ -353,12 +356,13 @@ class _SummarizerPage extends State<SummarizerPage> {
     );
     setState(() {
       _isLoading = false;
+      _interstitialAdController.canShowAdOnLoaded = false;
       var jsonParam = json.decode(response.body);
       _summaries.add(
         Summary.fromMap(jsonParam)
       );
       _summaryIndex = _summaries.length -1;
-      _interstitialAddController.showCount = 0;
+      _interstitialAdController.showCount = 0;
     });
   }
 

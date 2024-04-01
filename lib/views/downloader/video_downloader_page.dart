@@ -75,7 +75,7 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
   List<VideoData> _videoDatas = [];
   List<Folder> _folders = [];
   DbController dbController = DbController();
-  BannerAddsController _bannerAddsController = BannerAddsController(bannerAdCount: 1);
+  BannerAdsController _bannerAdsController = BannerAdsController(bannerAdCount: 1);
   String youtubeId = "";
   String fileDirectory = '';
   String _currentPath = '';
@@ -630,9 +630,9 @@ class _DownLoaderPageState extends State<DownLoaderPage> {
             Align(
               alignment: Alignment.topCenter,
               child: SizedBox(
-                width: _bannerAddsController.bannerAds[0].size.width.toDouble(),
-                height: _bannerAddsController.bannerAds[0].size.height.toDouble(),
-                child: AdWidget(ad: _bannerAddsController.bannerAds[0]),
+                width: _bannerAdsController.bannerAds[0].size.width.toDouble(),
+                height: _bannerAdsController.bannerAds[0].size.height.toDouble(),
+                child: AdWidget(ad: _bannerAdsController.bannerAds[0]),
               ),
             ),
           ],

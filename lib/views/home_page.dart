@@ -31,6 +31,7 @@ import 'package:video_news/controllers/load_controller.dart';
 import 'package:video_news/controllers/page_controller.dart';
 import 'package:video_news/controllers/version_controller.dart';
 import 'package:video_news/controllers/banner_adds_controller.dart';
+import 'package:video_news/controllers/interstitial_add_controller.dart';
 import 'package:video_news/consts/config.dart';
 import 'package:video_news/consts/device.dart';
 import 'package:video_news/helpers/ad_helper.dart';
@@ -70,7 +71,8 @@ class _HomePageState extends State<HomePage>  {
   late Future<void> _initializeVideoPlayerFuture;
   late VideoPlayerController _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(''));
   late CategoryBarController _categoryBarController;
-  late BannerAddsController _bannerAddsController;
+  late BannerAdsController _bannerAdsController;
+  late InterstitialAdController _interstitialAdController;
   @override
   void initState() {
     super.initState();
@@ -118,7 +120,8 @@ class _HomePageState extends State<HomePage>  {
       _scrollController = ScrollController(
         initialScrollOffset: (_deviceWidth!*_homeLayoutController.topMenuRatio),
       );
-      _bannerAddsController = BannerAddsController(bannerAdCount: 8);
+      _bannerAdsController = BannerAdsController(bannerAdCount: 8);
+      _interstitialAdController = InterstitialAdController();
       _scrollController.addListener(_onScroll);
       _pageController.pageIndex = widget.initialIndex;
       _homeLayoutController.updateCellsTop(0);
@@ -128,6 +131,7 @@ class _HomePageState extends State<HomePage>  {
         width: _deviceWidth!, 
         categoryController: _categoryController
       );
+      _interstitialAdController.createAd();
       //_scrollController.jumpTo(0.0);
       //_history.deleteTable();
       //_favorite.deleteTable();
@@ -387,8 +391,10 @@ class _HomePageState extends State<HomePage>  {
           video: video,
           height: _deviceHeight!,
           width: _deviceWidth!,
+          interstitialAd: _interstitialAdController.getAd,
           onClosed:() {
             Navigator.of(context).pop();
+            _interstitialAdController.createAd();
           },
         )
       );
@@ -564,7 +570,7 @@ class _HomePageState extends State<HomePage>  {
   }
 
   Widget adDisplay(int index){
-    int addLength = _bannerAddsController.bannerAds.length;
+    int addLength = _bannerAdsController.bannerAds.length;
     int halfAddLength = (addLength/2).toInt();
     int interval = 5;
     if (!_pageController.isHomePage()) {
@@ -579,7 +585,7 @@ class _HomePageState extends State<HomePage>  {
       int adNumber = index~/interval +1;
       int groupCount = _categoryController.changedCount%2;
       int adCount = adNumber+(groupCount*halfAddLength)-1;
-      BannerAd bannerAd = _bannerAddsController.bannerAds[adCount];
+      BannerAd bannerAd = _bannerAdsController.bannerAds[adCount];
       bannerAd.load();
       return Align(
         alignment: Alignment.topCenter,

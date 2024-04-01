@@ -2,13 +2,13 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:video_news/helpers/ad_helper.dart';
 import 'package:video_news/models/ad_display.dart';
 
-class BannerAddsController {
+class BannerAdsController {
   List<BannerAd> bannerAds = [];
   List<AdDisplay> adDisplays = [];
   List<BannerAdListener> bannerAdListeners = [];
   int bannerAdCount;
   
-  BannerAddsController({
+  BannerAdsController({
     required this.bannerAdCount
   }) {
     for (int i = 0; i < bannerAdCount; i++) {
