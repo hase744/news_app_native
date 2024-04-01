@@ -13,14 +13,13 @@ class InterstitialAddController {
   bool get canShowAd => (showCount < 1 && ready);
 
   void createAd() {
-    print("作成");
     InterstitialAd.load(
       adUnitId: AdHelper.intersitialAdUnitId,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         // 広告が正常にロードされたときに呼ばれます。
         onAdLoaded: (InterstitialAd ad) {
-          print('add loaded');
+          print("load succeeded");
           _interstitialAd = ad;
           num_of_attempt_load = 0;
           ready = true;
@@ -38,7 +37,7 @@ class InterstitialAddController {
         },
       ),
     );
-    print("作成後");
+    print("created");
   }
 
   // show interstitial ads to user

@@ -56,6 +56,8 @@ class _SummarizerPage extends State<SummarizerPage> {
       _interstitialAddController.createAd();
       //ロード前に要約ボタンが押されたら、広告が表示されないため、その時はロードが完了した時に広告を表示
       _interstitialAddController.onAdLoadedCallback = (){
+        print(_interstitialAddController.canShowAd);
+        print(_isLoading);
         if(_interstitialAddController.canShowAd && _isLoading){
           _interstitialAddController.showAd();
         }

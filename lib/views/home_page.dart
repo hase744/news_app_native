@@ -268,6 +268,7 @@ class _HomePageState extends State<HomePage>  {
         ..initialize().then((_) {
           setState(() {
             _videoPlayerController.play();
+            _videoPlayerController.setVolume(0.5);
           });
         });
       }
