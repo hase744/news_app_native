@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:video_news/consts/colors.dart';
 import 'package:video_news/controllers/category_controller.dart';
 import 'package:video_news/models/category.dart';
 
@@ -20,7 +21,7 @@ class CategoryOrderState extends State<CategoryOrder>  {
       ),
       body: 
       Container(
-        color: const Color.fromRGBO(242, 242, 247, 1),
+        color: ColorConfig.settingBackground,
         child: 
         Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -28,8 +29,9 @@ class CategoryOrderState extends State<CategoryOrder>  {
             const Text("ドラッグ&ドロップで並び替え"),
             Flexible(
               child:Container(
-                color: const Color.fromRGBO(242, 242, 247, 1),
-                child: const ReorderableExample(),)
+                color: ColorConfig.settingBackground,
+                child: const ReorderableExample(),
+              )
             )
           ]
         )
@@ -68,9 +70,26 @@ class _ReorderableExampleState extends State<ReorderableExample> {
     final List<Card> cards = <Card>[
       for (int index = 0; index < categoryController.categories.length; index += 1)
       Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(0),
+          //side: BorderSide(
+          //  color: Colors.pink,
+          //  width: 2,
+          //),
+        ),
+        margin:  EdgeInsets.all(0),
         key: Key('$index'),
         color: Colors.white,
-        child: SizedBox(
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: 
+              BorderSide(
+                color: ColorConfig.settingBorder,
+                width: 0.5,
+              ),
+            ),
+          ),
           height: 40,
           child: Center(
             child: Container(
@@ -112,7 +131,7 @@ class _ReorderableExampleState extends State<ReorderableExample> {
           ),
         ),
       ),
-      ];
+    ];
 
     return ReorderableListView(
       children: cards,

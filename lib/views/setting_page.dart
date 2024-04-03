@@ -144,6 +144,11 @@ class _SettingPageState extends State<SettingPage> {
                   const Icon(Icons.format_list_bulleted_add), 
                   const AddCategoyPage(title: "設定")
                 ),
+                settingTile(
+                  'オリジナル', 
+                  const Icon(Icons.playlist_add_check), 
+                  const AddCategoyPage(title: "設定")
+                ),
               ],
             ),
             SettingsSection(
