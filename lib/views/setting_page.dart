@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'category_adder_page.dart';
 import 'category_order_page.dart';
 import 'package:settings_ui/settings_ui.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'home_page.dart';
 import '../helpers/page_transition.dart';
 import 'package:video_news/views/bottom_navigation_bar.dart';
@@ -142,12 +143,12 @@ class _SettingPageState extends State<SettingPage> {
                 settingTile(
                   '追加', 
                   const Icon(Icons.format_list_bulleted_add), 
-                  const AddCategoyPage(title: "設定")
+                  const ProviderScope(child: AddCategoyPage(title: "設定"))
                 ),
                 settingTile(
                   'オリジナル', 
                   const Icon(Icons.playlist_add_check), 
-                  const AddCategoyPage(title: "設定")
+                  const ProviderScope(child: AddCategoyPage(title: "オリジナル"))
                 ),
               ],
             ),

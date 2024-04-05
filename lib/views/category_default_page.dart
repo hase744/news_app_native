@@ -59,27 +59,23 @@ class _CategoryDefaultState extends State<CategoryDefault> {
                   spacing: 15.0,
                   runSpacing: 10.0,
                   children: List<Widget>.generate(
-                    _categoryController.defaultCategories.length,
+                    _categoryController.formalCategories.length,
                     (int index) {
-                      Category category =
-                          _categoryController.defaultCategories[index];
+                      Category category = _categoryController.formalCategories[index];
                       return ChoiceChip(
                         label: Text(
                           "${category.emoji}${category.japaneseName}",
                           style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
+                            fontSize: 20, fontWeight: FontWeight.bold),
                         ),
-                        selected:
-                            categorySelectionNames.contains(category.name),
+                        selected: categorySelectionNames.contains(category.name),
                         onSelected: (bool selected) {
-                          int selectionIndex =
-                              categorySelectionNames.indexOf(category.name);
+                          int selectionIndex = categorySelectionNames.indexOf(category.name);
                           setState(() {
                             if (selectionIndex == -1) {
                               _categoryController.selection.add(category);
                             } else {
-                              _categoryController.selection
-                                  .removeAt(selectionIndex);
+                              _categoryController.selection.removeAt(selectionIndex);
                             }
                           });
                         },

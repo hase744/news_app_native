@@ -170,10 +170,11 @@ class _FirstPageState extends State<FirstPage> {
       final prefs = await SharedPreferences.getInstance();
       String defaultYoutubeId = prefs.getString('default_youtube_id') ?? '';
       await prefs.setString('default_youtube_id', defaultYoutubeId);
+      String? categoryOrder = await prefs.getString('category_order');
       
       Navigator.pushReplacement(
         context,
-        prefs.getString('category_order') == null
+        [null, '[]'].contains(categoryOrder)
           ? MaterialPageRoute(builder: (context) => CategoryDefault())
           : MaterialPageRoute(builder: (context) => const HomePage(initialIndex: 0)),
       );

@@ -12,6 +12,7 @@ class CategoryController {
   List<List<Category>> childCategoriesList = [];
   List<Category> selection = [];
   List<Category> unusedCategories = [];
+  List<Category> formalCategories = [];
   int categoryIndex = 0;
   int changedCount = 0;
   late Category currentCategory = categories[categoryIndex];
@@ -20,6 +21,7 @@ class CategoryController {
     setSavedCategory();
     setUnusedCategory();
     setDeraultCategory();
+    setFormalCategory();
   }
 
   update(i) {
@@ -27,8 +29,8 @@ class CategoryController {
   }
 
   Future<List> getCurrentPress() async {
-    //await prefs.remove('category_order');
     final prefs = await SharedPreferences.getInstance();
+    //await prefs.remove('category_order');
     String? currentPress = prefs.getString('presses');
     List pressParams = json.decode(currentPress!);
     return pressParams;
@@ -58,10 +60,10 @@ class CategoryController {
   Future<List> getSavedOrder() async {
     //await prefs.remove('category_order');
     final prefs = await SharedPreferences.getInstance();
-    String? categoriesOrder = prefs.getString('category_order');
-    List<dynamic> categoryParams = categoriesOrder == null
+    String? categoryOrder = prefs.getString('category_order');
+    List<dynamic> categoryParams = [null, '[]'].contains(categoryOrder)
         ? await getCurrentCategories()
-        : json.decode(categoriesOrder);
+        : json.decode(categoryOrder!);
     return categoryParams;
   }
 
@@ -71,8 +73,10 @@ class CategoryController {
       String name = categories[i].name;
       if (pressParams.any((c) => c['name'] == name)) {
         Map category = pressParams.firstWhere((c) => c['name'] == name);
-        categories[i].japaneseName = category['japanese_name'];
-        categories[i].emoji = category['emoji'];
+        categories[i].copyWith(
+          japaneseName: category['japanese_name'],
+          emoji: category['emoji']
+          );
       } else {
         categories.removeAt(i);
       }
@@ -100,13 +104,23 @@ class CategoryController {
   setSavedCategory() async {
     List categoryParams = await getSavedOrder();
     for (var category in categoryParams) {
-      categories.add(Category.fromMap(category));
+      categories.add(Category.fromJson(category));
     }
   }
+
+  setFormalCategory() async {
+    final prefs = await SharedPreferences.getInstance();
+    //await prefs.remove('category_order');
+    String? currentPress = prefs.getString('presses');
+    List pressParams = json.decode(currentPress!);
+    pressParams = pressParams.where((c) => c['is_formal'] == true).toList();
+    formalCategories = pressParams.map((p) => Category.fromJson(p)).toList();
+  }
+
   setDeraultCategory() async {
     List categoryParams = await getSavedOrder();
     for (var categoryParam in categoryParams) {
-      Category category = Category.fromMap(categoryParam);
+      Category category = Category.fromJson(categoryParam);
       if (category.isDefault && category.isFormal) {
         defaultCategories.add(category);
       }
@@ -116,48 +130,51 @@ class CategoryController {
   setUnusedCategory() async {
     List savedParams = await getSavedOrder();
     List<dynamic> currentCategories = await getCurrentPress();
-    List<dynamic> formalCategories =
-        currentCategories.where((c) => c['is_formal'] == true).toList();
-    for (var category in formalCategories) {
-      List matchedCategories =
-          savedParams.where((c) => c['name'] == category['name']).toList();
-      if (matchedCategories.isEmpty) {
-        unusedCategories.add(Category.fromMap(category));
+    List<dynamic> formalCategories = currentCategories.where((c) => c['is_formal'] == true).toList();
+    print("セット ${savedParams.length}/${formalCategories.length} ");
+    formalCategories.forEach((category) {
+      bool isCategoryMatched = savedParams.any((c) => c['name'] == category['name']);
+      if (!isCategoryMatched) {
+        unusedCategories.add(Category.fromJson(category));
+        //print(category.name);
       }
-    }
+    });
+    print(unusedCategories.length);
   }
 
   void saveOrder() async {
-    List<Map<String, dynamic>> categoryMaps =
-        categories.map((c) => c.toMap()).toList();
+    List<Map<String, dynamic>> categoryMaps = categories.map((c) => c.toJson()).toList();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('category_order', json.encode(categoryMaps.toList()));
   }
 
   void delete(int index) async {
+    print("削除");
     categories.removeAt(index);
     saveOrder();
   }
 
-  void add(Category category) async {
+  Future<void> add(int i) async {
+    Category category = unusedCategories[i];
+    unusedCategories[i] = unusedCategories[i].copyWith(isAdded: true);
     categories.add(category);
     saveOrder();
   }
 
   saveSelection() async {
-    await getCategoriesData();
     List selectionNames = selection.map((c) {
       return c.name;
     }).toList();
     List<dynamic> currentCategories = await getCategoriesData();
-    for (var category in currentCategories) {
-      if (!selectionNames.contains(category['name']) &&
-          category['is_default']) {
-        unusedCategories.add(Category.fromMap(category));
+    List<dynamic> defaultCategories = currentCategories.where((c) => c['is_default'] && c['is_formal']).toList();
+    List<Category> categories = [];
+    for (var category in defaultCategories) {
+      if (!selectionNames.contains(category['name'])) {
+        categories.add(Category.fromJson(category));
       }
     }
-    selection.addAll(unusedCategories);
-    List<dynamic> categoryMaps = selection.map((c) => c.toMap()).toList();
+    selection.addAll(categories);
+    List<dynamic> categoryMaps = selection.map((c) => c.toJson()).toList();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('category_order', json.encode(categoryMaps));
   }
@@ -175,7 +192,7 @@ class CategoryController {
       childCategories = [];
       for (var press in await getCurrentPress()) {
         if (childCategoryNames.contains(press['name'])) {
-          childCategories.add(Category.fromMap(press));
+          childCategories.add(Category.fromJson(press));
         }
       }
       childCategoriesList.add(childCategories);

@@ -1,26 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:video_news/consts/colors.dart';
 import 'package:video_news/controllers/category_controller.dart';
+import 'package:video_news/view_models/category_view_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:video_news/models/category.dart';
+import 'dart:io';
 
-class AddCategoyPage extends StatefulWidget {
+class AddCategoyPage extends ConsumerStatefulWidget {
   const AddCategoyPage({super.key, required this.title});
 
   final String title;
 
   @override
-  State<AddCategoyPage> createState() => _AddCategoyPageState();
+  ConsumerState<AddCategoyPage> createState() => _AddCategoyPageState();
 }
 
-class _AddCategoyPageState extends State<AddCategoyPage> {
+class _AddCategoyPageState extends ConsumerState<AddCategoyPage> {
     CategoryController _categoryController = CategoryController();
   double? _deviceHeight, _deviceWidth;
+  CategoryViewModel _categoryViewModel = CategoryViewModel();
   @override
   void initState() {
-    super.initState();;
+    super.initState();
     init();
   }
 
   void init() async {
+    _categoryViewModel.setRef(ref);
     CategoryController categoryController = await CategoryController();
+    //_ref.watch(categoryListProvider.notifier).state = categoryController.unusedCategories;
     setState(() {
       _categoryController = categoryController;
       _deviceHeight = MediaQuery.of(context).size.height;
@@ -30,11 +38,12 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
   
   @override
   Widget build(BuildContext context) {
+    List<Category> categories = _categoryViewModel.unusedCategories;
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
         backgroundColor: const Color.fromRGBO(255,251,255, 1),
-        title: const Text('カテゴリー追加',style: TextStyle(color: Colors.black)),
+        title:  Text('カテゴリー追加',style: TextStyle(color: Colors.black)),
       ),
       body: 
       Container(
@@ -44,9 +53,9 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              if(_categoryController.unusedCategories.isNotEmpty)
+              if(categories.isNotEmpty)
               const Text("追加ボタンからカテゴリーを追加"),
-              if(_categoryController.unusedCategories.isEmpty)
+              if(categories.isEmpty)
               const Text(
                 "追加可能なカテゴリーはありません",
                 style: TextStyle(
@@ -55,70 +64,89 @@ class _AddCategoyPageState extends State<AddCategoyPage> {
                 ),
               ),
               Flexible(
-              child: 
-              ListView.builder(
-                itemCount: _categoryController.unusedCategories.length,
-                itemBuilder: (context, index) {
-                  final category = _categoryController.unusedCategories[index];
-                  return 
-                  Container(
-                    width: _deviceWidth! - 2,
-                    height: 50,
-                    color: Colors.white,
+                child: 
+                ListView.builder(
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    final category = categories[index];
+                    return 
+                    Container(
+                      width: _deviceWidth! - 2,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: 
+                          BorderSide(
+                            color: ColorConfig.settingBorder,
+                            width: 0.5,
+                          ),
+                        ),
+                        color: Colors.white,
+                      ),
                       child:  Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
+                          Container(
+                            width: _deviceWidth!/20,
+                            margin: EdgeInsets.symmetric(horizontal: _deviceWidth!/80),
+                            child: 
+                            Center(
+                              child: 
+                              Text(category.emoji,
+                                style: TextStyle(
+                                  fontSize: _deviceWidth!/20,
+                                ),
+                              )
+                            )
+                          ),
                           Text(
-                            " ${category.emoji} ${category.japaneseName}",
-                            style: const TextStyle(
-                              fontSize: 20,
+                            category.japaneseName,
+                            style: TextStyle(
+                              fontSize: _deviceWidth!/20,
                             ),
                           ),
                           const Spacer(),
                           Container(
-                            child: _categoryController.unusedCategories[index].isAdded ?
-                              IconButton(
-                                icon:  const Icon(Icons.check_circle, color: Colors.green) ,
-                                onPressed: () {
-                                  setState(() {
-                                    //_categoryController.unusedCategories[index]['is_added'] = !_categoryController.unusedCategories[index]['is_added'];
-                                  });
-                                },
-                              ):
+                            child: categories[index].isAdded! ?
+                            Container(
+                              margin: EdgeInsets.only(right: _deviceWidth!/80),
+                              child:
+                              const Icon(
+                                Icons.check_circle, 
+                                color: Colors.green
+                              )
+                            ):
                             InkWell(
-                              onTap: () {
-                                setState(() {
-                                  _categoryController.unusedCategories[index].isAdded = !_categoryController.unusedCategories[index].isAdded;
-                                  //addCategory(category.name);
-                                  _categoryController.add(_categoryController.unusedCategories[index]);
-                                });
+                              onTap: (){
+                                _categoryViewModel.onAdded(index);
+                                _categoryViewModel = _categoryViewModel;
                               },
                               child: 
-                                Container(
-                                  padding: const EdgeInsets.all(5.0),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.red),
-                                    borderRadius: BorderRadius.circular(20),
-                                    color: Colors.red
-                                  ),
-                                  child: 
-                                  const Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
+                              Container(
+                                margin: EdgeInsets.only(right: _deviceWidth!/80),
+                                padding: EdgeInsets.symmetric(horizontal: _deviceWidth!/80, vertical: _deviceWidth!/320),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.blue),
+                                  borderRadius: BorderRadius.circular(20),
+                                  color: Colors.blue
+                                ),
+                                child: 
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Icon(Icons.add_circle, color: Colors.blue[200]),
+                                    SizedBox(width: _deviceWidth!/80),
                                     Text(
                                       "追加",
                                       style: TextStyle(
-                                        fontSize: 15,
+                                        fontSize: _deviceWidth!/30,
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold
                                       ),
                                     ),
-                                    Icon(Icons.add_circle, color: Colors.white),
                                   ]
                                 ),
-                                
                               )
-                              
                             )
                           ),
                         ]

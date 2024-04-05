@@ -1,33 +1,22 @@
-class Category{
-  String name;
-  String japaneseName;
-  String emoji = '';
-  bool isDeleting = false;
-  bool isAdded = false;
-  bool isDefault;
-  bool isFormal;
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:flutter/foundation.dart';
 
-  Category({
-    required this.name,
-    required this.japaneseName,
-    required this.isDefault,
-    required this.isFormal,
-  });
+part 'category.freezed.dart';
+part 'category.g.dart';
 
-  Category.fromMap(Map<String, dynamic> map)
-    : name = map['name'],
-      japaneseName = map['japanese_name'],
-      isDefault = map['is_default'] == true,
-      isFormal = map['is_formal'] == true,
-      emoji = map['emoji'];
+@freezed
+class Category with _$Category {
+  
+  const factory Category({
+    required String name,
+    required String japaneseName,
+    required String emoji,
+    required bool isDefault,
+    required bool isFormal,
+    bool? isDeleting,
+    bool? isAdded,
+  }) = _Category;
 
-  Map<String, dynamic> toMap() {
-    return {
-      'name': name,
-      'japanese_name': japaneseName,
-      'emoji': emoji,
-      'is_default': isDefault,
-      'is_formal': isFormal,
-    };
-  }
+  factory Category.fromJson(Map<String, dynamic> json) =>
+      _$CategoryFromJson(json);
 }
