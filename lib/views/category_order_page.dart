@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_news/consts/colors.dart';
 import 'package:video_news/controllers/category_controller.dart';
 import 'package:video_news/models/category.dart';
@@ -41,38 +42,33 @@ class CategoryOrderState extends State<CategoryOrder>  {
   }
 }
 
-class ReorderableExample extends StatefulWidget {
+class ReorderableExample extends ConsumerStatefulWidget {
   const ReorderableExample({super.key});
 
   @override
-  State<ReorderableExample> createState() => _ReorderableExampleState();
+  ConsumerState<ReorderableExample> createState() => _ReorderableExampleState();
 }
 
-class _ReorderableExampleState extends State<ReorderableExample> {
-  CategoryController categoryController = CategoryController();
-  //CategoryViewModel _categoryViewModel = CategoryViewModel();
+class _ReorderableExampleState extends ConsumerState<ReorderableExample> {
+  final _categoryViewModel = CategoryViewModel();
+  double? _deviceWidth;
 
   @override
   void initState() {
     super.initState();
     init();
   }
+
   void init() async {
-    //_categoryViewModel.setRef(ref);
-    categoryController = await CategoryController();
-    setState(() {
-      categoryController = CategoryController();
-    });
-  }
-  
-  countCategory()async{
+    _categoryViewModel.setRef(ref);
   }
 
   @override
   Widget build(BuildContext context) {
-    //List<Category> categories = _categoryViewModel.unusedCategories;
+    _deviceWidth = MediaQuery.of(context).size.width;
+    List<Category> categories = _categoryViewModel.savedCategories;
     final List<Card> cards = <Card>[
-      for (int index = 0; index < categoryController.categories.length; index += 1)
+      for (int index = 0; index < categories.length; index += 1)
       Card(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(0),
@@ -99,29 +95,27 @@ class _ReorderableExampleState extends State<ReorderableExample> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon:   categoryController.categories[index].isDeleting! ?
+                    icon: categories[index].isDeleting! ?
                     const Icon(Icons.add_circle, color: Colors.red):
                     const Icon(Icons.do_not_disturb_on, color: Colors.red),
                     onPressed: () {
-                      setState(() {
-                        categoryController.categories[index] = categoryController.categories[index].copyWith(isDeleting: ! categoryController.categories[index].isDeleting!);
-                          //categoryController.categories[index].isDeleting = ! categoryController.categories[index].isDeleting;
-                      });
+                      _categoryViewModel.onDeletePushed(index);
                     },
                   ),
-                  Text('${categoryController.categories[index].emoji} ${categoryController.categories[index].japaneseName}'),
+                  Text('${categories[index].emoji} ${categories[index].japaneseName}'),
                   const Spacer(),
-                  const Icon(Icons.dehaze_sharp, color: Colors.grey),
-                  if(categoryController.categories[index].isDeleting!)
+                  Container(
+                    child: Icon(Icons.dehaze_sharp, color: Colors.grey),
+                    margin: EdgeInsets.only(right: _deviceWidth!/80),
+                  ),
+                  if(categories[index].isDeleting!)
                   Container(
                     alignment: Alignment.centerRight,
                     color: Colors.red,
                     child: 
                     TextButton(
                       onPressed: () { 
-                        setState(() {
-                          categoryController.delete(index);
-                        });
+                          _categoryViewModel.onDeleted(index);
                        },
                       child: const Text(
                         '削除',
@@ -142,14 +136,7 @@ class _ReorderableExampleState extends State<ReorderableExample> {
     return ReorderableListView(
       children: cards,
       onReorder: (int oldIndex, int newIndex) {
-        setState(() {
-          if (oldIndex < newIndex) {
-            newIndex -= 1;
-          }
-          Category category = categoryController.categories.removeAt(oldIndex);
-          categoryController.categories.insert(newIndex, category);
-          categoryController.saveOrder();
-        });
+        _categoryViewModel.onReordered(oldIndex, newIndex);
       },
       
     );

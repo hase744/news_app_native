@@ -16,7 +16,6 @@ class AddCategoyPage extends ConsumerStatefulWidget {
 }
 
 class _AddCategoyPageState extends ConsumerState<AddCategoyPage> {
-    CategoryController _categoryController = CategoryController();
   double? _deviceHeight, _deviceWidth;
   CategoryViewModel _categoryViewModel = CategoryViewModel();
   @override
@@ -27,10 +26,7 @@ class _AddCategoyPageState extends ConsumerState<AddCategoyPage> {
 
   void init() async {
     _categoryViewModel.setRef(ref);
-    CategoryController categoryController = await CategoryController();
-    //_ref.watch(categoryListProvider.notifier).state = categoryController.unusedCategories;
     setState(() {
-      _categoryController = categoryController;
       _deviceHeight = MediaQuery.of(context).size.height;
       _deviceWidth = MediaQuery.of(context).size.width;
     });
@@ -38,6 +34,7 @@ class _AddCategoyPageState extends ConsumerState<AddCategoyPage> {
   
   @override
   Widget build(BuildContext context) {
+    _deviceWidth = MediaQuery.of(context).size.width;
     List<Category> categories = _categoryViewModel.unusedCategories;
     return Scaffold(
       appBar: AppBar(

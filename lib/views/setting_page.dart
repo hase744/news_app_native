@@ -138,7 +138,7 @@ class _SettingPageState extends State<SettingPage> {
                 settingTile(
                   '並び替え', 
                   const Icon(Icons.format_list_numbered), 
-                  const CategoryOrder()
+                  const ProviderScope(child: CategoryOrder())
                 ),
                 settingTile(
                   '追加', 
