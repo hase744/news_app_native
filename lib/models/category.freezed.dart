@@ -23,8 +23,10 @@ mixin _$Category {
   String get name => throw _privateConstructorUsedError;
   String get japaneseName => throw _privateConstructorUsedError;
   String get emoji => throw _privateConstructorUsedError;
+  String? get imageUrl => throw _privateConstructorUsedError;
   bool get isDefault => throw _privateConstructorUsedError;
   bool get isFormal => throw _privateConstructorUsedError;
+  bool get isOriginal => throw _privateConstructorUsedError;
   bool? get isDeleting => throw _privateConstructorUsedError;
   bool? get isAdded => throw _privateConstructorUsedError;
 
@@ -43,8 +45,10 @@ abstract class $CategoryCopyWith<$Res> {
       {String name,
       String japaneseName,
       String emoji,
+      String? imageUrl,
       bool isDefault,
       bool isFormal,
+      bool isOriginal,
       bool? isDeleting,
       bool? isAdded});
 }
@@ -65,8 +69,10 @@ class _$CategoryCopyWithImpl<$Res, $Val extends Category>
     Object? name = null,
     Object? japaneseName = null,
     Object? emoji = null,
+    Object? imageUrl = freezed,
     Object? isDefault = null,
     Object? isFormal = null,
+    Object? isOriginal = null,
     Object? isDeleting = freezed,
     Object? isAdded = freezed,
   }) {
@@ -83,6 +89,10 @@ class _$CategoryCopyWithImpl<$Res, $Val extends Category>
           ? _value.emoji
           : emoji // ignore: cast_nullable_to_non_nullable
               as String,
+      imageUrl: freezed == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
       isDefault: null == isDefault
           ? _value.isDefault
           : isDefault // ignore: cast_nullable_to_non_nullable
@@ -90,6 +100,10 @@ class _$CategoryCopyWithImpl<$Res, $Val extends Category>
       isFormal: null == isFormal
           ? _value.isFormal
           : isFormal // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isOriginal: null == isOriginal
+          ? _value.isOriginal
+          : isOriginal // ignore: cast_nullable_to_non_nullable
               as bool,
       isDeleting: freezed == isDeleting
           ? _value.isDeleting
@@ -115,8 +129,10 @@ abstract class _$$CategoryImplCopyWith<$Res>
       {String name,
       String japaneseName,
       String emoji,
+      String? imageUrl,
       bool isDefault,
       bool isFormal,
+      bool isOriginal,
       bool? isDeleting,
       bool? isAdded});
 }
@@ -135,8 +151,10 @@ class __$$CategoryImplCopyWithImpl<$Res>
     Object? name = null,
     Object? japaneseName = null,
     Object? emoji = null,
+    Object? imageUrl = freezed,
     Object? isDefault = null,
     Object? isFormal = null,
+    Object? isOriginal = null,
     Object? isDeleting = freezed,
     Object? isAdded = freezed,
   }) {
@@ -153,6 +171,10 @@ class __$$CategoryImplCopyWithImpl<$Res>
           ? _value.emoji
           : emoji // ignore: cast_nullable_to_non_nullable
               as String,
+      imageUrl: freezed == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
       isDefault: null == isDefault
           ? _value.isDefault
           : isDefault // ignore: cast_nullable_to_non_nullable
@@ -160,6 +182,10 @@ class __$$CategoryImplCopyWithImpl<$Res>
       isFormal: null == isFormal
           ? _value.isFormal
           : isFormal // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isOriginal: null == isOriginal
+          ? _value.isOriginal
+          : isOriginal // ignore: cast_nullable_to_non_nullable
               as bool,
       isDeleting: freezed == isDeleting
           ? _value.isDeleting
@@ -180,8 +206,10 @@ class _$CategoryImpl with DiagnosticableTreeMixin implements _Category {
       {required this.name,
       required this.japaneseName,
       required this.emoji,
+      required this.imageUrl,
       required this.isDefault,
       required this.isFormal,
+      required this.isOriginal,
       this.isDeleting,
       this.isAdded});
 
@@ -195,9 +223,13 @@ class _$CategoryImpl with DiagnosticableTreeMixin implements _Category {
   @override
   final String emoji;
   @override
+  final String? imageUrl;
+  @override
   final bool isDefault;
   @override
   final bool isFormal;
+  @override
+  final bool isOriginal;
   @override
   final bool? isDeleting;
   @override
@@ -205,7 +237,7 @@ class _$CategoryImpl with DiagnosticableTreeMixin implements _Category {
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'Category(name: $name, japaneseName: $japaneseName, emoji: $emoji, isDefault: $isDefault, isFormal: $isFormal, isDeleting: $isDeleting, isAdded: $isAdded)';
+    return 'Category(name: $name, japanese_name: $japaneseName, emoji: $emoji, image_url: $imageUrl, is_default: $isDefault, is_formal: $isFormal, is_original: $isOriginal, is_deleting: $isDeleting, is_added: $isAdded)';
   }
 
   @override
@@ -214,12 +246,14 @@ class _$CategoryImpl with DiagnosticableTreeMixin implements _Category {
     properties
       ..add(DiagnosticsProperty('type', 'Category'))
       ..add(DiagnosticsProperty('name', name))
-      ..add(DiagnosticsProperty('japaneseName', japaneseName))
+      ..add(DiagnosticsProperty('japanese_name', japaneseName))
       ..add(DiagnosticsProperty('emoji', emoji))
-      ..add(DiagnosticsProperty('isDefault', isDefault))
-      ..add(DiagnosticsProperty('isFormal', isFormal))
-      ..add(DiagnosticsProperty('isDeleting', isDeleting))
-      ..add(DiagnosticsProperty('isAdded', isAdded));
+      ..add(DiagnosticsProperty('image_url', imageUrl))
+      ..add(DiagnosticsProperty('is_default', isDefault))
+      ..add(DiagnosticsProperty('is_formal', isFormal))
+      ..add(DiagnosticsProperty('is_original', isOriginal))
+      ..add(DiagnosticsProperty('is_deleting', isDeleting))
+      ..add(DiagnosticsProperty('is_added', isAdded));
   }
 
   @override
@@ -231,10 +265,14 @@ class _$CategoryImpl with DiagnosticableTreeMixin implements _Category {
             (identical(other.japaneseName, japaneseName) ||
                 other.japaneseName == japaneseName) &&
             (identical(other.emoji, emoji) || other.emoji == emoji) &&
+            (identical(other.imageUrl, imageUrl) ||
+                other.imageUrl == imageUrl) &&
             (identical(other.isDefault, isDefault) ||
                 other.isDefault == isDefault) &&
             (identical(other.isFormal, isFormal) ||
                 other.isFormal == isFormal) &&
+            (identical(other.isOriginal, isOriginal) ||
+                other.isOriginal == isOriginal) &&
             (identical(other.isDeleting, isDeleting) ||
                 other.isDeleting == isDeleting) &&
             (identical(other.isAdded, isAdded) || other.isAdded == isAdded));
@@ -243,7 +281,7 @@ class _$CategoryImpl with DiagnosticableTreeMixin implements _Category {
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, name, japaneseName, emoji,
-      isDefault, isFormal, isDeleting, isAdded);
+      imageUrl, isDefault, isFormal, isOriginal, isDeleting, isAdded);
 
   @JsonKey(ignore: true)
   @override
@@ -264,8 +302,10 @@ abstract class _Category implements Category {
       {required final String name,
       required final String japaneseName,
       required final String emoji,
+      required final String? imageUrl,
       required final bool isDefault,
       required final bool isFormal,
+      required final bool isOriginal,
       final bool? isDeleting,
       final bool? isAdded}) = _$CategoryImpl;
 
@@ -279,9 +319,13 @@ abstract class _Category implements Category {
   @override
   String get emoji;
   @override
+  String? get imageUrl;
+  @override
   bool get isDefault;
   @override
   bool get isFormal;
+  @override
+  bool get isOriginal;
   @override
   bool? get isDeleting;
   @override

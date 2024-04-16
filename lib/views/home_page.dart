@@ -15,7 +15,7 @@ import 'package:video_news/models/ad_display.dart';
 import 'package:video_news/views/setting_page.dart';
 import 'package:video_news/views/video_cell.dart';
 import 'package:video_news/views/alert.dart';
-import 'package:video_news/views/category_bar.dart';
+import 'package:video_news/views/categories/category_bar.dart';
 import 'package:video_news/views/downloader/video_downloader_page.dart';
 import 'package:video_news/views/top_navigation.dart';
 import 'package:video_news/views/bottom_menu_bar.dart';
@@ -110,7 +110,7 @@ class _HomePageState extends State<HomePage>  {
         _videoPlayerController.setLooping(true);
         _initializeVideoPlayerFuture = _videoPlayerController.initialize();
       }
-      for(var i =0; i< _categoryController.categories.length; i++){
+      for(var i =0; i< _videoController.videosList.length; i++){
         ScrollController scrollController = ScrollController(
           initialScrollOffset: (_deviceWidth!*_homeLayoutController.topMenuRatio),
         );
@@ -492,7 +492,7 @@ class _HomePageState extends State<HomePage>  {
         updateVideos();
         _scrollController.jumpTo(_homeLayoutController.loadAreaHeight);
       }, 
-      onClosesd: () => setState(() { _homeLayoutController.displayingTextField = false; }) , 
+      onClosed: () => setState(() { _homeLayoutController.displayingTextField = false; }) , 
       menuOpened: () {
         showCupertinoModalPopup<void>(
           context: context,
@@ -1048,6 +1048,7 @@ class _HomePageState extends State<HomePage>  {
                             controller: _pressPageController,
                             children: 
                               [
+                              if(_videoController.videosList.length > 0)
                               for (var j = 0; j < _videoController.videosList.length; j++)
                               ListView(
                                 addAutomaticKeepAlives: true,

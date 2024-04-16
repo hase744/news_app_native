@@ -7,7 +7,7 @@ import 'package:video_news/controllers/video_controller.dart';
 import 'package:video_news/controllers/version_controller.dart';
 import 'package:video_news/views/home_page.dart';
 import 'package:video_news/models/downloader/mode.dart';
-import 'package:video_news/views/category_default_page.dart';
+import 'package:video_news/views/categories/category_default_page.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:video_news/views/downloader/video_downloader_page.dart';
 
@@ -171,7 +171,8 @@ class _FirstPageState extends State<FirstPage> {
       String defaultYoutubeId = prefs.getString('default_youtube_id') ?? '';
       await prefs.setString('default_youtube_id', defaultYoutubeId);
       String? categoryOrder = await prefs.getString('category_order');
-      
+      print("順番");
+      print(categoryOrder);
       Navigator.pushReplacement(
         context,
         [null, '[]'].contains(categoryOrder)

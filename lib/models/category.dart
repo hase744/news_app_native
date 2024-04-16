@@ -11,8 +11,10 @@ class Category with _$Category {
     required String name,
     required String japaneseName,
     required String emoji,
+    required String? imageUrl,
     required bool isDefault,
     required bool isFormal,
+    required bool isOriginal,
     bool? isDeleting,
     bool? isAdded,
   }) = _Category;

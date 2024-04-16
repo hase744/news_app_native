@@ -7,6 +7,12 @@ StateProvider<List<Category>> categoryListProvider = StateProvider<List<Category
   }
 );
 
+StateProvider<Category?> categoryProvider = StateProvider<Category?>(
+  (ref) {
+    return null;
+  }
+);
+
 FutureProvider<List<Category>> unusedCategoryProvider = FutureProvider<List<Category>>(
   (ref) async {
     List<Category> categories = ref.watch(categoryListProvider);
@@ -25,6 +31,17 @@ FutureProvider<List<Category>> savedCategoryProvider = FutureProvider<List<Categ
     if(categories.isEmpty){
       var controller = CategoryController();
       return  controller.categories;
+    }else{
+      return categories;
+    }
+  }
+);
+FutureProvider<List<Category>> originalCategoryProvider = FutureProvider<List<Category>>(
+  (ref) async {
+    List<Category> categories = ref.watch(categoryListProvider);
+    if(categories.isEmpty){
+      var controller = await CategoryController();
+      return  controller.originalCategories;
     }else{
       return categories;
     }

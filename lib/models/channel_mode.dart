@@ -1,0 +1,4 @@
+enum ChannelMode {
+  select,
+  search
+}

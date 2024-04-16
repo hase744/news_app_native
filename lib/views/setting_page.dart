@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'category_adder_page.dart';
-import 'category_order_page.dart';
+import 'package:video_news/views/categories/category_original.dart';
+import 'categories/category_adder_page.dart';
+import 'categories/category_order_page.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'home_page.dart';
@@ -146,9 +147,9 @@ class _SettingPageState extends State<SettingPage> {
                   const ProviderScope(child: AddCategoyPage(title: "設定"))
                 ),
                 settingTile(
-                  'オリジナル', 
+                  '作成', 
                   const Icon(Icons.playlist_add_check), 
-                  const ProviderScope(child: AddCategoyPage(title: "オリジナル"))
+                  ProviderScope(child: CategoryOriginal())
                 ),
               ],
             ),

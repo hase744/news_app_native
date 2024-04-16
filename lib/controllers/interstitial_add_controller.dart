@@ -22,14 +22,12 @@ class InterstitialAdController {
       adUnitId: AdHelper.intersitialAdUnitId,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
-        // 広告が正常にロードされたときに呼ばれます。
         onAdLoaded: (InterstitialAd ad) {
           print("load succeeded");
           _interstitialAd = ad;
           num_of_attempt_load = 0;
           onAdLoadedCallback!();
         },
-        // 広告のロードが失敗した際に呼ばれます。
         onAdFailedToLoad: (LoadAdError error) {
           print("失敗");
           print(error);

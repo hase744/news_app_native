@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_news/consts/colors.dart';
-import 'package:video_news/controllers/category_controller.dart';
 import 'package:video_news/models/category.dart';
 import 'package:video_news/view_models/category_view_model.dart';
 
@@ -86,7 +85,7 @@ class _ReorderableExampleState extends ConsumerState<ReorderableExample> {
               ),
             ),
           ),
-          height: 40,
+          height: _deviceWidth!/10,
           child: Center(
             child: Container(
               alignment: Alignment.centerLeft,
@@ -102,7 +101,51 @@ class _ReorderableExampleState extends ConsumerState<ReorderableExample> {
                       _categoryViewModel.onDeletePushed(index);
                     },
                   ),
-                  Text('${categories[index].emoji} ${categories[index].japaneseName}'),
+                  if([null, ''].contains(categories[index].imageUrl))
+                  Container(
+                    height: _deviceWidth!/10,
+                    width: _deviceWidth!/20,
+                    margin: EdgeInsets.only(right: _deviceWidth!/80),
+                    child: 
+                    Center(
+                      child: 
+                      Text(
+                        categories[index].emoji,
+                        style: TextStyle(
+                          fontSize:  _deviceWidth!/25
+                        ),
+                      )
+                    ),
+                  ),
+                  if(![null, ''].contains(categories[index].imageUrl))
+                  Container(
+                    height: _deviceWidth!/20,
+                    width: _deviceWidth!/20,
+                    margin: EdgeInsets.only(right: _deviceWidth!/80),
+                    child: 
+                    Center(
+                      child: 
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(_deviceWidth!),
+                        child:
+                        Image.network(categories[index].imageUrl!)
+                      )
+                    )
+                  ),
+                  Container(
+                    height: _deviceWidth!/10,
+                    child: 
+                    Center(
+                      child: 
+                      Text(
+                        '${categories[index].japaneseName}',
+                        style: TextStyle(
+                          fontSize:  _deviceWidth!/25
+                        ),
+                      )
+                    ),
+                    //margin: EdgeInsets.only(right: _deviceWidth!/80),
+                  ),
                   const Spacer(),
                   Container(
                     child: Icon(Icons.dehaze_sharp, color: Colors.grey),

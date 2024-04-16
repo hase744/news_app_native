@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:video_news/helpers/page_transition.dart';
 import 'package:video_news/models/navigation_item.dart';
-import 'package:video_news/models/direction.dart';
 import 'package:video_news/consts/navigation_list_config.dart';
 import 'package:video_news/controllers/version_controller.dart';
 

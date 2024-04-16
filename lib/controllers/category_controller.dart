@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:video_news/controllers/video_controller.dart';
 import 'package:video_news/models/category.dart';
+import 'package:video_news/models/channel.dart';
+import 'package:video_news/controllers/uuid_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_news/consts/config.dart';
 import 'dart:convert';
@@ -13,6 +16,7 @@ class CategoryController {
   List<Category> selection = [];
   List<Category> unusedCategories = [];
   List<Category> formalCategories = [];
+  List<Category> originalCategories = [];
   int categoryIndex = 0;
   int changedCount = 0;
   late Category currentCategory = categories[categoryIndex];
@@ -22,10 +26,7 @@ class CategoryController {
     setUnusedCategory();
     setDeraultCategory();
     setFormalCategory();
-  }
-
-  update(i) {
-    categoryIndex = i;
+    setOriginalCategory();
   }
 
   Future<List> getCurrentPress() async {
@@ -73,7 +74,7 @@ class CategoryController {
       String name = categories[i].name;
       if (pressParams.any((c) => c['name'] == name)) {
         Map category = pressParams.firstWhere((c) => c['name'] == name);
-        categories[i].copyWith(
+        categories[i] = categories[i].copyWith(
           japaneseName: category['japanese_name'],
           emoji: category['emoji']
           );
@@ -90,8 +91,7 @@ class CategoryController {
     List categoryParams = await getSavedOrder();
     List videosList = [];
     for (var category in categoryParams) {
-      Map matchedPress =
-          pressParams.firstWhere((c) => c['name'] == category['name']);
+      Map matchedPress = pressParams.firstWhere((c) => c['name'] == category['name']);
       try {
         videosList.add(json.decode(matchedPress['press']));
       } catch (e) {
@@ -117,6 +117,15 @@ class CategoryController {
     formalCategories = pressParams.map((p) => Category.fromJson(p)).toList();
   }
 
+  setOriginalCategory() async {
+    final prefs = await SharedPreferences.getInstance();
+    //await prefs.remove('category_order');
+    String? currentPress = prefs.getString('presses');
+    List pressParams = json.decode(currentPress!);
+    pressParams = pressParams.where((c) => c['is_original'] == true).toList();
+    originalCategories = pressParams.map((p) => Category.fromJson(p)).toList();
+  }
+
   setDeraultCategory() async {
     List categoryParams = await getSavedOrder();
     for (var categoryParam in categoryParams) {
@@ -136,10 +145,9 @@ class CategoryController {
       bool isCategoryMatched = savedParams.any((c) => c['name'] == category['name']);
       if (!isCategoryMatched) {
         unusedCategories.add(Category.fromJson(category));
-        //print(category.name);
+        //print(category['name']);
       }
     });
-    print(unusedCategories.length);
   }
 
   void saveOrder() async {
@@ -149,14 +157,18 @@ class CategoryController {
   }
 
   void delete(int index) async {
-    print("削除");
     categories.removeAt(index);
     saveOrder();
   }
 
-  Future<void> add(int i) async {
+  Future<void> addFromIndex(int i) async {
     Category category = unusedCategories[i];
     unusedCategories[i] = unusedCategories[i].copyWith(isAdded: true);
+    categories.add(category);
+    saveOrder();
+  }
+
+  Future<void> addFromCategory(Category category) async {
     categories.add(category);
     saveOrder();
   }
@@ -179,6 +191,55 @@ class CategoryController {
     await prefs.setString('category_order', json.encode(categoryMaps));
   }
 
+  Future<bool> create(List<Channel> channels, Category category) async {
+    UuidController uuidController = UuidController();
+    String jsonData = jsonEncode(
+      {
+        'uuid': await uuidController.getUuid(),
+        'youtube_ids': channels.map((c) => c.youtubeId).toList(),
+        'category': category.toJson(),
+        'is_formal': true,
+      }
+    );
+    String requestUrl = "${Config.domain}/user/categories";
+    final response = await http.post(
+      Uri.parse(requestUrl),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonData,
+    );
+    if(response.statusCode == 200){
+      return true;
+    }else{
+      return false;
+    }
+  }
+
+  Future<bool> update(List<Channel> channels, Category category) async {
+    UuidController uuidController = UuidController();
+    String jsonData = jsonEncode(
+      {
+        'uuid': uuidController.getUuid(),
+        'youtubeIds': channels.map((c) => c.youtubeId),
+        'category': category.toJson()
+      }
+    );
+    String requestUrl = "${Config.domain}/categories";
+    final response = await http.post(
+      Uri.parse(requestUrl),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonData,
+    );
+    if(response.statusCode == 200){
+      return true;
+    }else{
+      return false;
+    }
+  }
+
   insertAllChildCategories() async {
     List<dynamic> currentCategories = await getCurrentPress();
     List<dynamic> savedCategories = await getSavedOrder();
@@ -197,5 +258,42 @@ class CategoryController {
       }
       childCategoriesList.add(childCategories);
     }
+  }
+
+  Future<bool> destroy(Category category) async {
+    UuidController uuidController = UuidController();
+    String jsonData = jsonEncode(
+      {
+        'uuid': await uuidController.getUuid(),
+        'category': category.toJson(),
+      }
+    );
+    String requestUrl = "${Config.domain}/user/categories";
+    final response = await http.delete(
+      Uri.parse(requestUrl),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonData,
+    );
+    if(response.statusCode == 204){
+      return true;
+    }else{
+      return false;
+    }
+  }
+
+  Future<List> getChannlsOf(Category category) async {
+    List presses = await getCurrentPress();
+    Map press = presses.firstWhere((element) => element['name'] == category.name);
+    List videos = press['videos'];
+    List<Channel> channels = videos.map((e) => Channel.fromJson({
+      'name': e['name'],
+      'image_url': e['image_url'],
+      'channel_id': e['channel_id'],
+      'channel_youtube_id': e['channel_youtube_id'],
+      }
+    )).toList();
+    return channels;
   }
 }

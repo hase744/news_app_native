@@ -8,7 +8,7 @@ class TopNavigation extends StatelessWidget{
   double width;
   TextEditingController controller;
   Function(String) onSearched;
-  final VoidCallback onClosesd;
+  final VoidCallback onClosed;
   final VoidCallback menuOpened;
   final VoidCallback searchOpened;
   // ignore: annotate_overrides, overridden_fields
@@ -20,7 +20,7 @@ class TopNavigation extends StatelessWidget{
     required this.width,
     required this.controller,
     required this.onSearched,
-    required this.onClosesd,
+    required this.onClosed,
     required this.menuOpened,
     required this.searchOpened,
     this.key,
@@ -73,7 +73,7 @@ Widget build(BuildContext context){
                   hintText: 'キーワードで検索',
                   prefixIcon: IconButton(
                     icon: const Icon(Icons.arrow_back_ios_new),
-                    onPressed: onClosesd
+                    onPressed: onClosed
                   ),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.clear),

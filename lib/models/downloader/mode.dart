@@ -2,5 +2,5 @@ enum Mode {
   transfer,
   play,
   select,
-  download
+  download,
 }

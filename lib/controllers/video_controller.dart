@@ -129,9 +129,8 @@ class VideoController{
 
   accessVideos() async {
     await versionController.initialize();
-    print("リリース");
-    print(versionController.isReleased);
-    String url = versionController.isReleased ? '$domain/presses.json' : '$domain/fakes/presses.json' ;
+    String uuid = await UuidController().getUuid();
+    String url = versionController.isReleased ? '$domain/user/presses.json?uuid=$uuid' : '$domain/fakes/presses.json?uuid=$uuid' ;
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final prefs = await SharedPreferences.getInstance();
@@ -150,7 +149,7 @@ class VideoController{
     return videoModelsList;
   }
 
-  listToModels(List videos) async {
+  Future<List<VideoForm>> listToModels(List videos) async {
     List<VideoForm> videoModels = [];
     for(var video in videos){
       videoModels.add(VideoForm.fromMap(video));
@@ -296,8 +295,6 @@ class VideoController{
     String url = '';
     await versionController.initialize();
     url = versionController.isReleased ? '$domain/videos.json?category=$category&page=$page' : '$domain/fakes.json?category=$category&page=$page';
-        print('url');
-        print(url);
     final response = await http.get(Uri.parse(url));
     return response;
   }
