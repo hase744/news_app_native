@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
-import 'package:video_player/video_player.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:chewie/chewie.dart';
 import 'package:video_news/provider/downloader.dart';
 import 'package:video_news/consts/navigation_list_config.dart';
 import 'package:video_news/controllers/banner_adds_controller.dart';
-import 'package:video_news/controllers/directory/directory_ontroller.dart';
-import 'package:video_news/controllers/downloader/downloader_controller.dart';
 import 'package:video_news/view_models/downloader_view_model.dart';
 import 'package:video_news/views/downloader/cell.dart';
 import 'package:video_news/views/bottom_menu_bar.dart';
@@ -19,7 +14,6 @@ import 'package:video_news/views/bottom_navigation_bar.dart';
 import 'package:video_news/models/downloader/mode.dart';
 import 'package:video_news/models/video.dart';
 import 'package:video_news/models/downloader/video_data.dart';
-import 'package:video_news/models/downloader/downloading_data.dart';
 
 class DownLoaderPage extends ConsumerStatefulWidget {
   final String? path;
@@ -40,16 +34,11 @@ class DownLoaderPage extends ConsumerStatefulWidget {
 
 class _DownLoaderPageState extends ConsumerState<DownLoaderPage> {
   late DownLoaderViewModel _downLoaderViewModel = DownLoaderViewModel(ref);
-  late DirectoryController _directoryController = DirectoryController(currentPath: _currentPath);
 
   late String _appDocumentDirPath;
-  BannerAdsController _bannerAdsController = BannerAdsController(bannerAdCount: 1);
+  final BannerAdsController _bannerAdsController = BannerAdsController(bannerAdCount: 1);
   String _currentPath = '';
   double? _deviceWidth;
-  double? _deviceHeight;
-  double _progress = 0.0;
-  List<DownloaderController> downloaderControllers = [];
-  List<DownloadingData> downloadingList = [];
 
   @override
   void initState() {
@@ -61,30 +50,19 @@ class _DownLoaderPageState extends ConsumerState<DownLoaderPage> {
     final dir = await getApplicationDocumentsDirectory();
     _appDocumentDirPath = dir.path;
     _currentPath = '$_appDocumentDirPath/${widget.path}';
-    _directoryController = DirectoryController(currentPath: _currentPath);
     _downLoaderViewModel = DownLoaderViewModel(ref);
-    //final videoPlayerViewModel = ref.read(videoPlayerProvider);
-    //videoPlayerViewModel.initialize('', 16/9);
     await _downLoaderViewModel.setRef(ref);
-    await _downLoaderViewModel.setDefaultValue(widget.path, _currentPath, _progress, widget.downloadList);
+    await _downLoaderViewModel.setDefaultValue(widget.path, _currentPath, widget.downloadList);
     defineSize();
     if(widget.mode == Mode.download){
       await _downLoaderViewModel.downoloadAndTransit(context);
     }
-    await _directoryController.updateDirectories();
-    //print("サムネ");
-    //for(var data in await dbController.all()){
-    //  print(data['video_path']);
-    //  print(data['thumbnail_path']);
-    //  print(data['youtube_id']);
-    //}
     _downLoaderViewModel.updateFolders();
     _downLoaderViewModel.updateVideoDatas();
   }
 
   defineSize() {
     _deviceWidth = MediaQuery.of(context).size.width;
-    _deviceHeight = MediaQuery.of(context).size.height;
   }
 
   String folderTitle(String path){

@@ -20,7 +20,6 @@ class VideoPlayerViewModel extends ChangeNotifier {
     notifyListeners(); // 初期化完了を通知
   }
 
-  // 再生
   void play(VideoData data, String path) {
     _videoPlayerController = VideoPlayerController.file(
         File(path),
