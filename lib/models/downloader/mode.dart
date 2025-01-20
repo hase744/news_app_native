@@ -3,4 +3,5 @@ enum Mode {
   play,
   select,
   download,
+  copy,
 }

@@ -1,6 +1,7 @@
 // ignore_for_file: unused_field
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
@@ -352,12 +353,20 @@ class _HomePageState extends State<HomePage>  {
     case 'downloader':
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const DownLoaderPage(
-          path: '/video',
-          target: null,
-          downloadList: [],
-          mode: Mode.play,
-        )),
+        MaterialPageRoute(
+          builder: (context) => const ProviderScope(
+          child:
+          ProviderScope(
+            child: 
+            DownLoaderPage(
+              path: '/video',
+              target: null,
+              downloadList: [],
+              mode: Mode.play,
+              )
+            )
+          )
+        ),
       );
         break;
       default:
@@ -404,12 +413,16 @@ class _HomePageState extends State<HomePage>  {
   moveToDownloaderPage(List<VideoForm> videos){
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => DownLoaderPage(
-        path: '/video',
-        target: null,
-        downloadList: videos,
-        mode: Mode.select,
-      )),
+      MaterialPageRoute(
+        builder: (context) => ProviderScope(
+        child: DownLoaderPage(
+          path: '/video',
+          target: null,
+          downloadList: videos,
+          mode: Mode.select,
+          )
+        )
+      ),
     );
   }
 
@@ -772,12 +785,16 @@ class _HomePageState extends State<HomePage>  {
         onPressed: () async {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => DownLoaderPage(
-              path: '/video',
-              target: null,
-              downloadList: [video],
-              mode: Mode.select,
-            )),
+            MaterialPageRoute(
+              builder: (context) => ProviderScope(
+                child: DownLoaderPage(
+                  path: '/video',
+                  target: null,
+                  downloadList: [video],
+                  mode: Mode.select,
+                )
+              )
+            ),
           );
         },
         isDestractive: false,

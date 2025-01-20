@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_news/models/navigation_item.dart';
 import 'package:video_news/models/downloader/mode.dart';
 import 'package:video_news/views/home_page.dart';
@@ -83,12 +84,15 @@ class NavigationListConfig{
     NavigationItem(
       name: 'downloader',
       item: const BottomNavigationBarItem(icon: Icon(Icons.download), label: 'オフライン'),
-      page: const DownLoaderPage(
+      page: const ProviderScope(
+        child: 
+        DownLoaderPage(
           path: '/video',
           target: null,
           downloadList: [],
           mode: Mode.play,
         )
+      )
     ),
     NavigationItem(
       name: 'setting',
@@ -133,7 +137,7 @@ class NavigationListConfig{
       )
   ];
 
-  static List<NavigationItem> downloaderMenuList = [
+  static List<NavigationItem> downloaderTransitMenuList = [
     NavigationItem(
       name:"close", 
       item: const BottomNavigationBarItem(icon: Icon(Icons.close), label: '閉じる'),
@@ -142,6 +146,20 @@ class NavigationListConfig{
     NavigationItem(
       name:"transit", 
       item: const BottomNavigationBarItem(icon: Icon(Icons.drive_file_move), label: 'ここに移動'),
+      page: null
+      )
+  ];
+
+
+  static List<NavigationItem> downloaderCopyMenuList = [
+    NavigationItem(
+      name:"close", 
+      item: const BottomNavigationBarItem(icon: Icon(Icons.close), label: '閉じる'),
+      page: null
+      ),
+    NavigationItem(
+      name:"copy", 
+      item: const BottomNavigationBarItem(icon: Icon(Icons.drive_file_move), label: 'ここにコピー'),
       page: null
       )
   ];

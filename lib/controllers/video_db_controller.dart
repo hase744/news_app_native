@@ -88,15 +88,15 @@ class DbController{
       whereArgs: ['%$partialPath%'],
     );
   }
-Future<List<Map<String, dynamic>>> getRecordByPartialPath(String partialPath) async {
-  List<Map<String, dynamic>> record = await _database.query(
-    'Videos',
-    where: 'video_path LIKE ?',
-    whereArgs: ['%$partialPath%'],
-  );
-  return record;
-}
 
+  Future<List<Map<String, dynamic>>> getRecordByPartialPath(String partialPath) async {
+    List<Map<String, dynamic>> record = await _database.query(
+      'Videos',
+      where: 'video_path LIKE ?',
+      whereArgs: ['%$partialPath%'],
+    );
+    return record;
+  }
 
   Future<void> updateVideo(int id, VideoData data) async {
     Map<String, dynamic> stringMap = data.dbMap();

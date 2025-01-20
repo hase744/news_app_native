@@ -47,6 +47,7 @@ class DownloaderController{
     var imagePath = await downloadImage(video.youtubeId, imageTitle);
   
     await dbController.initDatabase();
+    print("videoPath: ${videoPath}");
     VideoData data = VideoData(
       createdAt: DateTime.now().millisecondsSinceEpoch,
       videoPath: videoPath,
@@ -102,11 +103,15 @@ class DownloaderController{
 
   downloadVideo(String youtubeId, String videoTitle, FileType type) async {
     final yt = YoutubeExplode();
-    final manifest = await yt.videos.streamsClient.getManifest("https://www.youtube.com/watch?v=$youtubeId");
+    final manifest = await yt.videos.streamsClient.getManifest("https://www.youtube.com/watch?v=$youtubeId",
+    ytClients: [
+        YoutubeApiClient.ios,
+        YoutubeApiClient.androidVr,
+      ]
+    );
     //final streams = type == FileType.video ? manifest.muxed : manifest.audioOnly;
     final streams = manifest.muxed;
     final audio = streams.first;
-    print(audio.container.name);
     var filename = '$videoTitle.${audio.container.name.toString()}';
     final file = File('$downloadPath/$filename');
     final output = file.openWrite(mode: FileMode.writeOnlyAppend);
@@ -123,7 +128,6 @@ class DownloaderController{
     }
     await output.flush();
     await output.close();
-    print("完了");
     return ('$relativeDownloadPath/$filename');
   }
 
